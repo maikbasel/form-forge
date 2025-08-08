@@ -414,7 +414,7 @@ name = "documents_core"
 version = "0.1.0"
 
 [[package]]
-name = "documents_pdf"
+name = "documents_storage"
 version = "0.1.0"
 
 [[package]]
