@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["features/documents/core", "features/documents/adapters/incoming/web", "features/documents/adapters/outgoing/storage"]
+members = ["features/sheets/core", "features/sheets/adapters/incoming/web", "features/sheets/adapters/outgoing/storage"]
 
 [workspace.dependencies]
 actix-web = "4"
 
 [dependencies]
 actix-web.workspace = true
-documents_web = { path = "features/documents/adapters/incoming/web" }
+sheets_web = { path = "features/sheets/adapters/incoming/web" }

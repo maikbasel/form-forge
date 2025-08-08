@@ -410,21 +410,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "documents_core"
-version = "0.1.0"
-
-[[package]]
-name = "documents_storage"
-version = "0.1.0"
-
-[[package]]
-name = "documents_web"
-version = "0.1.0"
-dependencies = [
- "actix-web",
-]
-
-[[package]]
 name = "encoding_rs"
 version = "0.8.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -466,7 +451,7 @@ name = "form-forge"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "documents_web",
+ "sheets_web",
 ]
 
 [[package]]
@@ -1078,6 +1063,21 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "sheets_core"
+version = "0.1.0"
+
+[[package]]
+name = "sheets_storage"
+version = "0.1.0"
+
+[[package]]
+name = "sheets_web"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
 ]
 
 [[package]]

@@ -1,7 +1,6 @@
 [package]
-name = "documents_web"
+name = "sheets_storage"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-actix-web.workspace = true
