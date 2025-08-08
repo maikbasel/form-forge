@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["features/pdfs/core", "features/pdfs/adapters/incoming/web", "features/pdfs/adapters/outgoing/pdf"]
+members = ["features/documents/core", "features/documents/adapters/incoming/web", "features/documents/adapters/outgoing/pdf"]
 
 [workspace.dependencies]
 actix-web = "4"
 
 [dependencies]
 actix-web.workspace = true
+documents_web = { path = "features/documents/adapters/incoming/web" }
