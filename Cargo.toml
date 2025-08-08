@@ -1,0 +1,17 @@
+[package]
+name = "form-forge"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+members = [
+    "app_core",
+    "adapters/incoming/web",
+    "adapters/outgoing/pdf",
+]
+
+[workspace.dependencies]
+actix-web = "4"
+
+[dependencies]
+actix-web.workspace = true
