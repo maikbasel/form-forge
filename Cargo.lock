@@ -466,8 +466,6 @@ name = "form-forge"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "documents_core",
- "documents_pdf",
  "documents_web",
 ]
 
