@@ -34,7 +34,12 @@ mod tests {
                 "application/pdf",
                 "DnD_5E_CharacterSheet_FormFillable.pdf",
             )
-            .with_file(bindings_path, "bindings", "application/json", "bindings.json");
+            .with_file(
+                bindings_path,
+                "bindings",
+                "application/json",
+                "bindings.json",
+            );
         let (header, body) = multipart_form_data_builder.build();
         let req = test::TestRequest::post()
             .uri("/sheets")
