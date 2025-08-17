@@ -112,6 +112,7 @@ pub struct SheetRequest {
     pub bindings: Json<Bindings>,
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

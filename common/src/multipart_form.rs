@@ -1,28 +1,36 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
+struct FilePart {
+    name: String,
+    file_name: String,
+    content_type: String,
+    path: PathBuf,
+}
+
+#[derive(Default)]
 pub struct MultipartFormDataBuilder {
-    files: Vec<(String, String, String, Box<dyn AsRef<Path>>)>,
+    files: Vec<FilePart>,
 }
 
 impl MultipartFormDataBuilder {
     pub fn new() -> Self {
-        Self { files: vec![] }
+        Self::default()
     }
 
     pub fn with_file(
         &mut self,
-        path: impl AsRef<Path> + 'static,
+        path: impl AsRef<Path>,
         name: impl Into<String>,
         content_type: impl Into<String>,
         file_name: impl Into<String>,
     ) -> &mut Self {
-        self.files.push((
-            name.into(),
-            file_name.into(),
-            content_type.into(),
-            Box::new(path),
-        ));
+        self.files.push(FilePart {
+            name: name.into(),
+            file_name: file_name.into(),
+            content_type: content_type.into(),
+            path: path.as_ref().to_path_buf(),
+        });
         self
     }
 
@@ -31,17 +39,17 @@ impl MultipartFormDataBuilder {
 
         let mut body = vec![];
 
-        for file in self.files.iter() {
+        for file in &self.files {
             body.extend(format!("--{}\r\n", boundary).as_bytes());
             body.extend(
                 format!(
                     "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n",
-                    file.0, file.1
+                    file.name, file.file_name
                 )
                 .as_bytes(),
             );
-            body.extend(format!("Content-Type: {}\r\n", file.2).as_bytes());
-            let data = std::fs::read(file.3.as_ref()).unwrap();
+            body.extend(format!("Content-Type: {}\r\n", file.content_type).as_bytes());
+            let data = std::fs::read(&file.path).unwrap();
             body.extend(format!("Content-Length: {}\r\n\r\n", data.len()).as_bytes());
             body.extend(data);
             body.extend("\r\n".as_bytes());
@@ -78,6 +86,6 @@ mod tests {
 
         assert_eq!(header.0, "Content-Type");
         assert!(header.1.starts_with("multipart/form-data; boundary="));
-        assert!(body.len() > 0);
+        assert!(!body.is_empty());
     }
 }
