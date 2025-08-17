@@ -4,4 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+common = { path = "../../../../../common" }
 actix-web.workspace = true
+actix-multipart.workspace = true
+serde.workspace = true
+validator.workspace = true
+uuid = { version = "1.18.0", features = ["v4"] }
