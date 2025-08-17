@@ -17,3 +17,10 @@ pub async fn upload_sheet_and_bindings(
         .insert_header((header::LOCATION, location))
         .finish())
 }
+
+pub async fn download_sheet(
+    app_data: web::Data<AppConfig>,
+    sheet_id: web::Path<Uuid>,
+) -> Result<HttpResponse, actix_web::Error> {
+    todo!("not implemented yet")
+}

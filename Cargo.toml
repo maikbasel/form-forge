@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["features/sheets/core", "features/sheets/adapters/incoming/web", "features/sheets/adapters/outgoing/storage", "common"]
+members = ["features/sheets/core", "features/sheets/adapters/driving/web", "features/sheets/adapters/driven/storage", "common"]
 
 [workspace.dependencies]
 actix-web = "4"
@@ -15,11 +15,12 @@ tracing-subscriber = "0.3"
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 validator = { version = "0.19", features = ["derive"] }
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
 
 [dependencies]
-sheets_web = { path = "features/sheets/adapters/incoming/web" }
+sheets_web = { path = "features/sheets/adapters/driving/web" }
 common = { path = "common" }
 actix-web.workspace = true
 tracing-actix-web.workspace = true
-uuid = { version = "1.17.0", features = ["v4"] }
 anyhow.workspace = true
+uuid.workspace = true

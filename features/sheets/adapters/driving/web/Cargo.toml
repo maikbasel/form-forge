@@ -9,4 +9,4 @@ actix-web.workspace = true
 actix-multipart.workspace = true
 serde.workspace = true
 validator.workspace = true
-uuid = { version = "1.18.0", features = ["v4"] }
+uuid.workspace = true
