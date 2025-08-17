@@ -1,12 +1,12 @@
+mod test_utils;
+
 #[cfg(test)]
 mod tests {
-    use actix_web::http::{StatusCode, header};
-    use actix_web::{App, test, web};
+    use crate::test_utils;
+    use actix_web::http::{header, StatusCode};
+    use actix_web::test;
     use common::app_config::AppConfig;
-    use common::multipart_form::MultipartFormDataBuilder;
     use common::telemetry;
-    use std::path::PathBuf;
-    use tracing_actix_web::TracingLogger;
     use uuid::Uuid;
 
     #[actix_web::test]
@@ -15,32 +15,8 @@ mod tests {
             .await
             .expect("initialize app config");
         telemetry::initialize().expect("initialize telemetry");
-        let app = test::init_service(
-            App::new()
-                .app_data(web::Data::new(app_config.clone()))
-                .configure(sheets_web::configure)
-                .wrap(TracingLogger::default()),
-        )
-        .await;
-        let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let sheet_path = here.join("tests/fixtures/DnD_5E_CharacterSheet_FormFillable.pdf");
-        let bindings_path =
-            here.join("tests/fixtures/DnD_5E_CharacterSheet_FormFillable_bindings.json");
-        let mut multipart_form_data_builder = MultipartFormDataBuilder::new();
-        multipart_form_data_builder
-            .with_file(
-                sheet_path,
-                "sheet",
-                "application/pdf",
-                "DnD_5E_CharacterSheet_FormFillable.pdf",
-            )
-            .with_file(
-                bindings_path,
-                "bindings",
-                "application/json",
-                "bindings.json",
-            );
-        let (header, body) = multipart_form_data_builder.build();
+        let app = test_utils::app!(app_config);
+        let (header, body) = test_utils::dnd_multipart_form_data().build();
         let req = test::TestRequest::post()
             .uri("/sheets")
             .insert_header(header)
