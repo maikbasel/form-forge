@@ -4,9 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-common = { path = "../../../../../common" }
+sheets_core = { path = "../../../core" }
 actix-web.workspace = true
 actix-multipart.workspace = true
-serde.workspace = true
-validator.workspace = true
 uuid.workspace = true

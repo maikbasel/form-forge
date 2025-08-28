@@ -3,15 +3,15 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use crate::test_utils;
-    use actix_web::http::{header, StatusCode};
+    use actix_web::http::{StatusCode, header};
     use actix_web::test;
-    use common::app_config::AppConfig;
     use common::telemetry;
+    use sheets_storage::config::StorageConfig;
     use uuid::Uuid;
 
     #[actix_web::test]
     async fn test_should_upload_sheet_and_binding() {
-        let app_config = AppConfig::initialize()
+        let app_config = StorageConfig::initialize()
             .await
             .expect("initialize app config");
         telemetry::initialize().expect("initialize telemetry");
@@ -39,7 +39,7 @@ mod tests {
 
     #[actix_web::test]
     async fn test_should_download_sheet() {
-        let app_config = AppConfig::initialize()
+        let app_config = StorageConfig::initialize()
             .await
             .expect("initialize app config");
         telemetry::initialize().expect("initialize telemetry");

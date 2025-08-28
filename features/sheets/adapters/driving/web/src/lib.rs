@@ -1,13 +1,8 @@
 use actix_web::web;
 
-mod handlers;
-mod request;
+mod handler;
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
-    cfg.route(
-        "/sheets",
-        web::post().to(handlers::upload_sheet_and_bindings),
-    )
-        .route("/sheets/{id}",
-        web::get().to(handlers::download_sheet));
+    cfg.route("/sheets", web::post().to(handler::upload_sheet))
+        .route("/sheets/{id}", web::get().to(handler::download_sheet));
 }

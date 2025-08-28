@@ -4,23 +4,29 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["features/sheets/core", "features/sheets/adapters/driving/web", "features/sheets/adapters/driven/storage", "common"]
+members = ["features/sheets/core", "features/sheets/adapters/driving/web", "features/sheets/adapters/driven/storage", "common", "features/sheets/adapters/driven/metadata"]
 
 [workspace.dependencies]
 actix-web = "4"
-actix-multipart = "0.7.2"
+actix-multipart = "0.7"
 tracing = "0.1"
 tracing-actix-web = "0.7"
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-validator = { version = "0.19", features = ["derive"] }
+thiserror = "2.0"
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
+async-trait = "0.1"
 
 [dependencies]
+sheets_core = { path = "features/sheets/core" }
 sheets_web = { path = "features/sheets/adapters/driving/web" }
+sheets_storage = { path = "features/sheets/adapters/driven/storage" }
+sheets_metadata = { path = "features/sheets/adapters/driven/metadata" }
 common = { path = "common" }
 actix-web.workspace = true
 tracing-actix-web.workspace = true
 anyhow.workspace = true
 uuid.workspace = true
+
+[features]
+tracing-logs = []
