@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["features/sheets/core", "features/sheets/adapters/driving/web", "features/sheets/adapters/driven/storage", "common", "features/sheets/adapters/driven/metadata"]
+members = ["features/sheets/core", "features/sheets/adapters/driving/web", "features/sheets/adapters/driven/storage", "common", "features/sheets/adapters/driven/db"]
 
 [workspace.dependencies]
 actix-web = "4"
@@ -21,7 +21,7 @@ async-trait = "0.1"
 sheets_core = { path = "features/sheets/core" }
 sheets_web = { path = "features/sheets/adapters/driving/web" }
 sheets_storage = { path = "features/sheets/adapters/driven/storage" }
-sheets_metadata = { path = "features/sheets/adapters/driven/metadata" }
+sheets_db = { path = "features/sheets/adapters/driven/db" }
 common = { path = "common" }
 actix-web.workspace = true
 tracing-actix-web.workspace = true

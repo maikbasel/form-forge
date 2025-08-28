@@ -595,7 +595,7 @@ dependencies = [
  "anyhow",
  "common",
  "sheets_core",
- "sheets_metadata",
+ "sheets_db",
  "sheets_storage",
  "sheets_web",
  "tracing-actix-web",
@@ -1416,7 +1416,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sheets_metadata"
+name = "sheets_db"
 version = "0.1.0"
 dependencies = [
  "async-trait",

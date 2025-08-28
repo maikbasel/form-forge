@@ -2,7 +2,7 @@ use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
 use common::telemetry;
 use sheets_core::ports::driven::{MetadataPort, StoragePort};
-use sheets_metadata::adapter::SheetMetadataDb;
+use sheets_db::adapter::SheetMetadataDb;
 use sheets_storage::adapter::FileStorage;
 use sheets_storage::config::StorageConfig;
 use std::sync::Arc;
