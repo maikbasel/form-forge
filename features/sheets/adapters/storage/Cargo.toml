@@ -1,8 +1,9 @@
 [package]
-name = "sheets_db"
+name = "sheets_storage"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sheets_core = { path = "../../../core" }
+sheets_core = { path = "../../core" }
 async-trait.workspace = true
+anyhow.workspace = true
