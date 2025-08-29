@@ -1,13 +1,12 @@
-use actix_multipart::form::MultipartForm;
 use actix_multipart::form::tempfile::TempFile;
-use actix_web::error::ErrorBadRequest;
+use actix_multipart::form::MultipartForm;
+use actix_web::error::{ErrorBadRequest, ErrorInternalServerError};
 use actix_web::http::header;
-use actix_web::{HttpResponse, web};
-use sheets_core::ports::driven::{MetadataPort, StoragePort};
+use actix_web::{web, HttpResponse};
+use sheets_core::error::SheetError;
+use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
 use sheets_core::ports::driving::import_sheet;
 use sheets_core::sheet::Sheet;
-use std::fs::File;
-use std::io::BufReader;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -18,31 +17,32 @@ pub struct UploadSheetRequest {
 }
 
 pub async fn upload_sheet(
-    storage_port: web::Data<Arc<dyn StoragePort>>,
-    metadata_port: web::Data<Arc<dyn MetadataPort>>,
+    storage_port: web::Data<Arc<dyn SheetStoragePort>>,
+    reference_port: web::Data<Arc<dyn SheetReferencePort>>,
     MultipartForm(payload): MultipartForm<UploadSheetRequest>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let sheet_path = payload.sheet.file.path().to_path_buf();
-    let sheet_file = File::open(sheet_path)?;
-    let sheet_reader = BufReader::new(sheet_file);
+    let path = payload.sheet.file.path().to_path_buf();
 
     import_sheet(
         storage_port.get_ref().clone(),
-        metadata_port.get_ref().clone(),
-        Sheet::new(sheet_reader),
+        reference_port.get_ref().clone(),
+        Sheet::new(path, payload.sheet.file_name),
     )
     .await
-    .map(|id| {
-        let location = format!("/sheets/{}", id);
+    .map(|sheet_reference| {
+        let location = format!("/sheets/{}", sheet_reference.sheet_id);
         HttpResponse::Created()
             .insert_header((header::LOCATION, location))
             .finish()
     })
-    .map_err(|err| ErrorBadRequest(err))
+    .map_err(|err| match err {
+        SheetError::InvalidFileName => ErrorBadRequest(err),
+        SheetError::StorageError(_) => ErrorInternalServerError(err),
+    })
 }
 
 pub async fn download_sheet(
-    app_data: web::Data<Arc<dyn StoragePort>>,
+    app_data: web::Data<Arc<dyn SheetStoragePort>>,
     sheet_id: web::Path<Uuid>,
 ) -> Result<HttpResponse, actix_web::Error> {
     todo!("not implemented yet")

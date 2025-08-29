@@ -1,8 +1,8 @@
 use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
 use common::telemetry;
-use sheets_core::ports::driven::{MetadataPort, StoragePort};
-use sheets_db::adapter::SheetMetadataDb;
+use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
+use sheets_db::adapter::SheetReferenceDb;
 use sheets_storage::adapter::FileStorage;
 use sheets_storage::config::StorageConfig;
 use std::sync::Arc;
@@ -17,13 +17,13 @@ async fn main() -> Result<()> {
     let storage_cfg = StorageConfig::initialize()
         .await
         .context("failed to initialize storage config")?;
-    let storage_port: Arc<dyn StoragePort> = Arc::new(FileStorage::new(storage_cfg.clone()));
-    let metadata_port: Arc<dyn MetadataPort> = Arc::new(SheetMetadataDb::new());
+    let storage_port: Arc<dyn SheetStoragePort> = Arc::new(FileStorage::new(storage_cfg.clone()));
+    let reference_port: Arc<dyn SheetReferencePort> = Arc::new(SheetReferenceDb::new());
 
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(storage_port.clone()))
-            .app_data(web::Data::new(metadata_port.clone()))
+            .app_data(web::Data::new(reference_port.clone()))
             .configure(sheets_web::configure)
             .wrap(TracingLogger::default())
     })
