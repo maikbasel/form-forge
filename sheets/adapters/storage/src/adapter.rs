@@ -6,11 +6,11 @@ use sheets_core::sheet::SheetReference;
 use std::fs::{copy, create_dir_all};
 use std::path::PathBuf;
 
-pub struct FileStorage {
+pub struct SheetFileStorage {
     data_dir: PathBuf,
 }
 
-impl FileStorage {
+impl SheetFileStorage {
     pub fn new(cfg: StorageConfig) -> Self {
         Self {
             data_dir: cfg.data_dir,
@@ -19,7 +19,7 @@ impl FileStorage {
 }
 
 #[async_trait]
-impl SheetStoragePort for FileStorage {
+impl SheetStoragePort for SheetFileStorage {
     async fn create(&self, sheet_reference: SheetReference) -> Result<SheetReference, SheetError> {
         let sheet_dir = self
             .data_dir

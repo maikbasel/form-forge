@@ -6,5 +6,5 @@ pub enum SheetError {
     #[error("invalid file name")]
     InvalidFileName,
     #[error("failed to save sheet")]
-    StorageError(#[source] io::Error)
+    StorageError(#[source] io::Error),
 }

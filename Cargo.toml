@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["features/sheets/core", "features/sheets/adapters/web", "features/sheets/adapters/storage", "common", "features/sheets/adapters/db"]
+members = ["sheets/core", "sheets/adapters/web", "sheets/adapters/storage", "common", "sheets/adapters/db"]
 
 [workspace.dependencies]
 actix-web = "4"
@@ -18,10 +18,10 @@ uuid = { version = "1.17.0", features = ["v4", "serde"] }
 async-trait = "0.1"
 
 [dependencies]
-sheets_core = { path = "features/sheets/core" }
-sheets_web = { path = "features/sheets/adapters/web" }
-sheets_storage = { path = "features/sheets/adapters/storage" }
-sheets_db = { path = "features/sheets/adapters/db" }
+sheets_core = { path = "sheets/core" }
+sheets_web = { path = "sheets/adapters/web" }
+sheets_storage = { path = "sheets/adapters/storage" }
+sheets_db = { path = "sheets/adapters/db" }
 common = { path = "common" }
 actix-web.workspace = true
 tracing-actix-web.workspace = true
