@@ -30,14 +30,16 @@ pub async fn upload_sheet(
     )
     .await
     .map(|sheet_reference| {
-        let location = format!("/sheets/{}", sheet_reference.sheet_id);
+        let location = format!("/sheets/{}", sheet_reference.id);
         HttpResponse::Created()
             .insert_header((header::LOCATION, location))
             .finish()
     })
     .map_err(|err| match err {
         SheetError::InvalidFileName => ErrorBadRequest(err),
+        SheetError::InvalidFilePath => ErrorBadRequest(err),
         SheetError::StorageError(_) => ErrorInternalServerError(err),
+        SheetError::DatabaseError(_) => ErrorInternalServerError(err),
     })
 }
 

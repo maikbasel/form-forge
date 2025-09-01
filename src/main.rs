@@ -1,25 +1,45 @@
-use actix_web::{App, HttpServer, web};
+use std::env;
+use actix_web::{web, App, HttpServer};
 use anyhow::{Context, Result};
+use common::db::DatabaseConfig;
 use common::telemetry;
 use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
 use sheets_db::adapter::SheetReferenceDb;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
+use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
+use dotenv::dotenv;
 use tracing_actix_web::TracingLogger;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
+    dotenv().ok();
+
     telemetry::initialize()?;
 
-    let addr = std::env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+    let addr = env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:8081".to_string());
 
-    let storage_cfg = StorageConfig::initialize()
+    let sheet_storage_cfg = StorageConfig::initialize()
         .await
         .context("failed to initialize storage config")?;
     let storage_port: Arc<dyn SheetStoragePort> =
-        Arc::new(SheetFileStorage::new(storage_cfg.clone()));
-    let reference_port: Arc<dyn SheetReferencePort> = Arc::new(SheetReferenceDb::new());
+        Arc::new(SheetFileStorage::new(sheet_storage_cfg.clone()));
+
+    let db_cfg = DatabaseConfig::initialize()?;
+    let postgres_url = format!(
+        "postgres://{}:{}@{}:{}/{}",
+        db_cfg.user, db_cfg.password, db_cfg.host, 5432, db_cfg.database
+    );
+
+    let pool = PgPoolOptions::new()
+        .max_connections(db_cfg.max_connections)
+        .connect(&postgres_url)
+        .await?;
+
+    sqlx::migrate!("./migrations").run(&pool).await?;
+
+    let reference_port: Arc<dyn SheetReferencePort> = Arc::new(SheetReferenceDb::new(pool));
 
     HttpServer::new(move || {
         App::new()

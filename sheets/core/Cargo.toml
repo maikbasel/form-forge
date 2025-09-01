@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 async-trait.workspace = true
 thiserror.workspace = true
+anyhow.workspace = true
 uuid = { version = "1.18.0", features = ["v4"] }

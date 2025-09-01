@@ -20,10 +20,12 @@ pub async fn import_sheet(
     let extension = path.extension().and_then(|e| e.to_str());
 
     let sheet_id = Uuid::new_v4();
-    let name = sheet_id.simple().to_string(); // 32 hex chars, no hyphens
+    let name = Uuid::new_v4().simple().to_string(); // 32 hex chars, no hyphens
     let sheet_reference = SheetReference::new(sheet_id, original_name, name, extension, sheet.path);
 
     let sheet_reference = storage_port.create(sheet_reference).await?;
 
-    reference_port.create(sheet_reference).await
+    reference_port.create(&sheet_reference).await?;
+    
+    Ok(sheet_reference)
 }

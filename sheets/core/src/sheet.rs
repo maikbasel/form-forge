@@ -17,7 +17,7 @@ impl Sheet {
 
 #[derive(Clone, Debug)]
 pub struct SheetReference {
-    pub sheet_id: Uuid,
+    pub id: Uuid,
     pub original_name: String,
     pub name: String,
     pub extension: Option<String>,
@@ -26,7 +26,7 @@ pub struct SheetReference {
 
 impl SheetReference {
     pub fn new(
-        sheet_id: Uuid,
+        id: Uuid,
         original_name: impl Into<String>,
         name: impl Into<String>,
         extension: Option<impl Into<String>>,
@@ -36,7 +36,7 @@ impl SheetReference {
         let name = name.into();
         let extension = extension.map(|e| e.into());
         Self {
-            sheet_id,
+            id,
             original_name,
             name,
             extension,

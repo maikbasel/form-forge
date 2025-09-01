@@ -16,6 +16,8 @@ anyhow = "1.0"
 thiserror = "2.0"
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
 async-trait = "0.1"
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid"] }
+dotenv = "0.15"
 
 [dependencies]
 sheets_core = { path = "sheets/core" }
@@ -27,6 +29,8 @@ actix-web.workspace = true
 tracing-actix-web.workspace = true
 anyhow.workspace = true
 uuid.workspace = true
+sqlx.workspace = true
+dotenv.workspace = true
 
 [features]
 tracing-logs = []

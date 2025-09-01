@@ -24,7 +24,7 @@ impl SheetStoragePort for SheetFileStorage {
         let sheet_dir = self
             .data_dir
             .join("sheets")
-            .join(sheet_reference.sheet_id.to_string());
+            .join(sheet_reference.id.to_string());
 
         create_dir_all(&sheet_dir).map_err(|e| SheetError::StorageError(e))?;
 
@@ -38,7 +38,7 @@ impl SheetStoragePort for SheetFileStorage {
         copy(&sheet_reference.path, &target_path).map_err(|e| SheetError::StorageError(e))?;
 
         Ok(SheetReference::new(
-            sheet_reference.sheet_id,
+            sheet_reference.id,
             sheet_reference.original_name,
             sheet_reference.name,
             sheet_reference.extension,

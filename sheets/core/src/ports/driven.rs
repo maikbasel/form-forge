@@ -9,5 +9,5 @@ pub trait SheetStoragePort: Send + Sync {
 
 #[async_trait]
 pub trait SheetReferencePort: Send + Sync {
-    async fn create(&self, sheet_reference: SheetReference) -> Result<SheetReference, SheetError>;
+    async fn create(&self, sheet_reference: &SheetReference) -> Result<(), SheetError>;
 }
