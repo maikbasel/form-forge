@@ -1,15 +1,15 @@
-use std::env;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
 use common::telemetry;
+use dotenv::dotenv;
 use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
 use sheets_db::adapter::SheetReferenceDb;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
 use sqlx::postgres::PgPoolOptions;
+use std::env;
 use std::sync::Arc;
-use dotenv::dotenv;
 use tracing_actix_web::TracingLogger;
 
 #[actix_web::main]

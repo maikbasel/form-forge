@@ -26,6 +26,6 @@ pub async fn import_sheet(
     let sheet_reference = storage_port.create(sheet_reference).await?;
 
     reference_port.create(&sheet_reference).await?;
-    
+
     Ok(sheet_reference)
 }
