@@ -4,11 +4,8 @@ use actix_web::error::{ErrorBadRequest, ErrorInternalServerError};
 use actix_web::http::header;
 use actix_web::{web, HttpResponse};
 use sheets_core::error::SheetError;
-use sheets_core::ports::driven::SheetStoragePort;
 use sheets_core::ports::driving::SheetService;
 use sheets_core::sheet::Sheet;
-use std::sync::Arc;
-use uuid::Uuid;
 
 #[derive(Debug, MultipartForm)]
 pub struct UploadSheetRequest {
@@ -39,9 +36,3 @@ pub async fn upload_sheet(
         })
 }
 
-pub async fn download_sheet(
-    app_data: web::Data<Arc<dyn SheetStoragePort>>,
-    sheet_id: web::Path<Uuid>,
-) -> Result<HttpResponse, actix_web::Error> {
-    todo!("not implemented yet")
-}
