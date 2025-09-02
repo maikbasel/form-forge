@@ -4,6 +4,7 @@ use common::db::DatabaseConfig;
 use common::telemetry;
 use dotenv::dotenv;
 use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
+use sheets_core::ports::driving::SheetService;
 use sheets_db::adapter::SheetReferenceDb;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
@@ -41,10 +42,11 @@ async fn main() -> Result<()> {
 
     let reference_port: Arc<dyn SheetReferencePort> = Arc::new(SheetReferenceDb::new(pool));
 
+    let sheet_service = SheetService::new(storage_port, reference_port);
+
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(storage_port.clone()))
-            .app_data(web::Data::new(reference_port.clone()))
+            .app_data(web::Data::new(sheet_service.clone()))
             .configure(sheets_web::configure)
             .wrap(TracingLogger::default())
     })

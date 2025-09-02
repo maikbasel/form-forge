@@ -9,6 +9,7 @@ mod tests {
     use common::telemetry;
     use rstest::*;
     use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
+    use sheets_core::ports::driving::SheetService;
     use sheets_db::adapter::SheetReferenceDb;
     use sheets_storage::adapter::SheetFileStorage;
     use sheets_storage::config::StorageConfig;
@@ -25,16 +26,17 @@ mod tests {
     #[actix_web::test]
     async fn test_should_upload_sheet_and_binding(#[future] async_ctx: AsyncTestContext) {
         let async_ctx = async_ctx.await;
-        let reference_port: Arc<dyn SheetReferencePort> =
+        let sheet_reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
         let tmp_dir = TempDir::new("tests").expect("create temp dir");
         let storage_cfg = StorageConfig {
             data_dir: tmp_dir.path().to_path_buf(),
         };
-        let storage_port: Arc<dyn SheetStoragePort> =
+        let sheet_storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let sheet_service = SheetService::new(sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(reference_port, storage_port);
+        let app = test_utils::app!(sheet_service);
         let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
         let req = test::TestRequest::post()
             .uri("/sheets")
@@ -68,8 +70,9 @@ mod tests {
         };
         let storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let sheet_service = SheetService::new(storage_port, reference_port);
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(reference_port, storage_port);
+        let app = test_utils::app!(sheet_service);
         let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
         let upload_req = test::TestRequest::post()
             .uri("/sheets")

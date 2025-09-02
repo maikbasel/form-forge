@@ -1,11 +1,11 @@
-use actix_multipart::form::MultipartForm;
 use actix_multipart::form::tempfile::TempFile;
+use actix_multipart::form::MultipartForm;
 use actix_web::error::{ErrorBadRequest, ErrorInternalServerError};
 use actix_web::http::header;
-use actix_web::{HttpResponse, web};
+use actix_web::{web, HttpResponse};
 use sheets_core::error::SheetError;
-use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
-use sheets_core::ports::driving::import_sheet;
+use sheets_core::ports::driven::SheetStoragePort;
+use sheets_core::ports::driving::SheetService;
 use sheets_core::sheet::Sheet;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -17,30 +17,26 @@ pub struct UploadSheetRequest {
 }
 
 pub async fn upload_sheet(
-    storage_port: web::Data<Arc<dyn SheetStoragePort>>,
-    reference_port: web::Data<Arc<dyn SheetReferencePort>>,
+    sheet_service: web::Data<SheetService>,
     MultipartForm(payload): MultipartForm<UploadSheetRequest>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let path = payload.sheet.file.path().to_path_buf();
 
-    import_sheet(
-        storage_port.get_ref().clone(),
-        reference_port.get_ref().clone(),
-        Sheet::new(path, payload.sheet.file_name),
-    )
-    .await
-    .map(|sheet_reference| {
-        let location = format!("/sheets/{}", sheet_reference.id);
-        HttpResponse::Created()
-            .insert_header((header::LOCATION, location))
-            .finish()
-    })
-    .map_err(|err| match err {
-        SheetError::InvalidFileName => ErrorBadRequest(err),
-        SheetError::InvalidFilePath => ErrorBadRequest(err),
-        SheetError::StorageError(_) => ErrorInternalServerError(err),
-        SheetError::DatabaseError(_) => ErrorInternalServerError(err),
-    })
+    sheet_service
+        .import_sheet(Sheet::new(path, payload.sheet.file_name))
+        .await
+        .map(|sheet_reference| {
+            let location = format!("/sheets/{}", sheet_reference.id);
+            HttpResponse::Created()
+                .insert_header((header::LOCATION, location))
+                .finish()
+        })
+        .map_err(|err| match err {
+            SheetError::InvalidFileName => ErrorBadRequest(err),
+            SheetError::InvalidFilePath => ErrorBadRequest(err),
+            SheetError::StorageError(_) => ErrorInternalServerError(err),
+            SheetError::DatabaseError(_) => ErrorInternalServerError(err),
+        })
 }
 
 pub async fn download_sheet(
