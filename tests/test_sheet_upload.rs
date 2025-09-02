@@ -3,20 +3,39 @@ mod test_utils;
 #[cfg(test)]
 mod tests {
     use crate::test_utils;
-    use actix_web::http::{StatusCode, header};
+    use crate::test_utils::AsyncTestContext;
+    use actix_web::http::{header, StatusCode};
     use actix_web::test;
     use common::telemetry;
+    use rstest::*;
+    use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
+    use sheets_db::adapter::SheetReferenceDb;
+    use sheets_storage::adapter::SheetFileStorage;
     use sheets_storage::config::StorageConfig;
+    use std::sync::Arc;
+    use tempdir::TempDir;
     use uuid::Uuid;
 
+    #[fixture]
+    async fn async_ctx() -> AsyncTestContext {
+        AsyncTestContext::setup().await
+    }
+
+    #[rstest]
     #[actix_web::test]
-    async fn test_should_upload_sheet_and_binding() {
-        let app_config = StorageConfig::initialize()
-            .await
-            .expect("initialize app config");
+    async fn test_should_upload_sheet_and_binding(#[future] async_ctx: AsyncTestContext) {
+        let async_ctx = async_ctx.await;
+        let reference_port: Arc<dyn SheetReferencePort> =
+            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+        let tmp_dir = TempDir::new("tests").expect("create temp dir");
+        let storage_cfg = StorageConfig {
+            data_dir: tmp_dir.path().to_path_buf(),
+        };
+        let storage_port: Arc<dyn SheetStoragePort> =
+            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(app_config);
-        let (header, body) = test_utils::dnd_multipart_form_data().build();
+        let app = test_utils::app!(reference_port, storage_port);
+        let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
         let req = test::TestRequest::post()
             .uri("/sheets")
             .insert_header(header)
@@ -37,14 +56,21 @@ mod tests {
         assert!(Uuid::parse_str(id_part).is_ok());
     }
 
+    #[rstest]
     #[actix_web::test]
-    async fn test_should_download_sheet() {
-        let app_config = StorageConfig::initialize()
-            .await
-            .expect("initialize app config");
+    async fn test_should_download_sheet(#[future] async_ctx: AsyncTestContext) {
+        let async_ctx = async_ctx.await;
+        let reference_port: Arc<dyn SheetReferencePort> =
+            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+        let tmp_dir = TempDir::new("tests").expect("create temp dir");
+        let storage_cfg = StorageConfig {
+            data_dir: tmp_dir.path().to_path_buf(),
+        };
+        let storage_port: Arc<dyn SheetStoragePort> =
+            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(app_config);
-        let (header, body) = test_utils::dnd_multipart_form_data().build();
+        let app = test_utils::app!(reference_port, storage_port);
+        let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
         let upload_req = test::TestRequest::post()
             .uri("/sheets")
             .insert_header(header)

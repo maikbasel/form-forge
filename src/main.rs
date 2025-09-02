@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     let db_cfg = DatabaseConfig::initialize()?;
     let postgres_url = format!(
         "postgres://{}:{}@{}:{}/{}",
-        db_cfg.user, db_cfg.password, db_cfg.host, 5432, db_cfg.database
+        db_cfg.user, db_cfg.password, db_cfg.host, db_cfg.port, db_cfg.database
     );
 
     let pool = PgPoolOptions::new()

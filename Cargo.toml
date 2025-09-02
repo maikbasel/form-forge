@@ -18,6 +18,10 @@ uuid = { version = "1.17.0", features = ["v4", "serde"] }
 async-trait = "0.1"
 sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid"] }
 dotenv = "0.15"
+tempdir = "0.3"
+testcontainers = "0.25"
+testcontainers-modules = { version = "0.13", features = ["postgres", "blocking"] }
+rstest = "0.26"
 
 [dependencies]
 sheets_core = { path = "sheets/core" }
@@ -31,6 +35,12 @@ anyhow.workspace = true
 uuid.workspace = true
 sqlx.workspace = true
 dotenv.workspace = true
+
+[dev-dependencies]
+tempdir.workspace = true
+testcontainers.workspace = true
+testcontainers-modules.workspace = true
+rstest.workspace = true
 
 [features]
 tracing-logs = []
