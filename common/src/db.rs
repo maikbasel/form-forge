@@ -40,6 +40,13 @@ impl DatabaseConfig {
         let database = "form-forge";
         let max_connections = 5;
 
-        Ok(Self::new(host, 5434, user,  password, database, max_connections))
+        Ok(Self::new(
+            host,
+            5434,
+            user,
+            password,
+            database,
+            max_connections,
+        ))
     }
 }

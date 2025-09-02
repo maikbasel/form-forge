@@ -69,7 +69,10 @@ impl AsyncTestContext {
             .await
             .expect("run migrations");
 
-        Self { pool, _container: container }
+        Self {
+            pool,
+            _container: container,
+        }
     }
 }
 

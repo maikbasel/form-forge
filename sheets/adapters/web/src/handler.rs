@@ -1,8 +1,8 @@
-use actix_multipart::form::tempfile::TempFile;
 use actix_multipart::form::MultipartForm;
+use actix_multipart::form::tempfile::TempFile;
 use actix_web::error::{ErrorBadRequest, ErrorInternalServerError};
 use actix_web::http::header;
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
 use sheets_core::sheet::Sheet;
@@ -35,4 +35,3 @@ pub async fn upload_sheet(
             SheetError::DatabaseError(_) => ErrorInternalServerError(err),
         })
 }
-

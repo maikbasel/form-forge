@@ -34,7 +34,8 @@ impl SheetService {
 
         let sheet_id = Uuid::new_v4();
         let name = Uuid::new_v4().simple().to_string(); // 32 hex chars, no hyphens
-        let sheet_reference = SheetReference::new(sheet_id, original_name, name, extension, sheet.path);
+        let sheet_reference =
+            SheetReference::new(sheet_id, original_name, name, extension, sheet.path);
 
         let sheet_reference = self.sheet_storage_port.create(sheet_reference).await?;
 
@@ -43,4 +44,3 @@ impl SheetService {
         Ok(sheet_reference)
     }
 }
-
