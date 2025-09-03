@@ -22,6 +22,7 @@ tempdir = "0.3"
 testcontainers = "0.25"
 testcontainers-modules = { version = "0.13", features = ["postgres", "blocking"] }
 rstest = "0.26"
+pretty_assertions = "1.4"
 
 [dependencies]
 sheets_core = { path = "sheets/core" }
@@ -41,6 +42,7 @@ tempdir.workspace = true
 testcontainers.workspace = true
 testcontainers-modules.workspace = true
 rstest.workspace = true
+pretty_assertions.workspace = true
 
 [features]
 tracing-logs = []
