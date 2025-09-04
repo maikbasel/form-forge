@@ -4,7 +4,7 @@ mod test_utils;
 mod tests {
     use crate::test_utils;
     use crate::test_utils::AsyncTestContext;
-    use actix_web::http::{StatusCode, header};
+    use actix_web::http::{header, StatusCode};
     use actix_web::test;
     use common::telemetry;
     use pretty_assertions::assert_eq;
@@ -15,7 +15,7 @@ mod tests {
     use sheets_storage::adapter::SheetFileStorage;
     use sheets_storage::config::StorageConfig;
     use std::sync::Arc;
-    use tempdir::TempDir;
+    use tempfile::Builder;
     use uuid::Uuid;
 
     #[fixture]
@@ -29,7 +29,10 @@ mod tests {
         let async_ctx = async_ctx.await;
         let sheet_reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
-        let tmp_dir = TempDir::new("tests").expect("create temp dir");
+        let tmp_dir = Builder::new()
+            .prefix("tests")
+            .tempdir()
+            .expect("create temp dir");
         let storage_cfg = StorageConfig {
             data_dir: tmp_dir.path().to_path_buf(),
         };
@@ -65,7 +68,10 @@ mod tests {
         let async_ctx = async_ctx.await;
         let reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
-        let tmp_dir = TempDir::new("tests").expect("create temp dir");
+        let tmp_dir = Builder::new()
+            .prefix("tests")
+            .tempdir()
+            .expect("create temp dir");
         let storage_cfg = StorageConfig {
             data_dir: tmp_dir.path().to_path_buf(),
         };
