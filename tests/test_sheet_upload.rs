@@ -4,7 +4,7 @@ mod test_utils;
 mod tests {
     use crate::test_utils;
     use crate::test_utils::AsyncTestContext;
-    use actix_web::http::{header, StatusCode};
+    use actix_web::http::{StatusCode, header};
     use actix_web::test;
     use common::telemetry;
     use pretty_assertions::assert_eq;

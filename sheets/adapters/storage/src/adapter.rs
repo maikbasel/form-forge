@@ -26,7 +26,7 @@ impl SheetStoragePort for SheetFileStorage {
             .join("sheets")
             .join(sheet_reference.id.to_string());
 
-        create_dir_all(&sheet_dir).map_err(|e| SheetError::StorageError(e))?;
+        create_dir_all(&sheet_dir).map_err(SheetError::StorageError)?;
 
         let file_name = match &sheet_reference.extension {
             Some(ext) => format!("{}.{}", sheet_reference.name, ext),
@@ -35,7 +35,7 @@ impl SheetStoragePort for SheetFileStorage {
 
         let target_path = sheet_dir.join(file_name);
 
-        copy(&sheet_reference.path, &target_path).map_err(|e| SheetError::StorageError(e))?;
+        copy(&sheet_reference.path, &target_path).map_err(SheetError::StorageError)?;
 
         Ok(SheetReference::new(
             sheet_reference.id,
@@ -44,5 +44,13 @@ impl SheetStoragePort for SheetFileStorage {
             sheet_reference.extension,
             target_path,
         ))
+    }
+
+    async fn read(&self, sheet_reference: &SheetReference) -> Result<PathBuf, SheetError> {
+        if sheet_reference.path.exists() {
+            Ok(sheet_reference.path.clone())
+        } else {
+            Err(SheetError::NotFound("file not found".to_string()))
+        }
     }
 }

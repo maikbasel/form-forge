@@ -1,11 +1,15 @@
+use actix_files::NamedFile;
 use actix_multipart::form::MultipartForm;
 use actix_multipart::form::tempfile::TempFile;
 use actix_web::error::{ErrorBadRequest, ErrorInternalServerError};
-use actix_web::http::header;
-use actix_web::{HttpResponse, web};
+use actix_web::http::header::{
+    Charset, ContentDisposition, DispositionParam, DispositionType, ExtendedValue, LOCATION,
+};
+use actix_web::{HttpResponse, mime, web};
 use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
 use sheets_core::sheet::Sheet;
+use uuid::Uuid;
 
 #[derive(Debug, MultipartForm)]
 pub struct UploadSheetRequest {
@@ -25,13 +29,50 @@ pub async fn upload_sheet(
         .map(|sheet_reference| {
             let location = format!("/sheets/{}", sheet_reference.id);
             HttpResponse::Created()
-                .insert_header((header::LOCATION, location))
+                .insert_header((LOCATION, location))
                 .finish()
         })
         .map_err(|err| match err {
             SheetError::InvalidFileName => ErrorBadRequest(err),
             SheetError::InvalidFilePath => ErrorBadRequest(err),
+            SheetError::NotFound(_) => ErrorBadRequest(err),
             SheetError::StorageError(_) => ErrorInternalServerError(err),
             SheetError::DatabaseError(_) => ErrorInternalServerError(err),
         })
+}
+
+pub async fn download_sheet(
+    sheet_service: web::Data<SheetService>,
+    sheet_id: web::Path<Uuid>,
+) -> Result<NamedFile, actix_web::Error> {
+    let sheet_id = sheet_id.into_inner();
+    let sheet = sheet_service
+        .export_sheet(sheet_id)
+        .await
+        .map_err(|err| match err {
+            SheetError::NotFound(_) => ErrorBadRequest(err),
+            SheetError::StorageError(_) => ErrorInternalServerError(err),
+            SheetError::DatabaseError(_) => ErrorInternalServerError(err),
+            _ => ErrorInternalServerError(err),
+        })?;
+
+    let file = NamedFile::open(&sheet.path)
+        .map_err(|err| ErrorInternalServerError(format!("sheet not found: {}", err)))?;
+
+    let sheet_name = sheet
+        .name
+        .ok_or_else(|| ErrorInternalServerError("sheet corrupted"))?;
+
+    let cd = ContentDisposition {
+        disposition: DispositionType::Attachment,
+        parameters: vec![DispositionParam::FilenameExt(ExtendedValue {
+            charset: Charset::Ext("UTF-8".into()),
+            language_tag: None,
+            value: sheet_name.into_bytes(),
+        })],
+    };
+
+    Ok(file
+        .set_content_disposition(cd)
+        .set_content_type(mime::APPLICATION_PDF))
 }

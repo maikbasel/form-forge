@@ -7,6 +7,8 @@ pub enum SheetError {
     InvalidFileName,
     #[error("invalid sheet path")]
     InvalidFilePath,
+    #[error("sheet not found: {0}")]
+    NotFound(String),
     #[error("failed to save sheet")]
     StorageError(#[source] io::Error),
     #[error("failed to save sheet reference")]

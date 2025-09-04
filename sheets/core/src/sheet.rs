@@ -8,10 +8,7 @@ pub struct Sheet {
 
 impl Sheet {
     pub fn new(path: PathBuf, name: Option<String>) -> Self {
-        Self {
-            path,
-            name: name.into(),
-        }
+        Self { path, name }
     }
 }
 

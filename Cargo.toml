@@ -9,6 +9,7 @@ members = ["sheets/core", "sheets/adapters/web", "sheets/adapters/storage", "com
 [workspace.dependencies]
 actix-web = "4"
 actix-multipart = "0.7"
+actix-files = "0.6.7"
 tracing = "0.1"
 tracing-actix-web = "0.7"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

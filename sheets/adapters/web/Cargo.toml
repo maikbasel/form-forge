@@ -8,3 +8,4 @@ sheets_core = { path = "../../core" }
 actix-web.workspace = true
 actix-multipart.workspace = true
 uuid.workspace = true
+actix-files.workspace = true

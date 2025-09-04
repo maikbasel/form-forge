@@ -2,7 +2,30 @@ use async_trait::async_trait;
 use sheets_core::error::SheetError;
 use sheets_core::ports::driven::SheetReferencePort;
 use sheets_core::sheet::SheetReference;
-use sqlx::{Pool, Postgres};
+use sqlx::types::Uuid;
+use sqlx::{FromRow, Pool, Postgres};
+use std::path::PathBuf;
+
+#[derive(FromRow)]
+struct SheetReferenceRow {
+    id: Uuid,
+    original_name: String,
+    name: String,
+    extension: Option<String>,
+    path: String,
+}
+
+impl From<SheetReferenceRow> for SheetReference {
+    fn from(row: SheetReferenceRow) -> Self {
+        SheetReference::new(
+            row.id,
+            row.original_name,
+            row.name,
+            row.extension,
+            PathBuf::from(row.path),
+        )
+    }
+}
 
 pub struct SheetReferenceDb {
     pool: Pool<Postgres>,
@@ -46,5 +69,21 @@ impl SheetReferencePort for SheetReferenceDb {
             .map_err(|e| SheetError::DatabaseError(e.into()))?;
 
         Ok(())
+    }
+
+    async fn find_by_id(&self, sheet_id: &Uuid) -> Result<SheetReference, SheetError> {
+        let row: Option<SheetReferenceRow> = sqlx::query_as(
+            r#"SELECT id, original_name, name, extension, path 
+           FROM sheet_reference WHERE id = $1"#,
+        )
+        .bind(sheet_id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| SheetError::DatabaseError(e.into()))?;
+
+        match row {
+            Some(row) => Ok(row.into()),
+            None => Err(SheetError::NotFound(sheet_id.to_string())),
+        }
     }
 }

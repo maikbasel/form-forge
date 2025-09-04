@@ -43,4 +43,16 @@ impl SheetService {
 
         Ok(sheet_reference)
     }
+
+    pub async fn export_sheet(&self, sheet_id: Uuid) -> Result<Sheet, SheetError> {
+        let sheet_reference = self.sheet_reference_port.find_by_id(&sheet_id).await?;
+        let file_path = self.sheet_storage_port.read(&sheet_reference).await?;
+
+        let filename = match &sheet_reference.extension {
+            Some(ext) => format!("{}.{}", sheet_reference.original_name, ext),
+            None => sheet_reference.original_name.clone(),
+        };
+
+        Ok(Sheet::new(file_path, Some(filename)))
+    }
 }
