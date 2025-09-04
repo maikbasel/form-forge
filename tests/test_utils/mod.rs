@@ -34,6 +34,7 @@ macro_rules! app {
 // --- Test utilities for database setup ---
 use common::db::DatabaseConfig;
 use sqlx::PgPool;
+use testcontainers::ImageExt;
 use testcontainers_modules::postgres::Postgres;
 use testcontainers_modules::testcontainers::runners::AsyncRunner;
 
@@ -49,6 +50,7 @@ impl AsyncTestContext {
             .with_user("postgres")
             .with_password("postgres")
             .with_db_name("form-forge")
+            .with_tag("17")
             .start()
             .await
             .expect("start postgres");
