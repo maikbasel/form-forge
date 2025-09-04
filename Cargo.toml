@@ -18,12 +18,12 @@ thiserror = "2.0"
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
 async-trait = "0.1"
 sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid"] }
-dotenv = "0.15"
 tempdir = "0.3"
 testcontainers = "0.25"
 testcontainers-modules = { version = "0.13", features = ["postgres", "blocking"] }
 rstest = "0.26"
 pretty_assertions = "1.4"
+dotenvy = "0.15"
 
 [dependencies]
 sheets_core = { path = "sheets/core" }
@@ -36,7 +36,7 @@ tracing-actix-web.workspace = true
 anyhow.workspace = true
 uuid.workspace = true
 sqlx.workspace = true
-dotenv.workspace = true
+dotenvy.workspace = true
 
 [dev-dependencies]
 tempdir.workspace = true

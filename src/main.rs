@@ -2,7 +2,7 @@ use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
 use common::telemetry;
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
 use sheets_core::ports::driving::SheetService;
 use sheets_db::adapter::SheetReferenceDb;
