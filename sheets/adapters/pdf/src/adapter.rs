@@ -168,25 +168,24 @@ impl SheetsPdf {
             };
 
             // Check if it's a widget annotation (form field)
-            if let Ok(subtype) = annot_dict.get(b"Subtype") {
-                if let Ok(subtype_name) = subtype.as_name() {
-                    if subtype_name == b"Widget" {
-                        debug!("found Widget annotation");
-                        return true;
-                    }
-                }
+            if let Ok(subtype) = annot_dict.get(b"Subtype")
+                && let Ok(subtype_name) = subtype.as_name()
+                && subtype_name == b"Widget"
+            {
+                debug!("found Widget annotation");
+                return true;
             }
 
             // Also check for form field types in FT entry
-            if let Ok(ft) = annot_dict.get(b"FT") {
-                if let Ok(field_type) = ft.as_name() {
-                    match field_type {
-                        b"Tx" | b"Ch" | b"Btn" | b"Sig" => {
-                            debug!(field_type = ?field_type, "found form field type");
-                            return true;
-                        }
-                        _ => {}
+            if let Ok(ft) = annot_dict.get(b"FT")
+                && let Ok(field_type) = ft.as_name()
+            {
+                match field_type {
+                    b"Tx" | b"Ch" | b"Btn" | b"Sig" => {
+                        debug!(field_type = ?field_type, "found form field type");
+                        return true;
                     }
+                    _ => {}
                 }
             }
         }
