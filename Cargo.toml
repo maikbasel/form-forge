@@ -27,6 +27,7 @@ dotenvy = "0.15"
 tokio = { version = "1.47", features = ["rt", "macros"] }
 mockall = "0.13"
 serde = { version = "1.0", features = ["derive"] }
+lopdf = "0.38"
 
 [dependencies]
 sheets_core = { path = "sheets/core" }

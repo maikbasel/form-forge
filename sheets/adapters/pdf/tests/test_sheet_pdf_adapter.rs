@@ -10,9 +10,12 @@ mod tests {
     #[tokio::test]
     async fn test_should_validate_pdf_file_with_valid_pdf_header() {
         let adapter = SheetsPdf;
-        let temp_file = NamedTempFile::with_suffix(".pdf").unwrap();
-        fs::write(temp_file.path(), b"%PDF-1.4\nvalid content").unwrap();
-        let sheet = Sheet::new(temp_file.path().to_path_buf(), Some("test.pdf".to_string()));
+        let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let sheet_path = here.join("tests/fixtures/DnD_5E_CharacterSheet_FormFillable.pdf");
+        let sheet = Sheet::new(
+            sheet_path,
+            Some("DnD_5E_CharacterSheet_FormFillable.pdf".to_string()),
+        );
 
         let actual = adapter.is_valid_pdf(&sheet).await;
 
@@ -29,7 +32,9 @@ mod tests {
             Some("invalid.pdf".to_string()),
         );
 
-        assert!(!adapter.is_valid_pdf(&sheet).await);
+        let actual = adapter.is_valid_pdf(&sheet).await;
+
+        assert!(!actual);
     }
 
     #[tokio::test]
@@ -40,6 +45,20 @@ mod tests {
             Some("missing.pdf".to_string()),
         );
 
-        assert!(!adapter.is_valid_pdf(&sheet).await);
+        let actual = adapter.is_valid_pdf(&sheet).await;
+
+        assert!(!actual);
+    }
+
+    #[tokio::test]
+    async fn test_should_fail_validating_non_form_fillable_pdf() {
+        let adapter = SheetsPdf;
+        let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let sheet_path = here.join("tests/fixtures/empty_pdf.pdf");
+        let sheet = Sheet::new(sheet_path, Some("empty_pdf.pdf".to_string()));
+
+        let actual = adapter.is_valid_pdf(&sheet).await;
+
+        assert!(!actual);
     }
 }
