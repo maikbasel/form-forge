@@ -29,7 +29,7 @@ impl SheetService {
         if !self.sheet_pdf_port.is_valid_pdf(&sheet).await {
             return Err(SheetError::InvalidPdfFile);
         }
-        
+
         let original_name_and_extension = sheet.name.ok_or(SheetError::InvalidFileName)?;
         let path = Path::new(&original_name_and_extension);
         let original_name = path

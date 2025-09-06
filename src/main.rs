@@ -6,13 +6,13 @@ use dotenvy::dotenv;
 use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
 use sheets_core::ports::driving::SheetService;
 use sheets_db::adapter::SheetReferenceDb;
+use sheets_pdf::adapter::SheetsPdf;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
-use sheets_pdf::adapter::SheetsPdf;
 
 #[actix_web::main]
 async fn main() -> Result<()> {

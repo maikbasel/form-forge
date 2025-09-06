@@ -12,10 +12,7 @@ mod tests {
         let adapter = SheetsPdf::new();
         let temp_file = NamedTempFile::with_suffix(".pdf").unwrap();
         fs::write(temp_file.path(), b"%PDF-1.4\nvalid content").unwrap();
-        let sheet = Sheet::new(
-            temp_file.path().to_path_buf(),
-            Some("test.pdf".to_string()),
-        );
+        let sheet = Sheet::new(temp_file.path().to_path_buf(), Some("test.pdf".to_string()));
 
         let actual = adapter.is_valid_pdf(&sheet).await;
 

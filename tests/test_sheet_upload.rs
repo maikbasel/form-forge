@@ -12,12 +12,12 @@ mod tests {
     use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
     use sheets_core::ports::driving::SheetService;
     use sheets_db::adapter::SheetReferenceDb;
+    use sheets_pdf::adapter::SheetsPdf;
     use sheets_storage::adapter::SheetFileStorage;
     use sheets_storage::config::StorageConfig;
     use std::sync::Arc;
     use tempfile::Builder;
     use uuid::Uuid;
-    use sheets_pdf::adapter::SheetsPdf;
 
     #[fixture]
     async fn async_ctx() -> AsyncTestContext {
@@ -40,7 +40,8 @@ mod tests {
         };
         let sheet_storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
-        let sheet_service = SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
+        let sheet_service =
+            SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");
         let app = test_utils::app!(sheet_service);
         let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
@@ -121,7 +122,8 @@ mod tests {
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
         let sheet_storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
-        let sheet_service = SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
+        let sheet_service =
+            SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");
         let app = test_utils::app!(sheet_service);
         let (header, body) = test_utils::fake_pdf_multipart_form_data().build();
