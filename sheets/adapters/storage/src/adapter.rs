@@ -5,6 +5,7 @@ use sheets_core::ports::driven::SheetStoragePort;
 use sheets_core::sheet::SheetReference;
 use std::fs::{copy, create_dir_all};
 use std::path::PathBuf;
+use tracing::instrument;
 
 pub struct SheetFileStorage {
     data_dir: PathBuf,
@@ -20,6 +21,7 @@ impl SheetFileStorage {
 
 #[async_trait]
 impl SheetStoragePort for SheetFileStorage {
+    #[instrument(name = "storage.create", skip(self), level = "info", fields(sheet_id = %sheet_reference.id))]
     async fn create(&self, sheet_reference: SheetReference) -> Result<SheetReference, SheetError> {
         let sheet_dir = self
             .data_dir
@@ -46,6 +48,7 @@ impl SheetStoragePort for SheetFileStorage {
         ))
     }
 
+    #[instrument(name = "storage.read", skip(self, sheet_reference), level = "info", fields(sheet_id = %sheet_reference.id))]
     async fn read(&self, sheet_reference: &SheetReference) -> Result<PathBuf, SheetError> {
         if sheet_reference.path.exists() {
             Ok(sheet_reference.path.clone())

@@ -3,6 +3,7 @@ use crate::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
 use crate::sheet::{Sheet, SheetReference};
 use std::path::Path;
 use std::sync::Arc;
+use tracing::{debug, info, instrument};
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -25,7 +26,10 @@ impl SheetService {
         }
     }
 
+    #[instrument(name = "sheets.import", skip(self, sheet), level = "info")]
     pub async fn import_sheet(&self, sheet: Sheet) -> Result<SheetReference, SheetError> {
+        debug!("validating uploaded sheet path exists and is valid pdf");
+
         if !self.sheet_pdf_port.is_valid_pdf(&sheet).await {
             return Err(SheetError::InvalidPdfFile);
         }
@@ -41,19 +45,32 @@ impl SheetService {
 
         let sheet_id = Uuid::new_v4();
         let name = Uuid::new_v4().simple().to_string(); // 32 hex chars, no hyphens
+
+        info!(%sheet_id, original_name = %original_name, generated_name = %name, "creating sheet reference and persisting");
+
         let sheet_reference =
             SheetReference::new(sheet_id, original_name, name, extension, sheet.path);
 
         let sheet_reference = self.sheet_storage_port.create(sheet_reference).await?;
 
+        info!(%sheet_id, path = %sheet_reference.path.display(), "stored sheet file on disk");
+
         self.sheet_reference_port.create(&sheet_reference).await?;
+
+        info!(%sheet_id, "stored sheet reference in database");
 
         Ok(sheet_reference)
     }
 
+    #[instrument(name = "sheets.export", skip(self), level = "info", fields(%sheet_id))]
     pub async fn export_sheet(&self, sheet_id: Uuid) -> Result<Sheet, SheetError> {
         let sheet_reference = self.sheet_reference_port.find_by_id(&sheet_id).await?;
+
+        info!(path = %sheet_reference.path.display(), "found sheet reference");
+
         let file_path = self.sheet_storage_port.read(&sheet_reference).await?;
+
+        info!(path = %file_path.display(), "read sheet file from storage");
 
         let filename = match &sheet_reference.extension {
             Some(ext) => format!("{}.{}", sheet_reference.original_name, ext),

@@ -7,3 +7,4 @@ edition = "2024"
 sheets_core = { path = "../../core" }
 async-trait.workspace = true
 anyhow.workspace = true
+tracing.workspace = true

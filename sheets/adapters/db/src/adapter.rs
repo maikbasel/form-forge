@@ -5,6 +5,7 @@ use sheets_core::sheet::SheetReference;
 use sqlx::types::Uuid;
 use sqlx::{FromRow, Pool, Postgres};
 use std::path::PathBuf;
+use tracing::instrument;
 
 #[derive(FromRow)]
 struct SheetReferenceRow {
@@ -39,6 +40,7 @@ impl SheetReferenceDb {
 
 #[async_trait]
 impl SheetReferencePort for SheetReferenceDb {
+    #[instrument(name = "db.create_reference", skip(self, sheet_reference), level = "info", fields(sheet_id = %sheet_reference.id))]
     async fn create(&self, sheet_reference: &SheetReference) -> Result<(), SheetError> {
         let mut tx = self
             .pool
@@ -71,6 +73,7 @@ impl SheetReferencePort for SheetReferenceDb {
         Ok(())
     }
 
+    #[instrument(name = "db.find_by_id", skip(self, sheet_id), level = "info", fields(%sheet_id))]
     async fn find_by_id(&self, sheet_id: &Uuid) -> Result<SheetReference, SheetError> {
         let row: Option<SheetReferenceRow> = sqlx::query_as(
             r#"SELECT id, original_name, name, extension, path 

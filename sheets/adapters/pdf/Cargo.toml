@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 sheets_core = { path = "../../core" }
 async-trait.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

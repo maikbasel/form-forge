@@ -12,7 +12,7 @@ actix-multipart = "0.7"
 actix-files = "0.6.7"
 tracing = "0.1"
 tracing-actix-web = "0.7"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json", "time"] }
 anyhow = "1.0"
 thiserror = "2.0"
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
