@@ -7,4 +7,9 @@ edition = "2024"
 async-trait.workspace = true
 thiserror.workspace = true
 anyhow.workspace = true
-uuid = { version = "1.18.1", features = ["v4"] }
+uuid.workspace = true
+
+[dev-dependencies]
+mockall.workspace = true
+tokio.workspace = true
+pretty_assertions.workspace = true

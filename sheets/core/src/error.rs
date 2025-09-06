@@ -7,6 +7,8 @@ pub enum SheetError {
     InvalidFileName,
     #[error("invalid sheet path")]
     InvalidFilePath,
+    #[error("invalid pdf file, only pdf files are allowed")]
+    InvalidPdfFile,
     #[error("sheet not found: {0}")]
     NotFound(String),
     #[error("failed to save sheet")]

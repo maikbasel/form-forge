@@ -15,6 +15,21 @@ pub fn dnd5e_sheet_multipart_form_data() -> MultipartFormDataBuilder {
     multipart_form_data_builder
 }
 
+pub fn fake_pdf_multipart_form_data() -> MultipartFormDataBuilder {
+    let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let fake_pdf_path = here.join("tests/fixtures/fake_pdf.pdf");
+
+    let mut multipart_form_data_builder = MultipartFormDataBuilder::new();
+    multipart_form_data_builder.with_file(
+        fake_pdf_path,
+        "sheet",
+        "application/pdf", // Claiming it's a PDF via MIME type
+        "fake.pdf",
+    );
+
+    multipart_form_data_builder
+}
+
 #[macro_export]
 macro_rules! app {
     ($($app_data:expr),+ $(,)?) => {{

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["sheets/core", "sheets/adapters/web", "sheets/adapters/storage", "common", "sheets/adapters/db"]
+members = ["sheets/core", "sheets/adapters/web", "sheets/adapters/storage", "common", "sheets/adapters/db", "sheets/adapters/pdf", ]
 
 [workspace.dependencies]
 actix-web = "4"
@@ -24,12 +24,15 @@ testcontainers-modules = { version = "0.13", features = ["postgres", "blocking"]
 rstest = "0.26"
 pretty_assertions = "1.4"
 dotenvy = "0.15"
+tokio = { version = "1.47", features = ["rt", "macros"] }
+mockall = "0.13"
 
 [dependencies]
 sheets_core = { path = "sheets/core" }
 sheets_web = { path = "sheets/adapters/web" }
 sheets_storage = { path = "sheets/adapters/storage" }
 sheets_db = { path = "sheets/adapters/db" }
+sheets_pdf = { path = "sheets/adapters/pdf" }
 common = { path = "common" }
 actix-web.workspace = true
 tracing-actix-web.workspace = true

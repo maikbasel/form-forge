@@ -36,6 +36,7 @@ pub async fn upload_sheet(
             SheetError::InvalidFileName => ErrorBadRequest(err),
             SheetError::InvalidFilePath => ErrorBadRequest(err),
             SheetError::NotFound(_) => ErrorBadRequest(err),
+            SheetError::InvalidPdfFile => ErrorBadRequest(err),
             SheetError::StorageError(_) => ErrorInternalServerError(err),
             SheetError::DatabaseError(_) => ErrorInternalServerError(err),
         })

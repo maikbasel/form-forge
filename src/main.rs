@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
 use common::telemetry;
 use dotenvy::dotenv;
-use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
+use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
 use sheets_core::ports::driving::SheetService;
 use sheets_db::adapter::SheetReferenceDb;
 use sheets_storage::adapter::SheetFileStorage;
@@ -12,6 +12,7 @@ use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
+use sheets_pdf::adapter::SheetsPdf;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -21,6 +22,7 @@ async fn main() -> Result<()> {
 
     let addr = env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:8081".to_string());
 
+    let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
     let sheet_storage_cfg = StorageConfig::initialize()
         .await
         .context("failed to initialize storage config")?;
@@ -42,7 +44,7 @@ async fn main() -> Result<()> {
 
     let reference_port: Arc<dyn SheetReferencePort> = Arc::new(SheetReferenceDb::new(pool));
 
-    let sheet_service = SheetService::new(storage_port, reference_port);
+    let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
 
     HttpServer::new(move || {
         App::new()

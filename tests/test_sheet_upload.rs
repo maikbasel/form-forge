@@ -9,7 +9,7 @@ mod tests {
     use common::telemetry;
     use pretty_assertions::assert_eq;
     use rstest::*;
-    use sheets_core::ports::driven::{SheetReferencePort, SheetStoragePort};
+    use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
     use sheets_core::ports::driving::SheetService;
     use sheets_db::adapter::SheetReferenceDb;
     use sheets_storage::adapter::SheetFileStorage;
@@ -17,6 +17,7 @@ mod tests {
     use std::sync::Arc;
     use tempfile::Builder;
     use uuid::Uuid;
+    use sheets_pdf::adapter::SheetsPdf;
 
     #[fixture]
     async fn async_ctx() -> AsyncTestContext {
@@ -27,6 +28,7 @@ mod tests {
     #[actix_web::test]
     async fn test_should_upload_sheet_and_binding(#[future] async_ctx: AsyncTestContext) {
         let async_ctx = async_ctx.await;
+        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
         let sheet_reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
         let tmp_dir = Builder::new()
@@ -38,7 +40,7 @@ mod tests {
         };
         let sheet_storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
-        let sheet_service = SheetService::new(sheet_storage_port, sheet_reference_port);
+        let sheet_service = SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");
         let app = test_utils::app!(sheet_service);
         let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
@@ -75,9 +77,10 @@ mod tests {
         let storage_cfg = StorageConfig {
             data_dir: tmp_dir.path().to_path_buf(),
         };
+        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
         let storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
-        let sheet_service = SheetService::new(storage_port, reference_port);
+        let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
         telemetry::initialize().expect("initialize telemetry");
         let app = test_utils::app!(sheet_service);
         let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
@@ -100,5 +103,36 @@ mod tests {
         let body_bytes = test::read_body(resp).await;
         assert!(!body_bytes.is_empty());
         assert!(body_bytes.starts_with(b"%PDF-"));
+    }
+
+    #[rstest]
+    #[actix_web::test]
+    async fn test_should_reject_fake_pdf_files(#[future] async_ctx: AsyncTestContext) {
+        let async_ctx = async_ctx.await;
+        let sheet_reference_port: Arc<dyn SheetReferencePort> =
+            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+        let tmp_dir = Builder::new()
+            .prefix("tests")
+            .tempdir()
+            .expect("create temp dir");
+        let storage_cfg = StorageConfig {
+            data_dir: tmp_dir.path().to_path_buf(),
+        };
+        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
+        let sheet_storage_port: Arc<dyn SheetStoragePort> =
+            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let sheet_service = SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
+        telemetry::initialize().expect("initialize telemetry");
+        let app = test_utils::app!(sheet_service);
+        let (header, body) = test_utils::fake_pdf_multipart_form_data().build();
+        let req = test::TestRequest::post()
+            .uri("/sheets")
+            .insert_header(header)
+            .set_payload(body)
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+
+        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     }
 }
