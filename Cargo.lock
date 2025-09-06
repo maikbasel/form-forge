@@ -2874,7 +2874,6 @@ dependencies = [
  "sheets_core",
  "tempfile",
  "tokio",
- "uuid",
 ]
 
 [[package]]
