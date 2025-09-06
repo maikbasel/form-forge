@@ -76,9 +76,7 @@ mod tests {
     #[tokio::test]
     async fn test_should_rename_imported_sheet() {
         let mut storage_port = MockSheetStoragePort::new();
-        storage_port
-            .expect_create()
-            .returning(Ok);
+        storage_port.expect_create().returning(Ok);
         let mut reference_port = MockSheetReferencePort::new();
         reference_port.expect_create().returning(|_| Ok(()));
         let mut pdf_port = MockSheetPdfPort::new();

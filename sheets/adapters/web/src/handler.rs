@@ -1,11 +1,11 @@
 use crate::error::ApiError;
 use actix_files::NamedFile;
-use actix_multipart::form::tempfile::TempFile;
 use actix_multipart::form::MultipartForm;
+use actix_multipart::form::tempfile::TempFile;
 use actix_web::http::header::{
     Charset, ContentDisposition, DispositionParam, DispositionType, ExtendedValue, LOCATION,
 };
-use actix_web::{mime, web, HttpResponse};
+use actix_web::{HttpResponse, mime, web};
 use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
 use sheets_core::sheet::Sheet;
@@ -40,7 +40,7 @@ pub async fn download_sheet(
     let sheet_id = sheet_id.into_inner();
     let sheet = sheet_service.export_sheet(sheet_id).await?;
 
-    let file = NamedFile::open(&sheet.path).map_err(|err| SheetError::StorageError(err))?;
+    let file = NamedFile::open(&sheet.path).map_err(SheetError::StorageError)?;
 
     let sheet_name = sheet
         .name
