@@ -69,13 +69,7 @@ jobs:
         run: cargo build --workspace --all-features --all-targets
 
       - name: Test
-        # Requires Docker and Linux containers to be enabled on the runner.
-        run: |
-          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            cargo test --workspace --all-features --all-targets --no-fail-fast
-          else
-            cargo test --workspace --all-features --all-targets --no-fail-fast --lib --bins
-          fi
+        run: cargo test --workspace --all-features --all-targets --no-fail-fast
         shell: bash
 
       - name: Build (release)

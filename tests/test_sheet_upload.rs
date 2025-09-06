@@ -1,6 +1,7 @@
 mod test_utils;
 
 #[cfg(test)]
+#[cfg(target_os = "linux")] // Requires Docker and Linux containers - only runs on ubuntu-latest GitHub runners
 mod tests {
     use crate::test_utils;
     use crate::test_utils::AsyncTestContext;
