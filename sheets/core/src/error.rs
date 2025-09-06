@@ -7,12 +7,26 @@ pub enum SheetError {
     InvalidFileName,
     #[error("invalid sheet path")]
     InvalidFilePath,
-    #[error("invalid pdf file, only pdf files are allowed")]
-    InvalidPdfFile,
+    #[error("invalid pdf file: {0}")]
+    InvalidPdfFile(#[from] PdfValidationError),
     #[error("sheet not found: {0}")]
     NotFound(String),
     #[error("failed to save sheet")]
     StorageError(#[source] io::Error),
     #[error("failed to save sheet reference")]
     DatabaseError(#[source] anyhow::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum PdfValidationError {
+    #[error("file does not exist")]
+    FileNotFound,
+    #[error("failed to read file: {0}")]
+    ReadError(#[source] io::Error),
+    #[error("invalid PDF header - file is not a PDF")]
+    InvalidHeader,
+    #[error("failed to parse PDF document: {0}")]
+    ParseError(String),
+    #[error("PDF is not form-fillable - no interactive form fields found")]
+    NotFormFillable,
 }

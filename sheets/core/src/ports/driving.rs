@@ -30,9 +30,10 @@ impl SheetService {
     pub async fn import_sheet(&self, sheet: Sheet) -> Result<SheetReference, SheetError> {
         debug!("validating uploaded sheet path exists and is valid pdf");
 
-        if !self.sheet_pdf_port.is_valid_pdf(&sheet).await {
-            return Err(SheetError::InvalidPdfFile);
-        }
+        self.sheet_pdf_port
+            .is_valid_pdf(&sheet)
+            .await
+            .map_err(SheetError::InvalidPdfFile)?;
 
         let original_name_and_extension = sheet.name.ok_or(SheetError::InvalidFileName)?;
         let path = Path::new(&original_name_and_extension);
@@ -97,7 +98,7 @@ mod tests {
         let mut reference_port = MockSheetReferencePort::new();
         reference_port.expect_create().returning(|_| Ok(()));
         let mut pdf_port = MockSheetPdfPort::new();
-        pdf_port.expect_is_valid_pdf().returning(|_| true);
+        pdf_port.expect_is_valid_pdf().returning(|_| Ok(()));
         let service = SheetService::new(
             Arc::new(pdf_port),
             Arc::new(storage_port),

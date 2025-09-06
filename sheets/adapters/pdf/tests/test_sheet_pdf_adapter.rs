@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use sheets_core::error::PdfValidationError;
     use sheets_core::ports::driven::SheetPdfPort;
     use sheets_core::sheet::Sheet;
     use sheets_pdf::adapter::SheetsPdf;
@@ -19,7 +20,7 @@ mod tests {
 
         let actual = adapter.is_valid_pdf(&sheet).await;
 
-        assert!(actual);
+        assert!(actual.is_ok());
     }
 
     #[tokio::test]
@@ -34,7 +35,8 @@ mod tests {
 
         let actual = adapter.is_valid_pdf(&sheet).await;
 
-        assert!(!actual);
+        assert!(actual.is_err());
+        assert!(matches!(actual, Err(PdfValidationError::InvalidHeader)));
     }
 
     #[tokio::test]
@@ -47,7 +49,8 @@ mod tests {
 
         let actual = adapter.is_valid_pdf(&sheet).await;
 
-        assert!(!actual);
+        assert!(actual.is_err());
+        assert!(matches!(actual, Err(PdfValidationError::FileNotFound)));
     }
 
     #[tokio::test]
@@ -59,6 +62,7 @@ mod tests {
 
         let actual = adapter.is_valid_pdf(&sheet).await;
 
-        assert!(!actual);
+        assert!(actual.is_err());
+        assert!(matches!(actual, Err(PdfValidationError::NotFormFillable)));
     }
 }

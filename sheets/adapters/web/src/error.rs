@@ -37,7 +37,7 @@ impl From<SheetError> for ApiError {
                     message: value.to_string(),
                 },
             ),
-            SheetError::InvalidPdfFile => ApiError::new(
+            SheetError::InvalidPdfFile(_) => ApiError::new(
                 StatusCode::BAD_REQUEST,
                 ApiErrorResponse {
                     message: value.to_string(),

@@ -1,4 +1,4 @@
-use crate::error::SheetError;
+use crate::error::{PdfValidationError, SheetError};
 use crate::sheet::{Sheet, SheetReference};
 use async_trait::async_trait;
 #[cfg(test)]
@@ -23,5 +23,5 @@ pub trait SheetReferencePort: Send + Sync {
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait SheetPdfPort: Send + Sync {
-    async fn is_valid_pdf(&self, sheet_reference: &Sheet) -> bool;
+    async fn is_valid_pdf(&self, sheet_reference: &Sheet) -> Result<(), PdfValidationError>;
 }

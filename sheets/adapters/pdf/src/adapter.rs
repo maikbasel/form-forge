@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use lopdf::Document;
+use sheets_core::error::PdfValidationError;
 use sheets_core::ports::driven::SheetPdfPort;
 use sheets_core::sheet::Sheet;
 use std::fs;
@@ -11,12 +12,12 @@ pub struct SheetsPdf;
 #[async_trait]
 impl SheetPdfPort for SheetsPdf {
     #[instrument(name = "pdf.validate", skip(self, sheet_reference), level = "debug", fields(path = %sheet_reference.path.display()))]
-    async fn is_valid_pdf(&self, sheet_reference: &Sheet) -> bool {
+    async fn is_valid_pdf(&self, sheet_reference: &Sheet) -> Result<(), PdfValidationError> {
         if !sheet_reference.path.exists() {
-            return false;
+            return Err(PdfValidationError::FileNotFound);
         }
 
-        let is_pdf = match fs::read(&sheet_reference.path) {
+        let valid_header = match fs::read(&sheet_reference.path) {
             Ok(bytes) => {
                 // PDF files start with "%PDF-" followed by a version number
                 let valid_header = bytes.len() >= 5 && bytes.starts_with(b"%PDF-");
@@ -25,11 +26,11 @@ impl SheetPdfPort for SheetsPdf {
 
                 valid_header
             }
-            Err(_) => false,
+            Err(e) => return Err(PdfValidationError::ReadError(e)),
         };
 
-        if !is_pdf {
-            return false;
+        if !valid_header {
+            return Err(PdfValidationError::InvalidHeader);
         }
 
         self.is_form_fillable(&sheet_reference.path).await
@@ -38,23 +39,23 @@ impl SheetPdfPort for SheetsPdf {
 
 impl SheetsPdf {
     #[instrument(name = "pdf.is_form_fillable", skip(self), level = "debug")]
-    async fn is_form_fillable(&self, path: &std::path::Path) -> bool {
+    async fn is_form_fillable(&self, path: &std::path::Path) -> Result<(), PdfValidationError> {
         match Document::load(path) {
             Ok(doc) => {
                 if self.has_acroform_fields(&doc) {
                     debug!("found form fields in AcroForm");
-                    return true;
+                    return Ok(());
                 }
                 if self.has_page_widgets(&doc) {
                     debug!("found form widgets on pages");
-                    return true;
+                    return Ok(());
                 }
                 debug!("no form fields or widgets found");
-                false
+                Err(PdfValidationError::NotFormFillable)
             }
             Err(e) => {
                 debug!(error = %e, "failed to load PDF document");
-                false
+                Err(PdfValidationError::ParseError(e.to_string()))
             }
         }
     }
@@ -176,7 +177,7 @@ impl SheetsPdf {
                 return true;
             }
 
-            // Also check for form field types in FT entry
+            // Also check for form field types in the FT entry
             if let Ok(ft) = annot_dict.get(b"FT")
                 && let Ok(field_type) = ft.as_name()
             {
