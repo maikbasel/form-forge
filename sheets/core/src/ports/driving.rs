@@ -81,7 +81,8 @@ mod tests {
             .returning(|sheet_ref| Ok(sheet_ref));
         let mut reference_port = MockSheetReferencePort::new();
         reference_port.expect_create().returning(|_| Ok(()));
-        let pdf_port = MockSheetPdfPort::new();
+        let mut pdf_port = MockSheetPdfPort::new();
+        pdf_port.expect_is_valid_pdf().returning(|_| true);
         let service = SheetService::new(
             Arc::new(pdf_port),
             Arc::new(storage_port),
