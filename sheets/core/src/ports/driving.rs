@@ -78,7 +78,7 @@ mod tests {
         let mut storage_port = MockSheetStoragePort::new();
         storage_port
             .expect_create()
-            .returning(|sheet_ref| Ok(sheet_ref));
+            .returning(Ok);
         let mut reference_port = MockSheetReferencePort::new();
         reference_port.expect_create().returning(|_| Ok(()));
         let mut pdf_port = MockSheetPdfPort::new();

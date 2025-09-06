@@ -3,13 +3,8 @@ use sheets_core::ports::driven::SheetPdfPort;
 use sheets_core::sheet::Sheet;
 use std::fs;
 
+#[derive(Default)]
 pub struct SheetsPdf;
-
-impl SheetsPdf {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 #[async_trait]
 impl SheetPdfPort for SheetsPdf {

@@ -29,7 +29,7 @@ mod tests {
     #[actix_web::test]
     async fn test_should_upload_sheet_and_binding(#[future] async_ctx: AsyncTestContext) {
         let async_ctx = async_ctx.await;
-        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
+        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
         let sheet_reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
         let tmp_dir = Builder::new()
@@ -79,7 +79,7 @@ mod tests {
         let storage_cfg = StorageConfig {
             data_dir: tmp_dir.path().to_path_buf(),
         };
-        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
+        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
         let storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
         let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
@@ -120,7 +120,7 @@ mod tests {
         let storage_cfg = StorageConfig {
             data_dir: tmp_dir.path().to_path_buf(),
         };
-        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
+        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
         let sheet_storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
         let sheet_service =

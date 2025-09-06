@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
 
     let addr = env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:8081".to_string());
 
-    let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf::new());
+    let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
     let sheet_storage_cfg = StorageConfig::initialize()
         .await
         .context("failed to initialize storage config")?;
