@@ -1,6 +1,7 @@
 use actix_web::web;
 
 mod handler;
+mod error;
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.route("/sheets", web::post().to(handler::upload_sheet))

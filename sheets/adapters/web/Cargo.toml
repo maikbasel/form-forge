@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 sheets_core = { path = "../../core" }
+common = { path = "../../../common" }
 actix-web.workspace = true
 actix-multipart.workspace = true
 uuid.workspace = true

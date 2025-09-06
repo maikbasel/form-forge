@@ -1,11 +1,11 @@
+use crate::error::ApiError;
 use actix_files::NamedFile;
-use actix_multipart::form::MultipartForm;
 use actix_multipart::form::tempfile::TempFile;
-use actix_web::error::{ErrorBadRequest, ErrorInternalServerError};
+use actix_multipart::form::MultipartForm;
 use actix_web::http::header::{
     Charset, ContentDisposition, DispositionParam, DispositionType, ExtendedValue, LOCATION,
 };
-use actix_web::{HttpResponse, mime, web};
+use actix_web::{mime, web, HttpResponse};
 use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
 use sheets_core::sheet::Sheet;
@@ -20,49 +20,31 @@ pub struct UploadSheetRequest {
 pub async fn upload_sheet(
     sheet_service: web::Data<SheetService>,
     MultipartForm(payload): MultipartForm<UploadSheetRequest>,
-) -> Result<HttpResponse, actix_web::Error> {
+) -> Result<HttpResponse, ApiError> {
     let path = payload.sheet.file.path().to_path_buf();
 
-    sheet_service
+    let sheet_reference = sheet_service
         .import_sheet(Sheet::new(path, payload.sheet.file_name))
-        .await
-        .map(|sheet_reference| {
-            let location = format!("/sheets/{}", sheet_reference.id);
-            HttpResponse::Created()
-                .insert_header((LOCATION, location))
-                .finish()
-        })
-        .map_err(|err| match err {
-            SheetError::InvalidFileName => ErrorBadRequest(err),
-            SheetError::InvalidFilePath => ErrorBadRequest(err),
-            SheetError::NotFound(_) => ErrorBadRequest(err),
-            SheetError::InvalidPdfFile => ErrorBadRequest(err),
-            SheetError::StorageError(_) => ErrorInternalServerError(err),
-            SheetError::DatabaseError(_) => ErrorInternalServerError(err),
-        })
+        .await?;
+
+    let location = format!("/sheets/{}", sheet_reference.id);
+    Ok(HttpResponse::Created()
+        .insert_header((LOCATION, location))
+        .finish())
 }
 
 pub async fn download_sheet(
     sheet_service: web::Data<SheetService>,
     sheet_id: web::Path<Uuid>,
-) -> Result<NamedFile, actix_web::Error> {
+) -> Result<NamedFile, ApiError> {
     let sheet_id = sheet_id.into_inner();
-    let sheet = sheet_service
-        .export_sheet(sheet_id)
-        .await
-        .map_err(|err| match err {
-            SheetError::NotFound(_) => ErrorBadRequest(err),
-            SheetError::StorageError(_) => ErrorInternalServerError(err),
-            SheetError::DatabaseError(_) => ErrorInternalServerError(err),
-            _ => ErrorInternalServerError(err),
-        })?;
+    let sheet = sheet_service.export_sheet(sheet_id).await?;
 
-    let file = NamedFile::open(&sheet.path)
-        .map_err(|err| ErrorInternalServerError(format!("sheet not found: {}", err)))?;
+    let file = NamedFile::open(&sheet.path).map_err(|err| SheetError::StorageError(err))?;
 
     let sheet_name = sheet
         .name
-        .ok_or_else(|| ErrorInternalServerError("sheet corrupted"))?;
+        .ok_or_else(|| SheetError::NotFound(sheet_id.to_string()))?;
 
     let cd = ContentDisposition {
         disposition: DispositionType::Attachment,

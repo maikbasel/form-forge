@@ -26,6 +26,7 @@ pretty_assertions = "1.4"
 dotenvy = "0.15"
 tokio = { version = "1.47", features = ["rt", "macros"] }
 mockall = "0.13"
+serde = { version = "1.0", features = ["derive"] }
 
 [dependencies]
 sheets_core = { path = "sheets/core" }

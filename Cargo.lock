@@ -634,6 +634,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "pretty_assertions",
+ "serde",
  "tracing",
  "tracing-subscriber",
  "uuid",
@@ -2892,6 +2893,7 @@ dependencies = [
  "actix-files",
  "actix-multipart",
  "actix-web",
+ "common",
  "sheets_core",
  "uuid",
 ]
