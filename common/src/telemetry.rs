@@ -13,6 +13,7 @@ pub fn initialize() -> Result<()> {
         let subscriber = FmtSubscriber::builder()
             .with_max_level(Level::INFO)
             .with_env_filter(env_filter)
+            .with_test_writer()
             .json()
             .with_current_span(true)
             .with_span_list(true)
