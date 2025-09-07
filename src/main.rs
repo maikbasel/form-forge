@@ -1,6 +1,7 @@
 use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
+use common::error::ApiErrorResponse;
 use common::telemetry;
 use dotenvy::dotenv;
 use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
@@ -9,8 +10,7 @@ use sheets_db::adapter::SheetReferenceDb;
 use sheets_pdf::adapter::SheetsPdf;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
-use sheets_web::docs::ApiDoc;
-use sheets_web::handler::{download_sheet, upload_sheet};
+use sheets_web::handler::{UploadSheetRequest, download_sheet, upload_sheet};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::sync::Arc;
@@ -50,6 +50,27 @@ async fn main() -> Result<()> {
     let reference_port: Arc<dyn SheetReferencePort> = Arc::new(SheetReferenceDb::new(pool));
 
     let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
+
+    #[derive(OpenApi)]
+    #[openapi(
+        paths(sheets_web::handler::upload_sheet, sheets_web::handler::download_sheet),
+        components(schemas(UploadSheetRequest, ApiErrorResponse)),
+        tags(
+        (name = "Sheets", description = "Operations related to form-fillable PDF sheets")
+        ),
+        info(
+            title = "Form Forge API",
+            version = "0.1.0",
+            description = r#"A REST API for uploading D&D 5e character sheet PDFs, discovering form fields, and applying predefined calculation actions. Users map fields to actions (e.g. ability mods, skills, proficiency) to generate dynamic, self-calculating PDFs. No custom JavaScript is required—only safe, declarative actions from a curated catalog."#,
+            license(name = "MIT", url = "https://opensource.org/license/MIT")
+        ),
+        servers(
+        (url = "https://api.formforge.maikbasel.com", description = "Production"),
+        (url = "https://dev.api.formforge.maikbasel.com", description = "Staging"),
+        (url = "http://127.0.0.1:8081", description = "Local")
+        )
+    )]
+    pub struct ApiDoc;
 
     HttpServer::new(move || {
         App::new()

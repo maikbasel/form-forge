@@ -4,7 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = ["sheets/core", "sheets/adapters/web", "sheets/adapters/storage", "common", "sheets/adapters/db", "sheets/adapters/pdf", ]
+members = [
+    "common",
+    "sheets/core",
+    "sheets/adapters/web",
+    "sheets/adapters/storage",
+    "sheets/adapters/db",
+    "sheets/adapters/pdf",
+    "actions/core",
+    "actions/adapters/web"
+]
 
 [workspace.dependencies]
 actix-web = "4"
@@ -45,9 +54,9 @@ anyhow.workspace = true
 uuid.workspace = true
 sqlx.workspace = true
 dotenvy.workspace = true
+utoipa.workspace = true
 utoipa-swagger-ui.workspace = true
 utoipa-actix-web.workspace = true
-utoipa.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
