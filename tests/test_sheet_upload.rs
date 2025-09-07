@@ -16,6 +16,7 @@ mod tests {
     use sheets_pdf::adapter::SheetsPdf;
     use sheets_storage::adapter::SheetFileStorage;
     use sheets_storage::config::StorageConfig;
+    use sheets_web::handler::{download_sheet, upload_sheet};
     use std::sync::Arc;
     use tempfile::Builder;
     use uuid::Uuid;
@@ -44,7 +45,7 @@ mod tests {
         let sheet_service =
             SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(sheet_service);
+        let app = test_utils::app!(app_data: [sheet_service], services: [upload_sheet]);
         let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
         let req = test::TestRequest::post()
             .uri("/sheets")
@@ -84,7 +85,8 @@ mod tests {
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
         let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(sheet_service);
+        let app =
+            test_utils::app!(app_data: [sheet_service], services: [upload_sheet, download_sheet]);
         let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
         let upload_req = test::TestRequest::post()
             .uri("/sheets")
@@ -126,7 +128,7 @@ mod tests {
         let sheet_service =
             SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(sheet_service);
+        let app = test_utils::app!(app_data: [sheet_service], services: [upload_sheet]);
         let (header, body) = test_utils::fake_pdf_multipart_form_data().build();
         let req = test::TestRequest::post()
             .uri("/sheets")

@@ -32,15 +32,21 @@ pub fn fake_pdf_multipart_form_data() -> MultipartFormDataBuilder {
 
 #[macro_export]
 macro_rules! app {
-    ($($app_data:expr),+ $(,)?) => {{
+    // Version that accepts both app data and services
+    (
+        app_data: [$($app_data:expr),* $(,)?],
+        services: [$($service:expr),* $(,)?]
+    ) => {{
         let mut app = actix_web::App::new();
         $(
             app = app.app_data(actix_web::web::Data::new($app_data));
-        )+
+        )*
+        $(
+            app = app.service($service);
+        )*
 
         actix_web::test::init_service(
-            app.configure(sheets_web::configure)
-                .wrap(tracing_actix_web::TracingLogger::default()),
+            app.wrap(tracing_actix_web::TracingLogger::default())
         )
         .await
     }};

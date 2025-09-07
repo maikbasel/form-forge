@@ -9,10 +9,13 @@ use sheets_db::adapter::SheetReferenceDb;
 use sheets_pdf::adapter::SheetsPdf;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
+use sheets_web::handler::{download_sheet, upload_sheet};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
+use utoipa_actix_web::AppExt;
+use utoipa_swagger_ui::SwaggerUi;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -48,8 +51,14 @@ async fn main() -> Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .into_utoipa_app()
             .app_data(web::Data::new(sheet_service.clone()))
-            .configure(sheets_web::configure)
+            .service(upload_sheet)
+            .service(download_sheet)
+            .openapi_service(|api| {
+                SwaggerUi::new("/swagger-ui/{_:.*}").url("/api/openapi.json", api)
+            })
+            .into_app()
             .wrap(TracingLogger::default())
     })
     .bind(addr)?

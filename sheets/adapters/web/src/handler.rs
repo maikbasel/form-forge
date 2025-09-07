@@ -5,18 +5,26 @@ use actix_multipart::form::tempfile::TempFile;
 use actix_web::http::header::{
     Charset, ContentDisposition, DispositionParam, DispositionType, ExtendedValue, LOCATION,
 };
-use actix_web::{HttpResponse, mime, web};
+use actix_web::{HttpResponse, get, mime, post, web};
 use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
 use sheets_core::sheet::Sheet;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Debug, MultipartForm)]
+#[derive(Debug, MultipartForm, ToSchema)]
 pub struct UploadSheetRequest {
     #[multipart(limit = "5MB")]
+    #[schema(value_type = String, format = Binary, content_media_type = "application/pdf")]
     pub sheet: TempFile,
 }
 
+#[utoipa::path(
+    post,
+    path = "/sheets",
+    request_body(content = UploadSheetRequest, content_type = "multipart/form-data")
+)]
+#[post("/sheets")]
 pub async fn upload_sheet(
     sheet_service: web::Data<SheetService>,
     MultipartForm(payload): MultipartForm<UploadSheetRequest>,
@@ -33,6 +41,8 @@ pub async fn upload_sheet(
         .finish())
 }
 
+#[utoipa::path(get, path = "/sheets/{sheet_id}")]
+#[get("/sheets/{sheet_id}")]
 pub async fn download_sheet(
     sheet_service: web::Data<SheetService>,
     sheet_id: web::Path<Uuid>,

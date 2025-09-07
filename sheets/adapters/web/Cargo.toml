@@ -10,3 +10,4 @@ actix-web.workspace = true
 actix-multipart.workspace = true
 uuid.workspace = true
 actix-files.workspace = true
+utoipa.workspace = true

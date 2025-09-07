@@ -28,6 +28,9 @@ tokio = { version = "1.47", features = ["rt", "macros"] }
 mockall = "0.13"
 serde = { version = "1.0", features = ["derive"] }
 lopdf = "0.38"
+utoipa = { version = "5", features = ["actix_extras"] }
+utoipa-swagger-ui = {version = "9.0", features = ["actix-web"]}
+utoipa-actix-web = "0.1"
 
 [dependencies]
 sheets_core = { path = "sheets/core" }
@@ -42,6 +45,8 @@ anyhow.workspace = true
 uuid.workspace = true
 sqlx.workspace = true
 dotenvy.workspace = true
+utoipa-swagger-ui.workspace = true
+utoipa-actix-web.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
