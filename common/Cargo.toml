@@ -9,6 +9,7 @@ anyhow.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 serde.workspace = true
+utoipa.workspace = true
 
 [dev-dependencies]
 pretty_assertions.workspace = true

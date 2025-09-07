@@ -691,6 +691,7 @@ dependencies = [
  "serde",
  "tracing",
  "tracing-subscriber",
+ "utoipa",
  "uuid",
 ]
 
@@ -1151,6 +1152,7 @@ dependencies = [
  "testcontainers",
  "testcontainers-modules",
  "tracing-actix-web",
+ "utoipa",
  "utoipa-actix-web",
  "utoipa-swagger-ui",
  "uuid",

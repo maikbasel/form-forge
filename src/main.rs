@@ -9,11 +9,13 @@ use sheets_db::adapter::SheetReferenceDb;
 use sheets_pdf::adapter::SheetsPdf;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
+use sheets_web::docs::ApiDoc;
 use sheets_web::handler::{download_sheet, upload_sheet};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
+use utoipa::OpenApi;
 use utoipa_actix_web::AppExt;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -52,6 +54,7 @@ async fn main() -> Result<()> {
     HttpServer::new(move || {
         App::new()
             .into_utoipa_app()
+            .openapi(ApiDoc::openapi())
             .app_data(web::Data::new(sheet_service.clone()))
             .service(upload_sheet)
             .service(download_sheet)

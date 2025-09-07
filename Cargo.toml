@@ -47,6 +47,7 @@ sqlx.workspace = true
 dotenvy.workspace = true
 utoipa-swagger-ui.workspace = true
 utoipa-actix-web.workspace = true
+utoipa.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
