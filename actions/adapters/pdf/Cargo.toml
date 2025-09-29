@@ -1,0 +1,10 @@
+[package]
+name = "actions_pdf"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actions_core = { path = "../../core" }
+async-trait.workspace = true
+tracing.workspace = true
+lopdf.workspace = true

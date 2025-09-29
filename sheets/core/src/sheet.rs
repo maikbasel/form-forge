@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use uuid::Uuid;
 
+#[derive(Debug)]
 pub struct Sheet {
     pub name: Option<String>,
     pub path: PathBuf,

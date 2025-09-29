@@ -57,3 +57,13 @@ impl SheetStoragePort for SheetFileStorage {
         }
     }
 }
+
+#[async_trait]
+impl actions_core::ports::driven::SheetStoragePort for SheetFileStorage {
+    async fn read(
+        &self,
+        sheet_reference: &actions_core::ports::driven::SheetReference,
+    ) -> Result<PathBuf, actions_core::error::SheetError> {
+        todo!()
+    }
+}

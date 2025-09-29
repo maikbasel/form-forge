@@ -1,14 +1,13 @@
 [package]
-name = "sheets_web"
+name = "actions_web"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sheets_core = { path = "../../core" }
 common = { path = "../../../common" }
+actions_core = { path = "../../core"}
 actix-web.workspace = true
-actix-multipart.workspace = true
-uuid.workspace = true
-actix-files.workspace = true
-utoipa.workspace = true
 serde.workspace = true
+uuid.workspace = true
+utoipa.workspace = true
+validator.workspace = true

@@ -90,3 +90,13 @@ impl SheetReferencePort for SheetReferenceDb {
         }
     }
 }
+
+#[async_trait]
+impl actions_core::ports::driven::SheetReferencePort for SheetReferenceDb {
+    async fn find_by_id(
+        &self,
+        id: &Uuid,
+    ) -> Result<actions_core::ports::driven::SheetReference, actions_core::error::SheetError> {
+        todo!()
+    }
+}

@@ -7,6 +7,7 @@ use actix_web::http::header::{
 };
 use actix_web::{HttpResponse, get, mime, post, web};
 use common::error::ApiErrorResponse;
+use serde::{Deserialize, Serialize};
 use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
 use sheets_core::sheet::Sheet;
@@ -19,6 +20,19 @@ pub struct UploadSheetRequest {
     #[multipart(limit = "5MB")]
     #[schema(value_type = String, format = Binary, content_media_type = "application/pdf")]
     pub sheet: TempFile,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct UploadSheetResponse {
+    #[schema(value_type = String, format = "uuid", example = "123e4567-e89b-12d3-a456-426614174000"
+    )]
+    pub id: Uuid,
+}
+
+impl UploadSheetResponse {
+    pub fn new(id: Uuid) -> Self {
+        Self { id }
+    }
 }
 
 #[utoipa::path(
@@ -34,7 +48,7 @@ pub struct UploadSheetRequest {
         description = "Multipart form with a single 'sheet' field containing the PDF file."
     ),
     responses(
-        (status = CREATED, description = "Sheet uploaded successfully"),
+        (status = CREATED, description = "Sheet uploaded successfully", body = UploadSheetResponse, content_type = "application/json"),
         (status = BAD_REQUEST, description = "Invalid PDF or request", body = ApiErrorResponse, content_type = "application/json",
             examples(
                 ("invalid_pdf_header" = (summary = "Invalid PDF file", value = json!({"message": "invalid PDF header - file is not a PDF"}))),
@@ -65,7 +79,7 @@ pub async fn upload_sheet(
     let location = format!("/sheets/{}", sheet_reference.id);
     Ok(HttpResponse::Created()
         .insert_header((LOCATION, location))
-        .finish())
+        .json(UploadSheetResponse::new(sheet_reference.id)))
 }
 
 #[utoipa::path(
@@ -73,6 +87,8 @@ pub async fn upload_sheet(
     path = "/sheets/{sheet_id}",
     tag = "Sheets",
     operation_id = "downloadSheet",
+    summary = "Download enhanced PDF sheet",
+    description = "Downloads a previously uploaded PDF sheet by its unique identifier. The sheet may have been enhanced with calculation scripts attached to its AcroForm fields, making it dynamic and self-calculating.",
     params(
         ("sheet_id" = String, Path, description = "ID of the sheet to download", example = "123e4567-e89b-12d3-a456-426614174000")
     ),
