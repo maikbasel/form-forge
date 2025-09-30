@@ -21,7 +21,8 @@ impl SheetFileStorage {
 
 #[async_trait]
 impl SheetStoragePort for SheetFileStorage {
-    #[instrument(name = "storage.create", skip(self), level = "info", fields(sheet_id = %sheet_reference.id))]
+    #[instrument(name = "storage.create", skip(self), level = "info", fields(sheet_id = %sheet_reference.id
+    ))]
     async fn create(&self, sheet_reference: SheetReference) -> Result<SheetReference, SheetError> {
         let sheet_dir = self
             .data_dir
@@ -48,10 +49,17 @@ impl SheetStoragePort for SheetFileStorage {
         ))
     }
 
-    #[instrument(name = "storage.read", skip(self, sheet_reference), level = "info", fields(sheet_id = %sheet_reference.id))]
-    async fn read(&self, sheet_reference: &SheetReference) -> Result<PathBuf, SheetError> {
-        if sheet_reference.path.exists() {
-            Ok(sheet_reference.path.clone())
+    #[instrument(
+        name = "storage.read",
+        skip(self),
+        level = "info",
+        fields(sheet_path = %path.display())
+    )]
+    async fn read(&self, path: PathBuf) -> Result<PathBuf, SheetError> {
+        // If read from a different file system like S3,
+        // the file would be downloaded here and the local file path returned.
+        if path.exists() {
+            Ok(path.clone())
         } else {
             Err(SheetError::NotFound("file not found".to_string()))
         }
@@ -60,10 +68,9 @@ impl SheetStoragePort for SheetFileStorage {
 
 #[async_trait]
 impl actions_core::ports::driven::SheetStoragePort for SheetFileStorage {
-    async fn read(
-        &self,
-        sheet_reference: &actions_core::ports::driven::SheetReference,
-    ) -> Result<PathBuf, actions_core::error::SheetError> {
-        todo!()
+    async fn read(&self, path: PathBuf) -> Result<PathBuf, actions_core::error::SheetError> {
+        <SheetFileStorage as SheetStoragePort>::read(self, path)
+            .await
+            .map_err(|_| actions_core::error::ActionError::FileNotFound)
     }
 }

@@ -1,21 +1,21 @@
 use actions_core::error::ActionError;
 use actions_core::ports::driven::ActionPdfPort;
 use async_trait::async_trait;
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(Default)]
 pub struct PdfActionAdapter;
 
 #[async_trait]
 impl ActionPdfPort for PdfActionAdapter {
-    fn add_doc_level_js(&self, js: &str, sheet_path: &PathBuf) -> Result<(), ActionError> {
+    fn add_doc_level_js(&self, js: &str, sheet_path: &Path) -> Result<(), ActionError> {
         todo!()
     }
 
     fn attach_calculation_js(
         &self,
         js: &str,
-        sheet_path: &PathBuf,
+        sheet_path: &Path,
         target_field: &str,
     ) -> Result<(), ActionError> {
         todo!()
@@ -24,7 +24,7 @@ impl ActionPdfPort for PdfActionAdapter {
     fn set_calculation_order(
         &self,
         field_order: &[String],
-        sheet_path: &PathBuf,
+        sheet_path: &Path,
     ) -> Result<(), ActionError> {
         todo!()
     }

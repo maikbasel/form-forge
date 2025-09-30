@@ -10,7 +10,7 @@ use uuid::Uuid;
 #[async_trait]
 pub trait SheetStoragePort: Send + Sync {
     async fn create(&self, sheet_reference: SheetReference) -> Result<SheetReference, SheetError>;
-    async fn read(&self, sheet_reference: &SheetReference) -> Result<PathBuf, SheetError>;
+    async fn read(&self, path: PathBuf) -> Result<PathBuf, SheetError>;
 }
 
 #[cfg_attr(test, automock)]

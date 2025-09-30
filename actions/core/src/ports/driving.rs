@@ -32,7 +32,7 @@ impl ActionService {
         action: CalculationAction,
     ) -> Result<(), ActionError> {
         let sheet_reference = self.sheet_reference_port.find_by_id(sheet_id).await?;
-        let sheet_path = self.sheet_storage_port.read(&sheet_reference).await?;
+        let sheet_path = self.sheet_storage_port.read(sheet_reference.path).await?;
 
         let dnd_helpers_js =
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/js/dnd_helpers.js"));

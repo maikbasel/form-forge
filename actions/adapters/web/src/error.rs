@@ -32,6 +32,12 @@ impl From<ActionError> for ApiError {
                     message: value.to_string(),
                 },
             ),
+            ActionError::FileNotFound => ApiError::new(
+                StatusCode::NOT_FOUND,
+                ApiErrorResponse {
+                    message: value.to_string(),
+                },
+            ),
         }
     }
 }

@@ -97,6 +97,9 @@ impl actions_core::ports::driven::SheetReferencePort for SheetReferenceDb {
         &self,
         id: &Uuid,
     ) -> Result<actions_core::ports::driven::SheetReference, actions_core::error::SheetError> {
-        todo!()
+        <SheetReferenceDb as SheetReferencePort>::find_by_id(self, id)
+            .await
+            .map(|s| actions_core::ports::driven::SheetReference::new(s.id, s.path))
+            .map_err(|_| actions_core::error::ActionError::NotFound(*id))
     }
 }

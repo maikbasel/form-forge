@@ -69,7 +69,7 @@ impl SheetService {
 
         info!(path = %sheet_reference.path.display(), "found sheet reference");
 
-        let file_path = self.sheet_storage_port.read(&sheet_reference).await?;
+        let file_path = self.sheet_storage_port.read(sheet_reference.path).await?;
 
         info!(path = %file_path.display(), "read sheet file from storage");
 
