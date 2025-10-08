@@ -7,6 +7,12 @@ pub enum ActionError {
     NotFound(Uuid),
     #[error("file does not exist")]
     FileNotFound,
+    #[error("failed to load PDF sheet")]
+    LoadPdfError,
+    #[error("invalid PDF sheet: {0}")]
+    InvalidPdfSheet(String),
+    #[error("failed to save PDF sheet")]
+    SavePdfError,
 }
 
 pub type SheetError = ActionError;

@@ -38,6 +38,13 @@ impl From<ActionError> for ApiError {
                     message: value.to_string(),
                 },
             ),
+            _ => ApiError::new(
+                // FIXME
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ApiErrorResponse {
+                    message: value.to_string(),
+                },
+            ),
         }
     }
 }
