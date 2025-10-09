@@ -12,14 +12,11 @@ pub struct PdfActionAdapter;
 impl ActionPdfPort for PdfActionAdapter {
     #[instrument(name = "pdf.add_doc_level_js", skip(self, js), fields(path = %sheet_path.display()))]
     fn add_doc_level_js(&self, js: &str, sheet_path: &Path) -> Result<(), ActionError> {
-        // Load the PDF document
         let mut doc = Document::load(sheet_path).map_err(|e| {
-            let msg = "failed to get Root reference from PDF trailer";
-            error!(error = ?e, msg);
-            ActionError::InvalidPdfSheet(msg.to_string())
+            error!(error = ?e, "failed to load PDF sheet");
+            ActionError::LoadPdfError
         })?;
 
-        // Get the catalog ObjectId from the document trailer
         let catalog_id = doc
             .trailer
             .get(b"Root")
@@ -30,7 +27,6 @@ impl ActionPdfPort for PdfActionAdapter {
                 ActionError::InvalidPdfSheet(msg.to_string())
             })?;
 
-        // Create a JavaScript action dictionary
         let mut js_dict = Dictionary::new();
         js_dict.set("S", Object::Name(b"JavaScript".to_vec()));
         js_dict.set(
@@ -38,7 +34,6 @@ impl ActionPdfPort for PdfActionAdapter {
             Object::String(js.as_bytes().to_vec(), lopdf::StringFormat::Literal),
         );
 
-        // Create Names dictionary for JavaScript
         let mut js_name_tree = Dictionary::new();
         let js_action_id = doc.add_object(Object::Dictionary(js_dict));
         js_name_tree.set(
@@ -49,10 +44,8 @@ impl ActionPdfPort for PdfActionAdapter {
             ]),
         );
 
-        // Add JavaScript name tree to document
         let js_name_tree_id = doc.add_object(Object::Dictionary(js_name_tree));
 
-        // Get or create the Names dictionary in catalog
         let catalog = doc
             .get_object_mut(catalog_id)
             .and_then(|obj| obj.as_dict_mut())
