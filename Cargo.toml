@@ -43,7 +43,6 @@ utoipa = { version = "5", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "9.0", features = ["actix-web"] }
 utoipa-actix-web = "0.1"
 validator = { version = "0.20", features = ["derive"] }
-pdf-extract = "0.9"
 
 [dependencies]
 common = { path = "common" }
@@ -71,7 +70,7 @@ testcontainers.workspace = true
 testcontainers-modules.workspace = true
 rstest.workspace = true
 pretty_assertions.workspace = true
-pdf-extract.workspace = true
+lopdf.workspace = true
 
 [features]
 tracing-logs = []

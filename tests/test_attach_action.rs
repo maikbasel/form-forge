@@ -4,14 +4,15 @@ mod test_utils;
 #[cfg(target_os = "linux")] // Requires Docker and Linux containers - only runs on ubuntu-latest GitHub runners
 mod tests {
     use crate::test_utils;
-    use crate::test_utils::AsyncTestContext;
+    use crate::test_utils::{AsyncTestContext, read_document_javascript};
+    use actions_core::ports::driving::ActionService;
+    use actions_pdf::adapter::PdfActionAdapter;
     use actions_web::handler::{
         AttachAbilityModCalcScriptRequest, attach_ability_modifier_calculation_script,
     };
     use actix_web::http::StatusCode;
     use actix_web::test;
     use common::telemetry;
-    use pdf_extract::extract_text;
     use pretty_assertions::assert_eq;
     use rstest::*;
     use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
@@ -37,7 +38,7 @@ mod tests {
         //region Setup
         let async_ctx = async_ctx.await;
         let reference_port: Arc<dyn SheetReferencePort> =
-            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+            Arc::new(SheetReferenceDb::new(async_ctx.pool.clone()));
         let tmp_dir = Builder::new()
             .prefix("tests")
             .tempdir()
@@ -49,8 +50,20 @@ mod tests {
         let storage_port: Arc<dyn SheetStoragePort> =
             Arc::new(SheetFileStorage::new(storage_cfg.clone()));
         let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
+        let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
+            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
+            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+        let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
+            Arc::new(PdfActionAdapter::default());
+        let action_service =
+            ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(app_data: [sheet_service], services: [upload_sheet, attach_ability_modifier_calculation_script, download_sheet]);
+        let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_ability_modifier_calculation_script, download_sheet]);
+        let expected_js = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/actions/core/js/dnd_helpers.js"
+        ));
         //endregion
 
         //region Sheet upload
@@ -92,11 +105,12 @@ mod tests {
         //endregion
 
         //region Verify calc script attachment
-        let pdf_content = extract_text(&temp_pdf.path()).expect("extract PDF content");
-        assert!(
-            pdf_content.contains("DND.abilityMod(\"int_score\")")
-                || pdf_content.contains("DND.abilityMod('int_score')")
-        );
+        let actual_js = read_document_javascript(&temp_pdf.path());
+        assert!(actual_js.is_ok());
+        let actual_js = actual_js.unwrap();
+        assert_eq!(actual_js.len(), 1);
+        assert_eq!(actual_js[0].0, "HelpersJS");
+        assert_eq!(actual_js[0].1, expected_js);
         //endregion
     }
 }
