@@ -38,9 +38,32 @@ impl From<ActionError> for ApiError {
                     message: value.to_string(),
                 },
             ),
-            _ => ApiError::new(
-                // FIXME
+            ActionError::LoadPdfError => ApiError::new(
                 StatusCode::INTERNAL_SERVER_ERROR,
+                ApiErrorResponse {
+                    message: value.to_string(),
+                },
+            ),
+            ActionError::InvalidPdfSheet(_) => ApiError::new(
+                StatusCode::BAD_REQUEST,
+                ApiErrorResponse {
+                    message: value.to_string(),
+                },
+            ),
+            ActionError::SavePdfError => ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ApiErrorResponse {
+                    message: value.to_string(),
+                },
+            ),
+            ActionError::FieldNotFound(_) => ApiError::new(
+                StatusCode::BAD_REQUEST,
+                ApiErrorResponse {
+                    message: value.to_string(),
+                },
+            ),
+            ActionError::InvalidAction(_) => ApiError::new(
+                StatusCode::BAD_REQUEST,
                 ApiErrorResponse {
                     message: value.to_string(),
                 },
