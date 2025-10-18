@@ -93,6 +93,7 @@ impl SheetReferencePort for SheetReferenceDb {
 
 #[async_trait]
 impl actions_core::ports::driven::SheetReferencePort for SheetReferenceDb {
+    #[instrument(name = "db.find_by_id.action_port", skip(self, id), level = "info", err, fields(%id))]
     async fn find_by_id(
         &self,
         id: &Uuid,

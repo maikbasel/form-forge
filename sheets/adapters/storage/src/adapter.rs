@@ -68,6 +68,7 @@ impl SheetStoragePort for SheetFileStorage {
 
 #[async_trait]
 impl actions_core::ports::driven::SheetStoragePort for SheetFileStorage {
+    #[instrument(name = "storage.read.action_port", skip(self, path), level = "info", err, fields(path = %path.display()))]
     async fn read(&self, path: PathBuf) -> Result<PathBuf, actions_core::error::SheetError> {
         <SheetFileStorage as SheetStoragePort>::read(self, path)
             .await
