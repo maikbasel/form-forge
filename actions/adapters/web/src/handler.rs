@@ -42,7 +42,7 @@ impl AttachAbilityModCalcScriptRequest {
 
 #[utoipa::path(
     put,
-    path = "/dnd/5e/{sheet_id}/ability-modifier",
+    path = "/dnd5e/{sheet_id}/ability-modifier",
     tag = "DnD 5e",
     operation_id = "attachAbilityModifierCalculationScript",
     summary = "Attach an Ability Score Modifier calculation script",
@@ -62,7 +62,7 @@ Note: Sending a request to attach a calculation script targeting the same abilit
         (status = 204, description = "Calculation script successfully attached to the ability modifier field.")
     ),
 )]
-#[put("/dnd/5e/{sheet_id}/ability-modifier")]
+#[put("/dnd5e/{sheet_id}/ability-modifier")]
 pub async fn attach_ability_modifier_calculation_script(
     action_service: web::Data<ActionService>,
     sheet_id: web::Path<Uuid>,

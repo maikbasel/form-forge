@@ -83,7 +83,7 @@ mod tests {
 
         //region Attach ability mod calc script
         let req = test::TestRequest::put()
-            .uri(&format!("/dnd/5e/{}/ability-modifier", sheet_id))
+            .uri(&format!("/dnd5e/{}/ability-modifier", sheet_id))
             .set_json(AttachAbilityModCalcScriptRequest::new("STR", "STRmod"))
             .to_request();
         let resp = test::call_service(&app, req).await;
