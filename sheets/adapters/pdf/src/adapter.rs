@@ -33,163 +33,104 @@ impl SheetPdfPort for SheetsPdf {
             return Err(PdfValidationError::InvalidHeader);
         }
 
-        self.is_form_fillable(&sheet_reference.path).await
+        self.is_compatible_pdf_sheet(&sheet_reference.path).await
     }
 }
 
 impl SheetsPdf {
-    #[instrument(name = "pdf.is_form_fillable", skip(self), level = "debug")]
-    async fn is_form_fillable(&self, path: &std::path::Path) -> Result<(), PdfValidationError> {
+    #[instrument(name = "pdf.is_compatible_pdf_sheet", skip(self), level = "debug")]
+    async fn is_compatible_pdf_sheet(
+        &self,
+        path: &std::path::Path,
+    ) -> Result<(), PdfValidationError> {
         match Document::load(path) {
             Ok(doc) => {
-                if self.has_acroform_fields(&doc) {
-                    debug!("found form fields in AcroForm");
-                    return Ok(());
+                // Not encrypted
+                if doc.trailer.get(b"Encrypt").is_ok() {
+                    return Err(PdfValidationError::NotSupported(
+                        "PDF sheet is encrypted".to_string(),
+                    ));
                 }
-                if self.has_page_widgets(&doc) {
-                    debug!("found form widgets on pages");
-                    return Ok(());
+
+                // Catalog
+                let catalog_id = match doc.trailer.get(b"Root").and_then(|o| o.as_reference()) {
+                    Ok(id) => id,
+                    Err(_) => {
+                        return Err(PdfValidationError::NotSupported(
+                            "PDF sheet does not have a catalog".to_string(),
+                        ));
+                    }
+                };
+                let catalog = match doc.get_object(catalog_id).and_then(|o| o.as_dict()) {
+                    Ok(c) => c,
+                    Err(_) => {
+                        return Err(PdfValidationError::NotSupported(
+                            "PDF sheet catalog is not a dictionary".to_string(),
+                        ));
+                    }
+                };
+
+                // AcroForm
+                let acroform_id = match catalog.get(b"AcroForm").and_then(|o| o.as_reference()) {
+                    // TODO: handle AcroForm that are direct objects and not indirect object references
+                    Ok(id) => id,
+                    Err(_) => {
+                        return Err(PdfValidationError::NotSupported(
+                            "PDF sheet does not have an AcroForm".to_string(),
+                        ));
+                    }
+                };
+                let acroform = match doc.get_object(acroform_id).and_then(|o| o.as_dict()) {
+                    Ok(a) => a,
+                    Err(_) => {
+                        return Err(PdfValidationError::NotSupported(
+                            "PDF sheet AcroForm is not a dictionary".to_string(),
+                        ));
+                    }
+                };
+
+                // Skip XFA forms — they use XML instead of /AA /C
+                if acroform.get(b"XFA").is_ok() {
+                    return Err(PdfValidationError::NotSupported(
+                        "PDF sheet has an XFA form".to_string(),
+                    ));
                 }
-                debug!("no form fields or widgets found");
-                Err(PdfValidationError::NotFormFillable)
+
+                // Must have /Fields array
+                let fields_arr_ref = match acroform.get(b"Fields").and_then(|o| o.as_reference()) {
+                    Ok(id) => id,
+                    Err(_) => {
+                        return Err(PdfValidationError::NotSupported(
+                            "PDF sheet does not have a Fields array".to_string(),
+                        ));
+                    }
+                };
+                if doc
+                    .get_object(fields_arr_ref)
+                    .and_then(|o| o.as_array())
+                    .is_err()
+                {
+                    return Err(PdfValidationError::NotSupported(
+                        "PDF sheet Fields object is not an array".to_string(),
+                    ));
+                }
+
+                // Disallow DocMDP permissions (locked PDF)
+                if let Ok(perms_ref) = catalog.get(b"Perms").and_then(|o| o.as_reference())
+                    && let Ok(perms) = doc.get_object(perms_ref).and_then(|o| o.as_dict())
+                    && perms.get(b"DocMDP").is_ok()
+                {
+                    return Err(PdfValidationError::NotSupported(
+                        "PDF sheet is locked".to_string(),
+                    ));
+                }
+
+                Ok(())
             }
             Err(e) => {
                 debug!(error = %e, "failed to load PDF document");
                 Err(PdfValidationError::ParseError(e.to_string()))
             }
         }
-    }
-
-    fn has_acroform_fields(&self, doc: &Document) -> bool {
-        // Attempt to traverse to the Fields array, early-returning on failures
-        let Ok(catalog) = doc.catalog() else {
-            return false;
-        };
-        let Ok(acroform_val) = catalog.get(b"AcroForm") else {
-            return false;
-        };
-        let Ok(acroform_ref) = acroform_val.as_reference() else {
-            debug!("AcroForm entry is not a reference");
-            return false;
-        };
-        let Ok(acroform_obj) = doc.get_object(acroform_ref) else {
-            return false;
-        };
-        let Ok(acroform_dict) = acroform_obj.as_dict() else {
-            return false;
-        };
-        let Ok(fields_val) = acroform_dict.get(b"Fields") else {
-            return false;
-        };
-        let Ok(fields_ref) = fields_val.as_reference() else {
-            debug!("Fields entry is not a reference");
-            return false;
-        };
-        let Ok(fields_obj) = doc.get_object(fields_ref) else {
-            return false;
-        };
-        let Ok(fields_array) = fields_obj.as_array() else {
-            return false;
-        };
-        !fields_array.is_empty()
-    }
-
-    fn has_page_widgets(&self, doc: &Document) -> bool {
-        let Ok(catalog) = doc.catalog() else {
-            return false;
-        };
-        let Ok(pages_ref) = catalog.get(b"Pages") else {
-            return false;
-        };
-        self.check_pages_for_widgets(doc, pages_ref)
-    }
-
-    fn check_pages_for_widgets(&self, doc: &Document, pages_ref: &lopdf::Object) -> bool {
-        let Ok(pages_ref) = pages_ref.as_reference() else {
-            debug!("Pages reference is not a valid reference");
-            return false;
-        };
-        let Ok(pages_obj) = doc.get_object(pages_ref) else {
-            return false;
-        };
-        let Ok(pages_dict) = pages_obj.as_dict() else {
-            return false;
-        };
-
-        // If Kids exists, it's a page tree node; traverse children
-        if let Ok(kids_val) = pages_dict.get(b"Kids") {
-            let Ok(kids_ref) = kids_val.as_reference() else {
-                debug!("Kids entry is not a reference");
-                return false;
-            };
-            let Ok(kids_obj) = doc.get_object(kids_ref) else {
-                return false;
-            };
-            let Ok(kids_array) = kids_obj.as_array() else {
-                return false;
-            };
-            for kid_ref in kids_array {
-                if self.check_pages_for_widgets(doc, kid_ref) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // Leaf page – check for widgets
-        self.page_has_widgets(doc, pages_dict)
-    }
-
-    fn page_has_widgets(&self, doc: &Document, page_dict: &lopdf::Dictionary) -> bool {
-        // Check for Annots (annotations) which include form widgets
-        let Ok(annots_val) = page_dict.get(b"Annots") else {
-            return false;
-        };
-        let Ok(annots_ref) = annots_val.as_reference() else {
-            debug!("Annotations entry is not a reference");
-            return false;
-        };
-        let Ok(annots_obj) = doc.get_object(annots_ref) else {
-            return false;
-        };
-        let Ok(annots_array) = annots_obj.as_array() else {
-            return false;
-        };
-
-        for annot_ref_obj in annots_array {
-            let Ok(annot_ref) = annot_ref_obj.as_reference() else {
-                debug!("Annotation reference is not a valid reference");
-                continue;
-            };
-            let Ok(annot_obj) = doc.get_object(annot_ref) else {
-                continue;
-            };
-            let Ok(annot_dict) = annot_obj.as_dict() else {
-                continue;
-            };
-
-            // Check if it's a widget annotation (form field)
-            if let Ok(subtype) = annot_dict.get(b"Subtype")
-                && let Ok(subtype_name) = subtype.as_name()
-                && subtype_name == b"Widget"
-            {
-                debug!("found Widget annotation");
-                return true;
-            }
-
-            // Also check for form field types in the FT entry
-            if let Ok(ft) = annot_dict.get(b"FT")
-                && let Ok(field_type) = ft.as_name()
-            {
-                match field_type {
-                    b"Tx" | b"Ch" | b"Btn" | b"Sig" => {
-                        debug!(field_type = ?field_type, "found form field type");
-                        return true;
-                    }
-                    _ => {}
-                }
-            }
-        }
-        false
     }
 }

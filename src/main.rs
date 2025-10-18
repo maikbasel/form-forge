@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
     let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
         Arc::new(SheetReferenceDb::new(pool));
     let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
-        Arc::new(PdfActionAdapter::default());
+        Arc::new(PdfActionAdapter);
     let action_service =
         ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
 

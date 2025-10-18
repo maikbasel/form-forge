@@ -39,18 +39,23 @@ impl ActionService {
         self.action_pdf_port
             .add_doc_level_js(dnd_helpers_js, &sheet_path)?;
 
-        // let (action_js, target_field) = match action {
-        //     CalculationAction::AbilityModifier {
-        //         score_field_name,
-        //         modifier_field_name,
-        //     } => {
-        //         let score_field = serde_json::to_string(&score_field_name); // turns name into a quoted JS string
-        //         let action_js = format!("event.value = DND.abilityMod({:?});", score_field);
-        //         (action_js, modifier_field_name)
-        //     }
-        // };
-        // self.action_pdf_port
-        //     .attach_calculation_js(&action_js, &sheet_path, &target_field)?;
+        let (action_js, target_field) = match action {
+            CalculationAction::AbilityModifier {
+                score_field_name,
+                modifier_field_name,
+            } => {
+                let score_field = serde_json::to_string(&score_field_name).map_err(|e| {
+                    ActionError::InvalidAction(format!(
+                        "failed to serialize score field name: {}",
+                        e
+                    ))
+                })?; // turns a name into a quoted JS string
+                let action_js = format!("calculateModifierFromScore({});", score_field);
+                (action_js, modifier_field_name)
+            }
+        };
+        self.action_pdf_port
+            .attach_calculation_js(&action_js, &sheet_path, &target_field)?;
 
         Ok(())
     }

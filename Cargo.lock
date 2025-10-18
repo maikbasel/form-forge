@@ -19,6 +19,7 @@ version = "0.1.0"
 dependencies = [
  "actions_core",
  "async-trait",
+ "common",
  "lopdf",
  "tracing",
 ]
@@ -721,6 +722,7 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "lopdf",
  "pretty_assertions",
  "serde",
  "tracing",

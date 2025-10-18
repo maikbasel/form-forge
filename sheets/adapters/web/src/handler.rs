@@ -41,7 +41,7 @@ impl UploadSheetResponse {
     tag = "Sheets",
     operation_id = "uploadSheet",
     summary = "Upload a form-fillable PDF",
-    description = "Uploads a form-fillable PDF file. If validation passes, returns 201 Created with a Location header pointing to the download URL.",
+    description = "Uploads a form-fillable PDF file. The PDF must satisfy these compatibility rules: \n\n- It must NOT be encrypted.\n- It must contain a Catalog dictionary.\n- It must contain an AcroForm dictionary.\n- It must NOT be an XFA form.\n- The AcroForm must provide a Fields array (interactive form fields).\n- It must NOT be locked via DocMDP permissions.\n\nIf validation passes, returns 201 Created with a Location header pointing to the download URL.",
     request_body(
         content = UploadSheetRequest,
         content_type = "multipart/form-data",
@@ -52,7 +52,7 @@ impl UploadSheetResponse {
         (status = BAD_REQUEST, description = "Invalid PDF or request", body = ApiErrorResponse, content_type = "application/json",
             examples(
                 ("invalid_pdf_header" = (summary = "Invalid PDF file", value = json!({"message": "invalid PDF header - file is not a PDF"}))),
-                ("not_form_fillable" = (summary = "PDF not form-fillable", value = json!({"message": "PDF is not form-fillable - no interactive form fields found"}))),
+                ("not_supported" = (summary = "PDF sheet is not supported", value = json!({"message": "PDF sheet is encrypted"}))),
                 ("file_too_large" = (summary = "File size exceeded", value = json!({"message": "file size exceeds 5MB limit"}))),
                 ("invalid_filename" = (summary = "Invalid filename", value = json!({"message": "invalid sheet name"})))
             )

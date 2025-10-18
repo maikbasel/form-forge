@@ -4,7 +4,9 @@ mod test_utils;
 #[cfg(target_os = "linux")] // Requires Docker and Linux containers - only runs on ubuntu-latest GitHub runners
 mod tests {
     use crate::test_utils;
-    use crate::test_utils::{AsyncTestContext, read_document_javascript};
+    use crate::test_utils::{
+        AsyncTestContext, read_document_javascript, read_field_calculation_js,
+    };
     use actions_core::ports::driving::ActionService;
     use actions_pdf::adapter::PdfActionAdapter;
     use actions_web::handler::{
@@ -55,7 +57,7 @@ mod tests {
         let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
         let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
-            Arc::new(PdfActionAdapter::default());
+            Arc::new(PdfActionAdapter);
         let action_service =
             ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
         telemetry::initialize().expect("initialize telemetry");
@@ -82,10 +84,7 @@ mod tests {
         //region Attach ability mod calc script
         let req = test::TestRequest::put()
             .uri(&format!("/dnd/5e/{}/ability-modifier", sheet_id))
-            .set_json(AttachAbilityModCalcScriptRequest::new(
-                "int_score",
-                "int_mod",
-            ))
+            .set_json(AttachAbilityModCalcScriptRequest::new("STR", "STRmod"))
             .to_request();
         let resp = test::call_service(&app, req).await;
         assert_eq!(resp.status(), StatusCode::NO_CONTENT);
@@ -101,16 +100,21 @@ mod tests {
             .suffix(".pdf")
             .tempfile()
             .expect("create temp PDF file");
-        std::fs::write(&temp_pdf.path(), &body_bytes).expect("write PDF to temp file");
+        std::fs::write(temp_pdf.path(), &body_bytes).expect("write PDF to temp file");
         //endregion
 
         //region Verify calc script attachment
-        let actual_js = read_document_javascript(&temp_pdf.path());
-        assert!(actual_js.is_ok());
-        let actual_js = actual_js.unwrap();
-        assert_eq!(actual_js.len(), 1);
-        assert_eq!(actual_js[0].0, "HelpersJS");
-        assert_eq!(actual_js[0].1, expected_js);
+        let actual_doc_level_js = read_document_javascript(temp_pdf.path());
+        assert_eq!(actual_doc_level_js.len(), 1);
+        assert_eq!(actual_doc_level_js[0].0, "HelpersJS");
+        assert_eq!(actual_doc_level_js[0].1, expected_js);
+        //endregion
+        //region Verify field calculation action
+        let actual_field_calc_js = read_field_calculation_js(temp_pdf.path(), "STRmod");
+        assert_eq!(
+            actual_field_calc_js,
+            r#"calculateModifierFromScore("STR");"#
+        );
         //endregion
     }
 }

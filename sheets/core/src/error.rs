@@ -27,6 +27,6 @@ pub enum PdfValidationError {
     InvalidHeader,
     #[error("failed to parse PDF document: {0}")]
     ParseError(String),
-    #[error("PDF is not form-fillable - no interactive form fields found")]
-    NotFormFillable,
+    #[error("PDF sheet is not supported: {0}")]
+    NotSupported(String),
 }

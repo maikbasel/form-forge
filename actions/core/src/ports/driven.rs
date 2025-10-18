@@ -25,12 +25,6 @@ pub trait ActionPdfPort: Send + Sync {
         sheet_path: &Path,
         target_field: &str,
     ) -> Result<(), ActionError>;
-
-    fn set_calculation_order(
-        &self,
-        field_order: &[String],
-        sheet_path: &Path,
-    ) -> Result<(), ActionError>;
 }
 
 #[async_trait]

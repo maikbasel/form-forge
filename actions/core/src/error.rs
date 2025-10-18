@@ -13,6 +13,10 @@ pub enum ActionError {
     InvalidPdfSheet(String),
     #[error("failed to save PDF sheet")]
     SavePdfError,
+    #[error("field not found in PDF sheet: {0}")]
+    FieldNotFound(String),
+    #[error("invalid action: {0}")]
+    InvalidAction(String),
 }
 
 pub type SheetError = ActionError;

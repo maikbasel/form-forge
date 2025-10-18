@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 actions_core = { path = "../../core" }
+common = { path = "../../../common" }
 async-trait.workspace = true
 tracing.workspace = true
 lopdf.workspace = true

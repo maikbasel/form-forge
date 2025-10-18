@@ -63,6 +63,6 @@ mod tests {
         let actual = adapter.is_valid_pdf(&sheet).await;
 
         assert!(actual.is_err());
-        assert!(matches!(actual, Err(PdfValidationError::NotFormFillable)));
+        assert!(matches!(actual, Err(PdfValidationError::NotSupported(_))));
     }
 }

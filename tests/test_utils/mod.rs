@@ -1,4 +1,7 @@
+#![allow(dead_code)]
+
 use common::multipart_form::MultipartFormDataBuilder;
+use common::pdf::find_form_field_by_name;
 use lopdf::{Document, Object};
 use std::path::{Path, PathBuf};
 
@@ -100,38 +103,33 @@ impl AsyncTestContext {
     }
 }
 
-pub fn read_document_javascript(path: &Path) -> Result<Vec<(String, String)>, lopdf::Error> {
-    let doc = Document::load(path)?;
+pub fn read_document_javascript(path: &Path) -> Vec<(String, String)> {
+    let doc = Document::load(path).expect("load PDF");
     let mut js_scripts = Vec::new();
 
-    let catalog_id = doc.trailer.get(b"Root")?.as_reference()?;
-    let catalog = doc.get_object(catalog_id)?.as_dict()?;
+    let catalog_id = doc.trailer.get(b"Root").unwrap().as_reference().unwrap();
+    let catalog = doc.get_object(catalog_id).unwrap().as_dict().unwrap();
 
-    let names_ref = catalog.get(b"Names")?;
-    let names_id = names_ref.as_reference()?;
-    let names = doc.get_object(names_id)?.as_dict()?;
+    let names_id = catalog.get(b"Names").unwrap().as_reference().unwrap();
+    let names = doc.get_object(names_id).unwrap().as_dict().unwrap();
 
-    let js_ref = names.get(b"JavaScript")?;
-    let js_tree_id = js_ref.as_reference()?;
-    let js_tree = doc.get_object(js_tree_id)?.as_dict()?;
+    let js_tree_id = names.get(b"JavaScript").unwrap().as_reference().unwrap();
+    let js_tree = doc.get_object(js_tree_id).unwrap().as_dict().unwrap();
 
-    let names_array = js_tree.get(b"Names")?.as_array()?;
+    let names_array = js_tree.get(b"Names").unwrap().as_array().unwrap();
 
     // Names array contains pairs: [name1, action_ref1, name2, action_ref2, ...]
     for chunk in names_array.chunks(2) {
         if chunk.len() == 2 {
-            // Get the name (key)
             let name = match &chunk[0] {
                 Object::String(bytes, _) => String::from_utf8_lossy(bytes).to_string(),
                 _ => continue,
             };
 
-            // Get the JavaScript action reference and extract code
-            let action_id = chunk[1].as_reference()?;
-            let action_dict = doc.get_object(action_id)?.as_dict()?;
+            let action_id = chunk[1].as_reference().unwrap();
+            let action_dict = doc.get_object(action_id).unwrap().as_dict().unwrap();
 
-            // Extract the JS code
-            let js_obj = action_dict.get(b"JS")?;
+            let js_obj = action_dict.get(b"JS").unwrap();
             let js_code = match js_obj {
                 Object::String(bytes, _) => String::from_utf8_lossy(bytes).to_string(),
                 _ => continue,
@@ -141,7 +139,34 @@ pub fn read_document_javascript(path: &Path) -> Result<Vec<(String, String)>, lo
         }
     }
 
-    Ok(js_scripts)
+    js_scripts
+}
+
+pub fn read_field_calculation_js(path: &Path, field_name: &str) -> String {
+    let doc = Document::load(path).expect("load PDF");
+
+    let catalog_id = doc.trailer.get(b"Root").unwrap().as_reference().unwrap();
+    let catalog = doc.get_object(catalog_id).unwrap().as_dict().unwrap();
+
+    let acroform_id = catalog.get(b"AcroForm").unwrap().as_reference().unwrap();
+    let acroform = doc.get_object(acroform_id).unwrap().as_dict().unwrap();
+
+    let fields_array_id = acroform.get(b"Fields").unwrap().as_reference().unwrap();
+
+    // Use the shared function
+    let field_id =
+        find_form_field_by_name(&doc, fields_array_id, field_name).expect("field not found");
+
+    let field_dict = doc.get_object(field_id).unwrap().as_dict().unwrap();
+    let aa_dict = field_dict.get(b"AA").unwrap().as_dict().unwrap();
+    let calc_action_id = aa_dict.get(b"C").unwrap().as_reference().unwrap();
+    let calc_action_dict = doc.get_object(calc_action_id).unwrap().as_dict().unwrap();
+
+    let js_obj = calc_action_dict.get(b"JS").unwrap();
+    match js_obj {
+        Object::String(bytes, _) => String::from_utf8_lossy(bytes).to_string(),
+        _ => panic!("JS is not a string"),
+    }
 }
 
 pub(crate) use app;
