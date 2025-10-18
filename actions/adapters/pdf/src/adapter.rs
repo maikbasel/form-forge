@@ -102,6 +102,7 @@ impl ActionPdfPort for PdfActionAdapter {
         Ok(())
     }
 
+    #[instrument(name = "pdf.attach_calculation_js", skip(self, js, sheet_path), fields(path = %sheet_path.display(), target_field))]
     fn attach_calculation_js(
         &self,
         js: &str,
