@@ -104,19 +104,48 @@ impl AsyncTestContext {
 }
 
 pub fn read_document_javascript(path: &Path) -> Vec<(String, String)> {
-    let doc = Document::load(path).expect("load PDF");
+    let doc = Document::load(path).expect("failed to load PDF document");
     let mut js_scripts = Vec::new();
 
-    let catalog_id = doc.trailer.get(b"Root").unwrap().as_reference().unwrap();
-    let catalog = doc.get_object(catalog_id).unwrap().as_dict().unwrap();
+    let catalog_id = doc
+        .trailer
+        .get(b"Root")
+        .expect("pdf trailer missing 'Root'")
+        .as_reference()
+        .expect("'Root' is not a reference");
+    let catalog = doc
+        .get_object(catalog_id)
+        .expect("failed to get catalog object")
+        .as_dict()
+        .expect("catalog object is not a dictionary");
 
-    let names_id = catalog.get(b"Names").unwrap().as_reference().unwrap();
-    let names = doc.get_object(names_id).unwrap().as_dict().unwrap();
+    let names_id = catalog
+        .get(b"Names")
+        .expect("catalog missing 'Names'")
+        .as_reference()
+        .expect("'Names' is not a reference");
+    let names = doc
+        .get_object(names_id)
+        .expect("failed to get 'Names' object")
+        .as_dict()
+        .expect("'Names' object is not a dictionary");
 
-    let js_tree_id = names.get(b"JavaScript").unwrap().as_reference().unwrap();
-    let js_tree = doc.get_object(js_tree_id).unwrap().as_dict().unwrap();
+    let js_tree_id = names
+        .get(b"JavaScript")
+        .expect("'Names' missing 'JavaScript'")
+        .as_reference()
+        .expect("'JavaScript' is not a reference");
+    let js_tree = doc
+        .get_object(js_tree_id)
+        .expect("failed to get 'JavaScript' names tree object")
+        .as_dict()
+        .expect("'JavaScript' names tree is not a dictionary");
 
-    let names_array = js_tree.get(b"Names").unwrap().as_array().unwrap();
+    let names_array = js_tree
+        .get(b"Names")
+        .expect("javascript names tree missing 'Names' array")
+        .as_array()
+        .expect("javascript names 'Names' entry is not an array");
 
     // Names array contains pairs: [name1, action_ref1, name2, action_ref2, ...]
     for chunk in names_array.chunks(2) {
@@ -126,10 +155,18 @@ pub fn read_document_javascript(path: &Path) -> Vec<(String, String)> {
                 _ => continue,
             };
 
-            let action_id = chunk[1].as_reference().unwrap();
-            let action_dict = doc.get_object(action_id).unwrap().as_dict().unwrap();
+            let action_id = chunk[1]
+                .as_reference()
+                .expect("javascript action entry is not a reference");
+            let action_dict = doc
+                .get_object(action_id)
+                .expect("failed to get JavaScript action object")
+                .as_dict()
+                .expect("javascript action object is not a dictionary");
 
-            let js_obj = action_dict.get(b"JS").unwrap();
+            let js_obj = action_dict
+                .get(b"JS")
+                .expect("javascript action dictionary missing 'JS'");
             let js_code = match js_obj {
                 Object::String(bytes, _) => String::from_utf8_lossy(bytes).to_string(),
                 _ => continue,
@@ -143,29 +180,68 @@ pub fn read_document_javascript(path: &Path) -> Vec<(String, String)> {
 }
 
 pub fn read_field_calculation_js(path: &Path, field_name: &str) -> String {
-    let doc = Document::load(path).expect("load PDF");
+    let doc = Document::load(path).expect("failed to load PDF document");
 
-    let catalog_id = doc.trailer.get(b"Root").unwrap().as_reference().unwrap();
-    let catalog = doc.get_object(catalog_id).unwrap().as_dict().unwrap();
+    let catalog_id = doc
+        .trailer
+        .get(b"Root")
+        .expect("pdf trailer missing 'Root'")
+        .as_reference()
+        .expect("'Root' is not a reference");
+    let catalog = doc
+        .get_object(catalog_id)
+        .expect("failed to get catalog object")
+        .as_dict()
+        .expect("catalog object is not a dictionary");
 
-    let acroform_id = catalog.get(b"AcroForm").unwrap().as_reference().unwrap();
-    let acroform = doc.get_object(acroform_id).unwrap().as_dict().unwrap();
+    let acroform_id = catalog
+        .get(b"AcroForm")
+        .expect("catalog missing 'AcroForm'")
+        .as_reference()
+        .expect("'AcroForm' is not a reference");
+    let acroform = doc
+        .get_object(acroform_id)
+        .expect("failed to get 'AcroForm' object")
+        .as_dict()
+        .expect("'AcroForm' object is not a dictionary");
 
-    let fields_array_id = acroform.get(b"Fields").unwrap().as_reference().unwrap();
+    let fields_array_id = acroform
+        .get(b"Fields")
+        .expect("'AcroForm' missing 'Fields'")
+        .as_reference()
+        .expect("'Fields' is not a reference");
 
     // Use the shared function
     let field_id =
         find_form_field_by_name(&doc, fields_array_id, field_name).expect("field not found");
 
-    let field_dict = doc.get_object(field_id).unwrap().as_dict().unwrap();
-    let aa_dict = field_dict.get(b"AA").unwrap().as_dict().unwrap();
-    let calc_action_id = aa_dict.get(b"C").unwrap().as_reference().unwrap();
-    let calc_action_dict = doc.get_object(calc_action_id).unwrap().as_dict().unwrap();
+    let field_dict = doc
+        .get_object(field_id)
+        .expect("failed to get field object")
+        .as_dict()
+        .expect("field object is not a dictionary");
+    let aa_dict = field_dict
+        .get(b"AA")
+        .expect("field dictionary missing 'AA'")
+        .as_dict()
+        .expect("'AA' is not a dictionary");
+    let calc_action_id = aa_dict
+        .get(b"C")
+        .expect("field 'AA' missing 'C' calculation action")
+        .as_reference()
+        .expect("calculation action 'C' is not a reference");
+    let calc_action_dict = doc
+        .get_object(calc_action_id)
+        .expect("failed to get calculation action object")
+        .as_dict()
+        .expect("calculation action object is not a dictionary");
 
-    let js_obj = calc_action_dict.get(b"JS").unwrap();
+    let js_obj = calc_action_dict
+        .get(b"JS")
+        .expect("calculation action dictionary missing 'JS'");
     match js_obj {
         Object::String(bytes, _) => String::from_utf8_lossy(bytes).to_string(),
-        _ => panic!("JS is not a string"),
+        _ => panic!("js is not a string"),
     }
 }
 

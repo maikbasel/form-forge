@@ -1,7 +1,16 @@
-
 function calculateModifierFromScore(scoreField) {
     var score = getNumberValueFromField(scoreField);
     event.value = Math.floor((score - 10) / 2);
+}
+
+function calculateSaveFromFields(abilityModField, proficientField, proficiencyBonusField) {
+    var mod = getNumberValueFromField(abilityModField);
+    console.println('mod: ' + mod);
+    var prof = getBoolValueFromField(proficientField);
+    console.println('prof: ' + prof);
+    var profBonus = getNumberValueFromField(proficiencyBonusField);
+    console.println('profBonus: ' + profBonus);
+    event.value = mod + (prof ? profBonus : 0);
 }
 
 function getNumberValueFromField(fieldName) {
@@ -9,6 +18,14 @@ function getNumberValueFromField(fieldName) {
     if (!f) return 0;
     var n = Number(f.value);
     return isNaN(n) ? 0 : n;
+}
+
+function getBoolValueFromField(fieldName) {
+    var f = this.getField(fieldName);
+    if (!f) return false;
+    var v = f.value;
+    console.println('getBoolValueFromField v: ' + v);
+    return v !== "Off" && v !== 0 && v !== "" && v != null;
 }
 
 // (function () {

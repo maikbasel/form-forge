@@ -11,11 +11,11 @@ use validator::Validate;
 #[serde(rename_all = "camelCase")]
 pub struct AttachAbilityModCalcScriptRequest {
     #[validate(length(min = 1))]
-    /// Name of the PDF AcroForm field containing the ability score.
+    /// Name of the PDF AcroForm text field containing the ability score.
     pub ability_score_field_name: String,
 
     #[validate(length(min = 1))]
-    /// Name of the PDF AcroForm field containing the target ability modifier.
+    /// Name of the PDF AcroForm text field containing the target ability modifier.
     pub ability_modifier_field_name: String,
 }
 
@@ -40,6 +40,50 @@ impl AttachAbilityModCalcScriptRequest {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct AttachSavingThrowModifierCalculationScriptRequest {
+    #[validate(length(min = 1))]
+    /// Name of the PDF AcroForm text field containing the relevant ability modifier to calculate the saving throw modifier from.
+    pub ability_modifier_field_name: String,
+    #[validate(length(min = 1))]
+    /// Name of the PDF AcroForm choice field that determines proficiency for this saving throw (used to decide whether to add proficiency bonus to the saving throw modifier or not).
+    pub proficiency_field_name: String,
+    #[validate(length(min = 1))]
+    /// Name of the PDF AcroForm text field containing the actual proficiency bonus value to be added to the saving throw modifier.
+    pub proficiency_bonus_field_name: String,
+    #[validate(length(min = 1))]
+    /// Name of the PDF AcroForm text field containing the target saving throw modifier.
+    pub saving_throw_modifier_field_name: String,
+}
+
+impl AttachSavingThrowModifierCalculationScriptRequest {
+    pub fn new(
+        ability_modifier_field_name: impl Into<String>,
+        proficiency_field_name: impl Into<String>,
+        proficiency_bonus_field_name: impl Into<String>,
+        saving_throw_modifier_field_name: impl Into<String>,
+    ) -> Self {
+        Self {
+            ability_modifier_field_name: ability_modifier_field_name.into(),
+            proficiency_field_name: proficiency_field_name.into(),
+            proficiency_bonus_field_name: proficiency_bonus_field_name.into(),
+            saving_throw_modifier_field_name: saving_throw_modifier_field_name.into(),
+        }
+    }
+}
+
+impl From<AttachSavingThrowModifierCalculationScriptRequest> for CalculationAction {
+    fn from(req: AttachSavingThrowModifierCalculationScriptRequest) -> Self {
+        CalculationAction::saving_throw_modifier(
+            req.ability_modifier_field_name,
+            req.proficiency_field_name,
+            req.proficiency_bonus_field_name,
+            req.saving_throw_modifier_field_name,
+        )
+    }
+}
+
 #[utoipa::path(
     put,
     path = "/dnd5e/{sheet_id}/ability-modifier",
@@ -51,8 +95,9 @@ The field will automatically calculate and display ability modifiers using the f
 `floor((score - 10) / 2)` whenever the corresponding ability score changes.\n\n\
 The script is embedded directly in the PDF's AcroForm structure for real-time updates.\n\n\
 Note: Sending a request to attach a calculation script targeting the same ability modifier field will replace the existing script on that field.",
-    request_body = AttachAbilityModCalcScriptRequest,
-    tag = "DnD 5e",
+    params(
+        ("sheet_id" = String, Path, description = "ID of the uploaded", example = "123e4567-e89b-12d3-a456-426614174000")
+    ),
     request_body(
         content = AttachAbilityModCalcScriptRequest,
         content_type = "application/json",
@@ -67,6 +112,45 @@ pub async fn attach_ability_modifier_calculation_script(
     action_service: web::Data<ActionService>,
     sheet_id: web::Path<Uuid>,
     request: web::Json<AttachAbilityModCalcScriptRequest>,
+) -> Result<HttpResponse, ApiError> {
+    let sheet_id = sheet_id.into_inner();
+
+    let action = request.into_inner().into();
+    action_service
+        .attach_calculation_script(&sheet_id, action)
+        .await?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+#[utoipa::path(
+    put,
+    path = "/dnd5e/{sheet_id}/saving-throw-modifier",
+    tag = "DnD 5e",
+    operation_id = "attachSavingThrowModifierCalculationScript",
+    summary = "Attach a Saving Throw Modifier calculation script",
+    description = "Attaches a JavaScript calculation script to a saving throw modifier target PDF AcroForm field in a DnD 5e character sheet.\n\n\
+The field will automatically calculate and display the saving throw modifier using the formula \
+`modifier + (proficient ? proficiency_bonus : 0)` whenever any of the source fields change.\n\n\
+The script is embedded directly in the PDF's AcroForm structure for real-time updates.\n\n\
+Note: Sending a request to attach a calculation script targeting the same saving throw modifier field will replace the existing script on that field.",
+    params(
+        ("sheet_id" = String, Path, description = "ID of the uploaded sheet", example = "123e4567-e89b-12d3-a456-426614174000")
+    ),
+    request_body(
+        content = AttachSavingThrowModifierCalculationScriptRequest,
+        content_type = "application/json",
+        description = "JSON object containing the names of the ability modifier, proficiency choice, and proficiency bonus fields to link together for calculating the saving throw modifier."
+    ),
+    responses(
+        (status = 204, description = "Calculation script successfully attached to the saving throw modifier field.")
+    ),
+)]
+#[put("/dnd5e/{sheet_id}/saving-throw-modifier")]
+pub async fn attach_saving_throw_modifier_calculation_script(
+    action_service: web::Data<ActionService>,
+    sheet_id: web::Path<Uuid>,
+    request: web::Json<AttachSavingThrowModifierCalculationScriptRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let sheet_id = sheet_id.into_inner();
 

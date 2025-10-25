@@ -1,6 +1,8 @@
 use actions_core::ports::driving::ActionService;
 use actions_pdf::adapter::PdfActionAdapter;
-use actions_web::handler::attach_ability_modifier_calculation_script;
+use actions_web::handler::{
+    attach_ability_modifier_calculation_script, attach_saving_throw_modifier_calculation_script,
+};
 use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
@@ -93,6 +95,7 @@ async fn main() -> Result<()> {
             .service(upload_sheet)
             .service(download_sheet)
             .service(attach_ability_modifier_calculation_script)
+            .service(attach_saving_throw_modifier_calculation_script)
             .openapi_service(|api| {
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api/openapi.json", api)
             })

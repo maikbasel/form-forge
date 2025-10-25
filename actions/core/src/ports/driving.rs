@@ -53,6 +53,39 @@ impl ActionService {
                 let action_js = format!("calculateModifierFromScore({});", score_field);
                 (action_js, modifier_field_name)
             }
+            CalculationAction::SavingThrowModifier {
+                ability_modifier_field_name,
+                proficiency_field_name,
+                proficiency_bonus_field_name,
+                saving_throw_modifier_field_name,
+            } => {
+                let ability_mod_field = serde_json::to_string(&ability_modifier_field_name)
+                    .map_err(|e| {
+                        ActionError::InvalidAction(format!(
+                            "failed to serialize ability modifier field name: {}",
+                            e
+                        ))
+                    })?;
+                let proficiency_field =
+                    serde_json::to_string(&proficiency_field_name).map_err(|e| {
+                        ActionError::InvalidAction(format!(
+                            "failed to serialize saving throw proficiency field name: {}",
+                            e
+                        ))
+                    })?;
+                let proficiency_bonus_field = serde_json::to_string(&proficiency_bonus_field_name)
+                    .map_err(|e| {
+                        ActionError::InvalidAction(format!(
+                            "failed to serialize saving throw bonus field name: {}",
+                            e
+                        ))
+                    })?;
+                let action_js = format!(
+                    "calculateSaveFromFields({}, {}, {});",
+                    ability_mod_field, proficiency_field, proficiency_bonus_field
+                );
+                (action_js, saving_throw_modifier_field_name)
+            }
         };
         self.action_pdf_port
             .attach_calculation_js(&action_js, &sheet_path, &target_field)?;
