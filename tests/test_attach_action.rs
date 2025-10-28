@@ -203,10 +203,10 @@ mod tests {
         assert_eq!(actual_doc_level_js[0].1, expected_js);
         //endregion
         //region Verify field calculation action
-        let actual_field_calc_js = read_field_calculation_js(temp_pdf.path(), "STRmod");
+        let actual_field_calc_js = read_field_calculation_js(temp_pdf.path(), "ST Strength");
         assert_eq!(
             actual_field_calc_js,
-            r#"calculateSaveFromFields("STRmod", "Check Box 11", "ProfBonus", "ST Strength");"#
+            r#"calculateSaveFromFields("STRmod", "Check Box 11", "ProfBonus");"#
         );
         //endregion
     }
