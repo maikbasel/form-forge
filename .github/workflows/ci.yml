@@ -9,6 +9,11 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: read
+  checks: write
+  issues: write
+
 # Cancel in-progress CI runs on the same branch/PR to save minutes
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -98,9 +103,6 @@ jobs:
   audit:
     name: Security audit (RustSec)
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      checks: write
     steps:
       - name: Checkout
         uses: actions/checkout@v5
