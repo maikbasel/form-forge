@@ -5,12 +5,19 @@ function calculateModifierFromScore(scoreField) {
 
 function calculateSaveFromFields(abilityModField, proficientField, proficiencyBonusField) {
     var mod = getNumberValueFromField(abilityModField);
-    console.println('mod: ' + mod);
     var prof = getBoolValueFromField(proficientField);
-    console.println('prof: ' + prof);
     var profBonus = getNumberValueFromField(proficiencyBonusField);
-    console.println('profBonus: ' + profBonus);
     event.value = mod + (prof ? profBonus : 0);
+}
+
+function calculateSkillFromFields(abilityModField, proficientField, expertiseField, halfProfField, proficiencyBonusField) {
+    var abilityMod = getNumberValueFromField(abilityModField);
+    var prof = getBoolValueFromField(proficientField);
+    var ex = getBoolValueFromField(expertiseField);
+    var half = getBoolValueFromField(halfProfField);
+    var profBonus = getNumberValueFromField(proficiencyBonusField);
+    var profMult = getProficiencyMultiplier(prof, ex, half);
+    event.value = Math.floor(abilityMod + (profMult * profBonus));
 }
 
 function getNumberValueFromField(fieldName) {
@@ -24,9 +31,23 @@ function getBoolValueFromField(fieldName) {
     var f = this.getField(fieldName);
     if (!f) return false;
     var v = f.value;
-    console.println('getBoolValueFromField v: ' + v);
     return v !== "Off" && v !== 0 && v !== "" && v != null;
 }
+
+function getProficiencyMultiplier(proficient, expertise, half) {
+    if (expertise) return 2;
+    if (proficient) return 1;
+    if (half) return 0.5;
+
+    return 0;
+}
+//     DND.profMult = function (proficient, expertise, half) {
+//         // boolean flags → multiplier
+//         if (expertise) return 2;
+//         if (proficient) return 1;
+//         if (half) return 0.5;
+//         return 0;
+//     };
 
 // (function () {
 //     if (typeof this.DND === "object") return; // already loaded

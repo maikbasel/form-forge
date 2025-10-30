@@ -52,13 +52,8 @@ impl ActionService {
                 score_field_name,
                 modifier_field_name,
             } => {
-                let score_field = serde_json::to_string(&score_field_name).map_err(|e| {
-                    ActionError::InvalidAction(format!(
-                        "failed to serialize score field name: {}",
-                        e
-                    ))
-                })?; // turns a name into a quoted JS string
-                let action_js = format!("calculateModifierFromScore({});", score_field);
+                let score_field_name = Self::serialize_field_name(&score_field_name)?; // turns a name into a quoted JS string
+                let action_js = format!("calculateModifierFromScore({});", score_field_name);
                 (action_js, modifier_field_name, "AbilityModifier")
             }
             CalculationAction::SavingThrowModifier {
@@ -67,36 +62,54 @@ impl ActionService {
                 proficiency_bonus_field_name,
                 saving_throw_modifier_field_name,
             } => {
-                let ability_mod_field = serde_json::to_string(&ability_modifier_field_name)
-                    .map_err(|e| {
-                        ActionError::InvalidAction(format!(
-                            "failed to serialize ability modifier field name: {}",
-                            e
-                        ))
-                    })?;
-                let proficiency_field =
-                    serde_json::to_string(&proficiency_field_name).map_err(|e| {
-                        ActionError::InvalidAction(format!(
-                            "failed to serialize saving throw proficiency field name: {}",
-                            e
-                        ))
-                    })?;
-                let proficiency_bonus_field = serde_json::to_string(&proficiency_bonus_field_name)
-                    .map_err(|e| {
-                        ActionError::InvalidAction(format!(
-                            "failed to serialize saving throw bonus field name: {}",
-                            e
-                        ))
-                    })?;
+                let ability_modifier_field_name =
+                    Self::serialize_field_name(&ability_modifier_field_name)?;
+                let proficiency_field_name = Self::serialize_field_name(&proficiency_field_name)?;
+                let proficiency_bonus_field_name =
+                    Self::serialize_field_name(&proficiency_bonus_field_name)?;
                 let action_js = format!(
                     "calculateSaveFromFields({}, {}, {});",
-                    ability_mod_field, proficiency_field, proficiency_bonus_field
+                    ability_modifier_field_name,
+                    proficiency_field_name,
+                    proficiency_bonus_field_name
                 );
                 (
                     action_js,
                     saving_throw_modifier_field_name,
                     "SavingThrowModifier",
                 )
+            }
+            CalculationAction::SkillModifier {
+                ability_modifier_field_name,
+                proficiency_field_name,
+                expertise_field_name,
+                half_prof_field_name,
+                proficiency_bonus_field_name,
+                skill_modifier_field_name,
+            } => {
+                let ability_modifier_field_name =
+                    Self::serialize_field_name(&ability_modifier_field_name)?;
+                let proficiency_field_name = Self::serialize_field_name(&proficiency_field_name)?;
+                let expertise_field_name = match &expertise_field_name {
+                    Some(name) => Self::serialize_field_name(name)?,
+                    None => "undefined".to_string(),
+                };
+                let half_prof_field_name = match &half_prof_field_name {
+                    Some(name) => Self::serialize_field_name(name)?,
+                    None => "undefined".to_string(),
+                };
+                let proficiency_bonus_field_name =
+                    Self::serialize_field_name(&proficiency_bonus_field_name)?;
+                let action_js = format!(
+                    // calculateSkillFromFields(abilityModField, proficientField, expertiseField, halfProfField, proficiencyBonusField)
+                    "calculateSkillFromFields({}, {}, {}, {}, {});",
+                    ability_modifier_field_name,
+                    proficiency_field_name,
+                    expertise_field_name,
+                    half_prof_field_name,
+                    proficiency_bonus_field_name
+                );
+                (action_js, skill_modifier_field_name, "SkillModifier")
             }
         };
 
@@ -113,5 +126,11 @@ impl ActionService {
         info!("attach_calculation_script completed successfully");
 
         Ok(())
+    }
+
+    fn serialize_field_name(field_name: &String) -> Result<String, ActionError> {
+        serde_json::to_string(&field_name).map_err(|e| {
+            ActionError::InvalidAction(format!("failed to serialize field name: {}", e))
+        })
     }
 }
