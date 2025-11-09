@@ -16,7 +16,9 @@ use sheets_db::adapter::SheetReferenceDb;
 use sheets_pdf::adapter::SheetsPdf;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
-use sheets_web::handler::{UploadSheetRequest, UploadSheetResponse, download_sheet, upload_sheet};
+use sheets_web::handler::{
+    UploadSheetRequest, UploadSheetResponse, download_sheet, get_sheet_form_fields, upload_sheet,
+};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::sync::Arc;
@@ -95,6 +97,7 @@ async fn main() -> Result<()> {
             .app_data(web::Data::new(action_service.clone()))
             .service(upload_sheet)
             .service(download_sheet)
+            .service(get_sheet_form_fields)
             .service(attach_ability_modifier_calculation_script)
             .service(attach_saving_throw_modifier_calculation_script)
             .service(attach_skill_modifier_calculation_script)

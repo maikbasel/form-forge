@@ -16,7 +16,10 @@ mod tests {
     use sheets_pdf::adapter::SheetsPdf;
     use sheets_storage::adapter::SheetFileStorage;
     use sheets_storage::config::StorageConfig;
-    use sheets_web::handler::{download_sheet, upload_sheet};
+    use sheets_web::handler::{
+        ListSheetFieldsResponse, UploadSheetResponse, download_sheet, get_sheet_form_fields,
+        upload_sheet,
+    };
     use std::sync::Arc;
     use tempfile::Builder;
     use uuid::Uuid;
@@ -28,7 +31,7 @@ mod tests {
 
     #[rstest]
     #[actix_web::test]
-    async fn test_should_upload_sheet_and_binding(#[future] async_ctx: AsyncTestContext) {
+    async fn test_should_upload_sheet(#[future] async_ctx: AsyncTestContext) {
         let async_ctx = async_ctx.await;
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
         let sheet_reference_port: Arc<dyn SheetReferencePort> =
@@ -139,5 +142,44 @@ mod tests {
         let resp = test::call_service(&app, req).await;
 
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[rstest]
+    #[actix_web::test]
+    async fn test_should_respond_with_list_of_interactive_form_fields(
+        #[future] async_ctx: AsyncTestContext,
+    ) {
+        let async_ctx = async_ctx.await;
+        let sheet_reference_port: Arc<dyn SheetReferencePort> =
+            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+        let tmp_dir = Builder::new()
+            .prefix("tests")
+            .tempdir()
+            .expect("create temp dir");
+        let storage_cfg = StorageConfig {
+            data_dir: tmp_dir.path().to_path_buf(),
+        };
+        let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
+        let sheet_storage_port: Arc<dyn SheetStoragePort> =
+            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let sheet_service =
+            SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
+        telemetry::initialize().expect("initialize telemetry");
+        let app = test_utils::app!(app_data: [sheet_service], services: [upload_sheet, download_sheet, get_sheet_form_fields]);
+        let (header, body) = test_utils::dnd5e_sheet_multipart_form_data().build();
+        let req = test::TestRequest::post()
+            .uri("/sheets")
+            .insert_header(header)
+            .set_payload(body)
+            .to_request();
+        let resp: UploadSheetResponse = test::call_and_read_body_json(&app, req).await;
+        let sheet_id = resp.id;
+
+        let req = test::TestRequest::get()
+            .uri(&format!("/sheets/{}/fields", sheet_id))
+            .to_request();
+        let resp: ListSheetFieldsResponse = test::call_and_read_body_json(&app, req).await;
+
+        assert_eq!(resp.fields.len(), 210);
     }
 }

@@ -1,5 +1,5 @@
-use crate::error::{PdfValidationError, SheetError};
-use crate::sheet::{Sheet, SheetReference};
+use crate::error::{PdfError, SheetError};
+use crate::sheet::{Sheet, SheetField, SheetReference};
 use async_trait::async_trait;
 #[cfg(test)]
 use mockall::automock;
@@ -23,5 +23,9 @@ pub trait SheetReferencePort: Send + Sync {
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait SheetPdfPort: Send + Sync {
-    async fn is_valid_pdf(&self, sheet_reference: &Sheet) -> Result<(), PdfValidationError>;
+    async fn is_valid_pdf(&self, sheet_reference: &Sheet) -> Result<(), PdfError>;
+    async fn list_form_fields(
+        &self,
+        sheet_reference: &Sheet,
+    ) -> Result<Vec<SheetField>, SheetError>;
 }

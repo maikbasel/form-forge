@@ -8,7 +8,7 @@ pub enum SheetError {
     #[error("invalid sheet path")]
     InvalidFilePath,
     #[error("invalid pdf file: {0}")]
-    InvalidPdfFile(#[from] PdfValidationError),
+    InvalidPdfFile(#[from] PdfError),
     #[error("sheet not found: {0}")]
     NotFound(String),
     #[error("failed to save sheet")]
@@ -18,7 +18,7 @@ pub enum SheetError {
 }
 
 #[derive(Debug, Error)]
-pub enum PdfValidationError {
+pub enum PdfError {
     #[error("file does not exist")]
     FileNotFound,
     #[error("failed to read file: {0}")]

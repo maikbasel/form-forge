@@ -42,3 +42,22 @@ impl SheetReference {
         }
     }
 }
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum SheetFieldKind {
+    Text,
+    Choice,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct SheetField {
+    pub name: String,
+    pub kind: SheetFieldKind,
+}
+
+impl SheetField {
+    pub fn new(name: impl Into<String>, kind: SheetFieldKind) -> Self {
+        let name = name.into();
+        Self { name, kind }
+    }
+}

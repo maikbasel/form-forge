@@ -10,7 +10,7 @@ use common::error::ApiErrorResponse;
 use serde::{Deserialize, Serialize};
 use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
-use sheets_core::sheet::Sheet;
+use sheets_core::sheet::{Sheet, SheetField, SheetFieldKind};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -32,6 +32,65 @@ pub struct UploadSheetResponse {
 impl UploadSheetResponse {
     pub fn new(id: Uuid) -> Self {
         Self { id }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum SheetFieldKindDto {
+    /// A text (`/Tx`) AcroForm field.
+    Text,
+    /// A choice (`/Ch`) AcroForm field.
+    Choice,
+}
+
+impl From<SheetFieldKind> for SheetFieldKindDto {
+    fn from(value: SheetFieldKind) -> Self {
+        match value {
+            SheetFieldKind::Text => SheetFieldKindDto::Text,
+            SheetFieldKind::Choice => SheetFieldKindDto::Choice,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct SheetFieldDto {
+    /// Name of the AcroForm field.
+    name: String,
+    /// What kind of AcroForm field this is, either text (`/Tx`) or choice (`/Ch`).
+    kind: SheetFieldKindDto,
+}
+
+impl SheetFieldDto {
+    pub fn new(name: impl Into<String>, kind: SheetFieldKindDto) -> Self {
+        let name = name.into();
+        Self { name, kind }
+    }
+}
+
+impl From<SheetField> for SheetFieldDto {
+    fn from(value: SheetField) -> Self {
+        let kind = value.kind.into();
+        SheetFieldDto::new(value.name, kind)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ListSheetFieldsResponse {
+    /// List of interactive PDF AcroForm fields.
+    pub fields: Vec<SheetFieldDto>,
+}
+
+impl ListSheetFieldsResponse {
+    pub fn new(fields: Vec<SheetFieldDto>) -> Self {
+        Self { fields }
+    }
+}
+
+impl From<Vec<SheetField>> for ListSheetFieldsResponse {
+    fn from(value: Vec<SheetField>) -> Self {
+        let fields = value.into_iter().map(SheetFieldDto::from).collect();
+        Self::new(fields)
     }
 }
 
@@ -127,4 +186,36 @@ pub async fn download_sheet(
     Ok(file
         .set_content_disposition(cd)
         .set_content_type(mime::APPLICATION_PDF))
+}
+
+#[utoipa::path(
+    get,
+    path = "/sheets/{sheet_id}/fields",
+    tag = "Sheets",
+    operation_id = "getSheetFormFields",
+    summary = "Lists sheet form fields",
+    description = "Lists interactive PDF AcroForm fields that support calculation actions. Only text (`/Tx`), choice (`/Ch`) fields with widget annotations are returned.",
+    params(
+        ("sheet_id" = String, Path, description = "ID of the uploaded sheet", example = "123e4567-e89b-12d3-a456-426614174000")
+    ),
+    responses(
+        (status = 200, description = "List of interactive PDF AcroForm fields", body = ListSheetFieldsResponse),
+        (status = NOT_FOUND, description = "Sheet not found", body = ApiErrorResponse, content_type = "application/json",
+            examples(
+                ("sheet_not_found" = (summary = "Sheet does not exist", value = json!({"message": "sheet not found: 123e4567-e89b-12d3-a456-426614174000"})))
+            )
+        )
+    )
+)]
+#[get("/sheets/{sheet_id}/fields")]
+pub async fn get_sheet_form_fields(
+    sheet_service: web::Data<SheetService>,
+    sheet_id: web::Path<Uuid>,
+) -> Result<HttpResponse, ApiError> {
+    let sheet_id = sheet_id.into_inner();
+
+    let fields = sheet_service.list_sheet_form_fields(sheet_id).await?;
+    let response = ListSheetFieldsResponse::from(fields);
+
+    Ok(HttpResponse::Ok().json(response))
 }

@@ -1,15 +1,26 @@
+mod test_utils;
+
 #[cfg(test)]
 mod tests {
-    use sheets_core::error::PdfValidationError;
+    use crate::test_utils::TestContext;
+    use pretty_assertions::assert_eq;
+    use rstest::{fixture, rstest};
+    use sheets_core::error::PdfError;
     use sheets_core::ports::driven::SheetPdfPort;
-    use sheets_core::sheet::Sheet;
+    use sheets_core::sheet::{Sheet, SheetField, SheetFieldKind};
     use sheets_pdf::adapter::SheetsPdf;
     use std::fs;
     use std::path::PathBuf;
     use tempfile::NamedTempFile;
 
+    #[fixture]
+    fn ctx() -> TestContext {
+        TestContext::setup()
+    }
+
+    #[rstest]
     #[tokio::test]
-    async fn test_should_validate_pdf_file_with_valid_pdf_header() {
+    async fn test_should_validate_pdf_file_with_valid_pdf_header(_ctx: TestContext) {
         let adapter = SheetsPdf;
         let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let sheet_path = here.join("tests/fixtures/DnD_5E_CharacterSheet_FormFillable.pdf");
@@ -23,8 +34,9 @@ mod tests {
         assert!(actual.is_ok());
     }
 
+    #[rstest]
     #[tokio::test]
-    async fn test_fail_validating_pdf_file_with_invalid_pdf_header() {
+    async fn test_fail_validating_pdf_file_with_invalid_pdf_header(_ctx: TestContext) {
         let adapter = SheetsPdf;
         let temp_file = NamedTempFile::with_suffix(".pdf").unwrap();
         fs::write(temp_file.path(), b"not a pdf file").unwrap();
@@ -36,11 +48,12 @@ mod tests {
         let actual = adapter.is_valid_pdf(&sheet).await;
 
         assert!(actual.is_err());
-        assert!(matches!(actual, Err(PdfValidationError::InvalidHeader)));
+        assert!(matches!(actual, Err(PdfError::InvalidHeader)));
     }
 
+    #[rstest]
     #[tokio::test]
-    async fn test_fail_validating_non_existent_file() {
+    async fn test_fail_validating_non_existent_file(_ctx: TestContext) {
         let adapter = SheetsPdf;
         let sheet = Sheet::new(
             PathBuf::from("/does/not/exist.pdf"),
@@ -50,11 +63,12 @@ mod tests {
         let actual = adapter.is_valid_pdf(&sheet).await;
 
         assert!(actual.is_err());
-        assert!(matches!(actual, Err(PdfValidationError::FileNotFound)));
+        assert!(matches!(actual, Err(PdfError::FileNotFound)));
     }
 
+    #[rstest]
     #[tokio::test]
-    async fn test_should_fail_validating_non_form_fillable_pdf() {
+    async fn test_should_fail_validating_non_form_fillable_pdf(_ctx: TestContext) {
         let adapter = SheetsPdf;
         let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let sheet_path = here.join("tests/fixtures/empty_pdf.pdf");
@@ -63,6 +77,31 @@ mod tests {
         let actual = adapter.is_valid_pdf(&sheet).await;
 
         assert!(actual.is_err());
-        assert!(matches!(actual, Err(PdfValidationError::NotSupported(_))));
+        assert!(matches!(actual, Err(PdfError::NotSupported(_))));
+    }
+
+    #[rstest]
+    #[tokio::test]
+    async fn test_list_terminal_text_and_choice_form_fields_returns_expected_fields(
+        _ctx: TestContext,
+    ) {
+        let adapter = SheetsPdf;
+        let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let sheet_path = here.join("tests/fixtures/list_fields_test.pdf");
+        let sheet = Sheet::new(sheet_path, Some("list_fields_test.pdf".to_string()));
+        let mut expected: Vec<SheetField> = vec![
+            SheetField::new("Text Field", SheetFieldKind::Text),
+            SheetField::new("Combo Box", SheetFieldKind::Choice),
+            SheetField::new("List Box", SheetFieldKind::Choice),
+        ];
+        expected.sort_by_key(|field| field.name.clone());
+
+        let actual = adapter.list_form_fields(&sheet).await;
+
+        assert!(actual.is_ok());
+        let mut fields = actual.unwrap();
+        // assert_eq!(fields.len(), 3);
+        fields.sort_by_key(|field| field.name.clone());
+        assert_eq!(fields, expected);
     }
 }

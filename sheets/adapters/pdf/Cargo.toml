@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+common = { path = "../../../common" }
 sheets_core = { path = "../../core" }
 async-trait.workspace = true
 tracing.workspace = true
@@ -12,3 +13,5 @@ lopdf.workspace = true
 [dev-dependencies]
 tempfile.workspace = true
 tokio.workspace = true
+rstest.workspace = true
+pretty_assertions.workspace = true

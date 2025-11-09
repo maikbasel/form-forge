@@ -1,6 +1,6 @@
 use crate::error::SheetError;
 use crate::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
-use crate::sheet::{Sheet, SheetReference};
+use crate::sheet::{Sheet, SheetField, SheetReference};
 use std::path::Path;
 use std::sync::Arc;
 use tracing::{debug, info, instrument};
@@ -79,6 +79,24 @@ impl SheetService {
         };
 
         Ok(Sheet::new(file_path, Some(filename)))
+    }
+
+    #[instrument(name = "sheets.list_form_fields", skip(self), level = "info", fields(%sheet_id))]
+    pub async fn list_sheet_form_fields(
+        &self,
+        sheet_id: Uuid,
+    ) -> Result<Vec<SheetField>, SheetError> {
+        let sheet_reference = self.sheet_reference_port.find_by_id(&sheet_id).await?;
+
+        info!(path = %sheet_reference.path.display(), "found sheet reference");
+
+        let file_path = self.sheet_storage_port.read(sheet_reference.path).await?;
+
+        info!(path = %file_path.display(), "read sheet file from storage");
+
+        self.sheet_pdf_port
+            .list_form_fields(&Sheet::new(file_path, None))
+            .await
     }
 }
 
