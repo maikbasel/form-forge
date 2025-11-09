@@ -104,49 +104,26 @@ impl SheetsPdf {
                 };
 
                 // AcroForm
-                let acroform_id = match catalog.get(b"AcroForm").and_then(|o| o.as_reference()) {
-                    // TODO: handle AcroForm that are direct objects and not indirect object references
-                    Ok(id) => id,
-                    Err(_) => {
-                        return Err(PdfError::NotSupported(
-                            "PDF sheet does not have an AcroForm".to_string(),
-                        ));
-                    }
-                };
-                let acroform = match doc.get_object(acroform_id).and_then(|o| o.as_dict()) {
-                    Ok(a) => a,
-                    Err(_) => {
-                        return Err(PdfError::NotSupported(
-                            "PDF sheet AcroForm is not a dictionary".to_string(),
-                        ));
-                    }
-                };
+                let acroform_dict = doc.get_dict_in_dict(catalog, b"AcroForm").map_err(|e| {
+                    error!(error = ?e, "failed to get AcroForm dictionary");
+                    PdfError::NotSupported("PDF sheet does not have an AcroForm".to_string())
+                })?;
 
                 // Skip XFA forms — they use XML instead of /AA /C
-                if acroform.get(b"XFA").is_ok() {
+                if acroform_dict.get(b"XFA").is_ok() {
                     return Err(PdfError::NotSupported(
                         "PDF sheet has an XFA form".to_string(),
                     ));
                 }
 
                 // Must have /Fields array
-                let fields_arr_ref = match acroform.get(b"Fields").and_then(|o| o.as_reference()) {
-                    Ok(id) => id,
-                    Err(_) => {
-                        return Err(PdfError::NotSupported(
-                            "PDF sheet does not have a Fields array".to_string(),
-                        ));
-                    }
-                };
-                if doc
-                    .get_object(fields_arr_ref)
-                    .and_then(|o| o.as_array())
-                    .is_err()
-                {
-                    return Err(PdfError::NotSupported(
-                        "PDF sheet Fields object is not an array".to_string(),
-                    ));
-                }
+                acroform_dict
+                    .get_deref(b"Fields", &doc)
+                    .and_then(|obj| obj.as_array())
+                    .map_err(|e| {
+                        error!(error = ?e, "failed to get Fields array reference from AcroForm");
+                        PdfError::NotSupported("PDF sheet does not have a Fields array".to_string())
+                    })?;
 
                 // Disallow DocMDP permissions (locked PDF)
                 if let Ok(perms_ref) = catalog.get(b"Perms").and_then(|o| o.as_reference())
@@ -242,6 +219,7 @@ impl SheetsPdf {
                 error!(error = ?e, "failed to get field name");
                 PdfError::ParseError(e.to_string())
             })?;
+
         let field_name = str::from_utf8(field_name_bytes).map_err(|e| {
             error!(error = ?e, "field name is not valid UTF-8");
             PdfError::ParseError(e.to_string())
