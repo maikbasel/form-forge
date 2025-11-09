@@ -3,8 +3,8 @@ repos:
     rev: v1.0
     hooks:
     -   id: fmt
-        args: ["--all", "--", "--check"]
+        args: ["--manifest-path", "backend/Cargo.toml", "--all", "--", "--check"]
     -   id: clippy
-        args: ["--workspace", "--all-targets", "--all-features", "--", "-D", "warnings"]
+        args: ["--manifest-path", "backend/Cargo.toml", "--workspace", "--all-targets", "--all-features", "--", "-D", "warnings"]
     -   id: cargo-check
-        args: ["--workspace", "--all-features", "--all-targets"]
+        args: ["--manifest-path", "backend/Cargo.toml", "--workspace", "--all-features", "--all-targets"]
