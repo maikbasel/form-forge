@@ -4,6 +4,7 @@ use actions_web::handler::{
     attach_ability_modifier_calculation_script, attach_saving_throw_modifier_calculation_script,
     attach_skill_modifier_calculation_script,
 };
+use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
@@ -90,6 +91,8 @@ async fn main() -> Result<()> {
     pub struct ApiDoc;
 
     HttpServer::new(move || {
+        let cors = Cors::permissive(); // FIXME: Configure for production.
+
         App::new()
             .into_utoipa_app()
             .openapi(ApiDoc::openapi())
@@ -106,6 +109,7 @@ async fn main() -> Result<()> {
             })
             .into_app()
             .wrap(TracingLogger::default())
+            .wrap(cors)
     })
     .bind(addr)?
     .run()
