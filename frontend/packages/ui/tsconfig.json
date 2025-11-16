@@ -6,7 +6,8 @@
     "baseUrl": ".",
     "paths": {
       "@repo/ui/*": ["./src/*"]
-    }
+    },
+    "strictNullChecks": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

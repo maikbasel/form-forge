@@ -1,19 +1,19 @@
-import { z } from "zod";
-import natural from "natural";
 import {
   ApiError,
-  HttpStatus,
-  createResponse,
   createErrorResponse,
+  createResponse,
+  HttpStatus,
 } from "@repo/ui/lib/api";
-import { TextAnalysisResult } from "@repo/ui/types/text-analysis";
+import type { TextAnalysisResult } from "@repo/ui/types/text-analysis";
+import natural from "natural";
+import { z } from "zod";
 
 // Define the schema for validating the input using Zod
 const InputSchema = z.object({
   text: z
     .string()
     .min(1, "Text input cannot be empty")
-    .max(10000, "Text input exceeds the maximum allowed length"),
+    .max(10_000, "Text input exceeds the maximum allowed length"),
 });
 
 export async function POST(request: Request) {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       throw new ApiError(
         HttpStatus.BAD_REQUEST,
         "VALIDATION_ERROR",
-        errorMessage,
+        errorMessage
       );
     }
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const analyzer = new natural.SentimentAnalyzer(
       "English",
       natural.PorterStemmer,
-      "afinn",
+      "afinn"
     );
     const sentimentScore = analyzer.getSentiment(words);
 
@@ -75,16 +75,18 @@ export async function POST(request: Request) {
 
 // Helper function to find the most frequent word
 function findMostFrequentWord(words: string[]): string | null {
-  if (words.length === 0) return null;
+  if (words.length === 0) {
+    return null;
+  }
 
   const frequencyMap: Record<string, number> = {};
-  words.forEach((word) => {
+  for (const word of words) {
     const normalizedWord = word.toLowerCase();
     frequencyMap[normalizedWord] = (frequencyMap[normalizedWord] ?? 0) + 1;
-  });
+  }
 
   return Object.keys(frequencyMap).reduce(
     (a, b) => ((frequencyMap[a] || 0) > (frequencyMap[b] || 0) ? a : b),
-    "",
+    ""
   );
 }

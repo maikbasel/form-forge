@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@repo/ui/globals.css";
+import { Toaster } from "@repo/ui/components/sonner";
+import SheetProviderWrapper from "@/app/providers/sheet-provider-wrapper";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -24,8 +26,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${fontSans.variable} ${fontMono.variable}`}>
-        {children}
+      <body
+        className={`${fontSans.variable} ${fontMono.variable} min-h-screen bg-background text-foreground`}
+      >
+        <SheetProviderWrapper>
+          <div className="flex min-h-screen flex-col">
+            <main className="container mx-auto flex-1 p-4">{children}</main>
+          </div>
+
+          <Toaster />
+        </SheetProviderWrapper>
       </body>
     </html>
   );

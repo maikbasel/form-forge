@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Button } from "@repo/ui/components/button";
 import {
   Card,
   CardContent,
@@ -6,13 +6,12 @@ import {
   CardTitle,
 } from "@repo/ui/components/card";
 import { Textarea } from "@repo/ui/components/textarea";
-import { Button } from "@repo/ui/components/button";
-import { TextAnalysisResult } from "../types/text-analysis.js";
-import { fetch as tauri } from '@tauri-apps/plugin-http';
+import { fetch as tauri } from "@tauri-apps/plugin-http";
+import { useState } from "react";
+import type { TextAnalysisResult } from "../types/text-analysis.js";
 
-const fetchFn = typeof window !== 'undefined' && '__TAURI__' in window
-    ? tauri
-    : fetch;
+const fetchFn =
+  typeof window !== "undefined" && "__TAURI__" in window ? tauri : fetch;
 
 function getSentimentText(score: number): string {
   if (score === 0) return "Neutral 😐";
@@ -51,16 +50,16 @@ export const AnalyzeTextView = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-4">Text Analysis App</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="container mx-auto max-w-2xl p-4">
+      <h1 className="mb-4 font-bold text-2xl">Text Analysis App</h1>
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <Textarea
-          value={sourceText}
+          className="min-h-[100px]"
           onChange={(e) => setSourceText(e.target.value)}
           placeholder="Enter your text here..."
-          className="min-h-[100px]"
+          value={sourceText}
         />
-        <Button type="submit" disabled={isLoading}>
+        <Button disabled={isLoading} type="submit">
           Analyze Text
         </Button>
       </form>

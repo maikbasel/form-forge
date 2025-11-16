@@ -22,7 +22,7 @@ export class ApiError extends Error {
     public statusCode: number,
     public code: string,
     message: string,
-    public details?: unknown,
+    public details?: unknown
   ) {
     super(message);
     this.name = "ApiError";
@@ -55,7 +55,7 @@ export function createErrorResponse(error: Error | ApiError): Response {
       : new ApiError(
           HttpStatus.INTERNAL_SERVER_ERROR,
           "INTERNAL_SERVER_ERROR",
-          "An unexpected error occurred",
+          "An unexpected error occurred"
         );
 
   const body: ApiResponse<never> = {
@@ -77,13 +77,13 @@ export function createErrorResponse(error: Error | ApiError): Response {
 }
 
 export function isSuccessResponse<T, E>(
-  response: ApiResponse<T, E>,
+  response: ApiResponse<T, E>
 ): response is ApiResponse<T, E> & { success: true } {
   return response.success === true;
 }
 
 export async function parseApiResponse<T, E = unknown>(
-  response: Response,
+  response: Response
 ): Promise<ApiResponse<T, E>> {
   const data = await response.json();
   if (!response.ok) {
@@ -95,7 +95,7 @@ export async function parseApiResponse<T, E = unknown>(
       response.status,
       error.code,
       error.message,
-      error.details,
+      error.details
     );
   }
   return data as ApiResponse<T, E>;
