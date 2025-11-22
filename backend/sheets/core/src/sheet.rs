@@ -43,21 +43,29 @@ impl SheetReference {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum SheetFieldKind {
-    Text,
-    Choice,
+#[derive(Debug, PartialEq)]
+pub struct SheetFieldRect {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+impl SheetFieldRect {
+    pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
+        Self { x, y, width, height }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct SheetField {
     pub name: String,
-    pub kind: SheetFieldKind,
+    pub rect: SheetFieldRect,
 }
 
 impl SheetField {
-    pub fn new(name: impl Into<String>, kind: SheetFieldKind) -> Self {
+    pub fn new(name: impl Into<String>, rect: SheetFieldRect) -> Self {
         let name = name.into();
-        Self { name, kind }
+        Self { name, rect }
     }
 }

@@ -10,7 +10,7 @@ use common::error::ApiErrorResponse;
 use serde::{Deserialize, Serialize};
 use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
-use sheets_core::sheet::{Sheet, SheetField, SheetFieldKind};
+use sheets_core::sheet::{SheetFieldRect, Sheet, SheetField};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -37,18 +37,24 @@ impl UploadSheetResponse {
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "lowercase")]
-pub enum SheetFieldKindDto {
-    /// A text (`/Tx`) AcroForm field.
-    Text,
-    /// A choice (`/Ch`) AcroForm field.
-    Choice,
+pub struct SheetFieldRectDto {
+    /// X coordinate of the upper-left corner of the field's bounding box, in PDF points.
+    pub x: f32,
+    /// Y coordinate of the upper-left corner of the field's bounding box, in PDF points.
+    pub y: f32,
+    /// Width of the field's bounding box, in PDF points.
+    pub width: f32,
+    /// Height of the field's bounding box, in PDF points.
+    pub height: f32,
 }
 
-impl From<SheetFieldKind> for SheetFieldKindDto {
-    fn from(value: SheetFieldKind) -> Self {
-        match value {
-            SheetFieldKind::Text => SheetFieldKindDto::Text,
-            SheetFieldKind::Choice => SheetFieldKindDto::Choice,
+impl From<SheetFieldRect> for SheetFieldRectDto {
+    fn from(value: SheetFieldRect) -> Self {
+        Self {
+            x: value.x,
+            y: value.y,
+            width: value.width,
+            height: value.height,
         }
     }
 }
@@ -57,21 +63,21 @@ impl From<SheetFieldKind> for SheetFieldKindDto {
 pub struct SheetFieldDto {
     /// Name of the AcroForm field.
     name: String,
-    /// What kind of AcroForm field this is, either text (`/Tx`) or choice (`/Ch`).
-    kind: SheetFieldKindDto,
+    /// Bounding box of the field, in PDF points.
+    rect: SheetFieldRectDto,
 }
 
 impl SheetFieldDto {
-    pub fn new(name: impl Into<String>, kind: SheetFieldKindDto) -> Self {
+    pub fn new(name: impl Into<String>, rect: SheetFieldRectDto) -> Self {
         let name = name.into();
-        Self { name, kind }
+        Self { name, rect }
     }
 }
 
 impl From<SheetField> for SheetFieldDto {
     fn from(value: SheetField) -> Self {
-        let kind = value.kind.into();
-        SheetFieldDto::new(value.name, kind)
+        let rect = value.rect.into();
+        SheetFieldDto::new(value.name, rect)
     }
 }
 
