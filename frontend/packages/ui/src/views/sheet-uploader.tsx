@@ -22,7 +22,7 @@ const ALLOWED_FILE_TYPES = ["application/pdf"];
 
 export default function SheetUploader() {
   const [files, setFiles] = useState<File[]>([]);
-  const { setSheetPath } = useSheet();
+  const { setSheetPath, setSheetId } = useSheet();
 
   const onUpload: NonNullable<FileUploadProps["onUpload"]> = useCallback(
     async (files, { onProgress, onSuccess, onError }) => {
@@ -59,6 +59,7 @@ export default function SheetUploader() {
           }
 
           setSheetPath(location);
+          setSheetId(location.split("/").pop());
 
           // Make sure we end at 100% and mark success
           onProgress(file, 100);

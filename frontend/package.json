@@ -5,11 +5,10 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "clean": "turbo clean",
     "check-types": "turbo check-types",
     "shadcn": "pnpm --filter @repo/ui shadcn",
-    "tauri": "pnpm --filter native tauri",
+    "tauri": "pnpm --filter native tauri dev",
     "prepare": "husky",
     "check": "npx ultracite@latest check",
     "fix": "npx ultracite@latest fix"
