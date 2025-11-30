@@ -29,7 +29,7 @@ export default function Home() {
         {/* Viewer: bottom on mobile, right on larger screens */}
         <section className="min-h-[300px] flex-1">
           {fileUrl && (
-            <div className="h-full rounded-md border bg-card">
+            <div className="h-full">
               <SheetViewer file={fileUrl} />
             </div>
           )}
