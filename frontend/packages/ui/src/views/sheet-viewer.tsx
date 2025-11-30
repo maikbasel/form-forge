@@ -2,6 +2,14 @@ import { useCallback, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import {
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  useDraggable,
+  useDroppable,
+} from "@dnd-kit/core";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -12,7 +20,13 @@ import {
   CardTitle,
 } from "@repo/ui/components/card";
 import { ScrollArea } from "@repo/ui/components/scroll-area";
-import { Select } from "@repo/ui/components/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
 import { Separator } from "@repo/ui/components/separator";
 import { useSheet } from "@repo/ui/context/sheet-context";
 import { useResizeObserver } from "@wojtekmaj/react-hooks";
@@ -154,6 +168,179 @@ const ACTION_TYPES: ActionType[] = [
   },
 ];
 
+function DraggableField({ field }: Readonly<{ field: string }>) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: field,
+    });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`cursor-move rounded-md border-2 border-border bg-card px-3 py-2 font-mono text-sm shadow-sm transition-all hover:border-primary/50 hover:shadow-md ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      {field}
+    </div>
+  );
+}
+
+function AvailableFieldsPool({ fields }: Readonly<{ fields: string[] }>) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "available-fields",
+  });
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-semibold text-sm">Available Fields</h3>
+        <Badge variant="secondary">{fields.length} fields</Badge>
+      </div>
+      <div
+        className={`flex min-h-[80px] flex-wrap gap-2 rounded-lg border-2 border-dashed p-4 transition-colors ${
+          isOver
+            ? "border-primary bg-primary/5"
+            : "border-muted-foreground/25 bg-muted/30"
+        }`}
+        ref={setNodeRef}
+      >
+        {fields.length === 0 ? (
+          <span className="text-muted-foreground text-sm italic">
+            All fields assigned
+          </span>
+        ) : (
+          fields.map((field) => <DraggableField field={field} key={field} />)
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Role Drop Zone Component
+type RoleDropZoneProps = {
+  role: ActionRole;
+  assignedField: string | undefined;
+  onRemove: () => void;
+  onSelectField: (field: string) => void;
+  unassignedFields: string[];
+  isDragging: boolean;
+};
+
+function RoleDropZone({
+  role,
+  assignedField,
+  onRemove,
+  onSelectField,
+  unassignedFields,
+  isDragging,
+}: Readonly<RoleDropZoneProps>) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `role-${role.key}`,
+  });
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragRef,
+    transform,
+  } = useDraggable({
+    id: assignedField || `empty-${role.key}`,
+    disabled: !assignedField,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  return (
+    <div
+      className={`rounded-lg border-2 p-4 transition-all ${
+        assignedField
+          ? "border-green-500 bg-green-500/5"
+          : role.required
+            ? "border-primary border-dashed bg-primary/5"
+            : "border-muted-foreground/25 border-dashed bg-muted/20"
+      } ${isOver && !assignedField ? "ring-2 ring-primary/50" : ""}`}
+      ref={setNodeRef}
+    >
+      <div className="mb-3 flex items-start justify-between">
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="font-semibold text-sm">{role.label}</span>
+            {role.required ? (
+              <Badge className="text-xs" variant="default">
+                Required
+              </Badge>
+            ) : (
+              <Badge className="text-xs" variant="secondary">
+                Optional
+              </Badge>
+            )}
+          </div>
+          <p className="text-muted-foreground text-xs">{role.hint}</p>
+        </div>
+        {assignedField && (
+          <Button
+            className="h-8 w-8"
+            onClick={onRemove}
+            size="icon"
+            variant="ghost"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {assignedField ? (
+        <div
+          ref={setDragRef}
+          style={style}
+          {...listeners}
+          {...attributes}
+          className="flex cursor-move items-center gap-2 rounded-md border-2 border-green-500 bg-card px-3 py-2.5"
+        >
+          <Check className="h-4 w-4 text-green-600" />
+          <span className="font-medium font-mono text-sm">{assignedField}</span>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="rounded-md border-2 border-dashed p-3 text-center text-muted-foreground text-sm italic">
+            {isDragging ? "Drop here" : "Drag a field here"}
+          </div>
+
+          {/* Dropdown as alternative */}
+          {unassignedFields.length > 0 && (
+            <Select onValueChange={onSelectField} value="">
+              <SelectTrigger>
+                <SelectValue placeholder="Or select from list..." />
+              </SelectTrigger>
+              <SelectContent>
+                {unassignedFields.map((field) => (
+                  <SelectItem key={field} value={field}>
+                    {field}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 type ActionConfigModalProps = {
   selectedFields: string[];
   onClose: () => void;
@@ -167,7 +354,7 @@ function ActionConfigModal({
 }: Readonly<ActionConfigModalProps>) {
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
-  const [draggedField, setDraggedField] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const currentAction = ACTION_TYPES.find((a) => a.id === selectedAction);
 
@@ -210,6 +397,42 @@ function ActionConfigModal({
       endpoint: currentAction.endpoint,
       mapping: fieldMapping,
     });
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    const fieldName = active.id as string;
+    const targetId = over.id as string;
+
+    // Dropping back to available pool
+    if (targetId === "available-fields") {
+      // Find which role has this field and remove it
+      const roleKey = Object.keys(fieldMapping).find(
+        (key) => fieldMapping[key] === fieldName
+      );
+      if (roleKey) {
+        removeAssignment(roleKey);
+      }
+      return;
+    }
+
+    // Dropping onto a role
+    if (targetId.startsWith("role-")) {
+      const roleKey = targetId.replace("role-", "");
+      assignField(roleKey, fieldName);
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
   };
 
   return (
@@ -266,164 +489,53 @@ function ActionConfigModal({
           <div className="flex-1">
             <ScrollArea className="h-full p-6">
               {currentAction ? (
-                <div className="mx-auto max-w-3xl space-y-6">
-                  {/* Unassigned Fields Pool */}
-                  <div>
-                    <div className="mb-3 flex items-center justify-between">
-                      <h3 className="font-semibold text-sm">
-                        Available Fields
+                <DndContext
+                  onDragCancel={handleDragCancel}
+                  onDragEnd={handleDragEnd}
+                  onDragStart={handleDragStart}
+                >
+                  <div className="mx-auto max-w-3xl space-y-6">
+                    {/* Unassigned Fields Pool */}
+                    <AvailableFieldsPool fields={getUnassignedFields()} />
+
+                    <Separator />
+
+                    {/* Role Assignment Slots */}
+                    <div>
+                      <h3 className="mb-4 font-semibold text-sm">
+                        Field Roles
                       </h3>
-                      <Badge variant="secondary">
-                        {getUnassignedFields().length} fields
-                      </Badge>
-                    </div>
-                    <div
-                      className="flex min-h-[80px] flex-wrap gap-2 rounded-lg border-2 border-muted-foreground/25 border-dashed bg-muted/30 p-4"
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        // Handle dropping back to pool (remove assignment)
-                        const roleKey = e.dataTransfer.getData("roleKey");
-                        if (roleKey) {
-                          removeAssignment(roleKey);
-                        }
-                      }}
-                    >
-                      {getUnassignedFields().length === 0 ? (
-                        <span className="text-muted-foreground text-sm italic">
-                          All fields assigned
-                        </span>
-                      ) : (
-                        getUnassignedFields().map((field) => (
-                          <div
-                            className="cursor-move rounded-md border-2 border-border bg-card px-3 py-2 font-mono text-sm shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
-                            draggable
-                            key={field}
-                            onDragEnd={() => setDraggedField(null)}
-                            onDragStart={(e) => {
-                              e.dataTransfer.setData("fieldName", field);
-                              setDraggedField(field);
-                            }}
-                          >
-                            {field}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
+                      <div className="space-y-4">
+                        {currentAction.roles.map((role) => {
+                          const assignedField = fieldMapping[role.key];
 
-                  <Separator />
-
-                  {/* Role Assignment Slots */}
-                  <div>
-                    <h3 className="mb-4 font-semibold text-sm">Field Roles</h3>
-                    <div className="space-y-4">
-                      {currentAction.roles.map((role) => {
-                        const assignedField = fieldMapping[role.key];
-
-                        return (
-                          <div
-                            className={`rounded-lg border-2 p-4 transition-all ${
-                              assignedField
-                                ? "border-green-500 bg-green-500/5"
-                                : role.required
-                                  ? "border-primary border-dashed bg-primary/5"
-                                  : "border-muted-foreground/25 border-dashed bg-muted/20"
-                            } ${draggedField && !assignedField ? "ring-2 ring-primary/50" : ""}`}
-                            key={role.key}
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              const fieldName =
-                                e.dataTransfer.getData("fieldName");
-                              if (fieldName) {
-                                assignField(role.key, fieldName);
+                          return (
+                            <RoleDropZone
+                              assignedField={assignedField}
+                              isDragging={!!activeId}
+                              key={role.key}
+                              onRemove={() => removeAssignment(role.key)}
+                              onSelectField={(field) =>
+                                assignField(role.key, field)
                               }
-                            }}
-                          >
-                            <div className="mb-3 flex items-start justify-between">
-                              <div>
-                                <div className="mb-1 flex items-center gap-2">
-                                  <span className="font-semibold text-sm">
-                                    {role.label}
-                                  </span>
-                                  {role.required ? (
-                                    <Badge
-                                      className="text-xs"
-                                      variant="default"
-                                    >
-                                      Required
-                                    </Badge>
-                                  ) : (
-                                    <Badge
-                                      className="text-xs"
-                                      variant="secondary"
-                                    >
-                                      Optional
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-muted-foreground text-xs">
-                                  {role.hint}
-                                </p>
-                              </div>
-                              {assignedField && (
-                                <Button
-                                  className="h-8 w-8"
-                                  onClick={() => removeAssignment(role.key)}
-                                  size="icon"
-                                  variant="ghost"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-
-                            {assignedField ? (
-                              <div
-                                className="flex cursor-move items-center gap-2 rounded-md border-2 border-green-500 bg-card px-3 py-2.5"
-                                draggable
-                                onDragEnd={() => setDraggedField(null)}
-                                onDragStart={(e) => {
-                                  e.dataTransfer.setData("roleKey", role.key);
-                                  setDraggedField(assignedField);
-                                }}
-                              >
-                                <Check className="h-4 w-4 text-green-600" />
-                                <span className="font-medium font-mono text-sm">
-                                  {assignedField}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                <div className="rounded-md border-2 border-dashed p-3 text-center text-muted-foreground text-sm italic">
-                                  Drag a field here
-                                </div>
-
-                                {/* Dropdown as alternative */}
-                                {getUnassignedFields().length > 0 && (
-                                  <Select
-                                    onValueChange={(value) => {
-                                      if (value) assignField(role.key, value);
-                                    }}
-                                    placeholder="Or select from list..."
-                                    value=""
-                                  >
-                                    {getUnassignedFields().map((field) => (
-                                      <option key={field} value={field}>
-                                        {field}
-                                      </option>
-                                    ))}
-                                  </Select>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                              role={role}
+                              unassignedFields={getUnassignedFields()}
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* Drag Overlay */}
+                  <DragOverlay>
+                    {activeId ? (
+                      <div className="cursor-move rounded-md border-2 border-primary bg-card px-3 py-2 font-mono text-sm shadow-lg">
+                        {activeId}
+                      </div>
+                    ) : null}
+                  </DragOverlay>
+                </DndContext>
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
                   <div className="text-center">
@@ -444,21 +556,18 @@ function ActionConfigModal({
         {/* Footer */}
         <div className="flex items-center justify-between border-t bg-muted/30 p-6">
           <div className="text-sm">
-            {currentAction && (
-              <>
-                {isValid() ? (
-                  <span className="flex items-center gap-2 font-medium text-green-600">
-                    <Check className="h-4 w-4" />
-                    Ready to apply
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2 font-medium text-amber-600">
-                    <AlertCircle className="h-4 w-4" />
-                    Assign all required fields
-                  </span>
-                )}
-              </>
-            )}
+            {currentAction &&
+              (isValid() ? (
+                <span className="flex items-center gap-2 font-medium text-green-600">
+                  <Check className="h-4 w-4" />
+                  Ready to apply
+                </span>
+              ) : (
+                <span className="flex items-center gap-2 font-medium text-amber-600">
+                  <AlertCircle className="h-4 w-4" />
+                  Assign all required fields
+                </span>
+              ))}
           </div>
           <div className="flex gap-2">
             <Button onClick={onClose} variant="outline">
@@ -695,6 +804,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                       <button
                         className="ml-1 hover:text-destructive"
                         onClick={() => handleFieldSelect(field)}
+                        type="button"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -708,7 +818,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
           <Separator />
 
           <CardContent className="flex flex-1 flex-col items-center overflow-auto p-6">
-            <div className="relative inline-block">
+            <div className="relative inline-block" ref={setContainerRef}>
               <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
                 <Page
                   className="shadow-lg"
