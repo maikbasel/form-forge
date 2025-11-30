@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -29,7 +29,6 @@ import {
 } from "@repo/ui/components/select";
 import { Separator } from "@repo/ui/components/separator";
 import { useSheet } from "@repo/ui/context/sheet-context";
-import { useResizeObserver } from "@wojtekmaj/react-hooks";
 import {
   AlertCircle,
   Check,
@@ -42,8 +41,6 @@ import useSWR from "swr";
 import { z } from "zod";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
-const resizeObserverOptions = {};
 
 type ActionRole = {
   key: string;
@@ -628,26 +625,14 @@ type FieldPosition = {
 };
 
 export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
+  const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number>();
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([]); // All fields from all pages
   const [selectedFields, setSelectedFields] = useState<string[]>([]); // Changed from single to array
-  const [scale, setScale] = useState(1);
   const [showActionModal, setShowActionModal] = useState(false);
   const [appliedActions, setAppliedActions] = useState<AppliedAction[]>([]);
   const { sheetId } = useSheet();
-
-  const onResize = useCallback<ResizeObserverCallback>((entries) => {
-    const [entry] = entries;
-
-    if (entry) {
-      setContainerWidth(entry.contentRect.width);
-    }
-  }, []);
-
-  useResizeObserver(containerRef, resizeObserverOptions, onResize);
 
   const nextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, numPages));
@@ -818,7 +803,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
           <Separator />
 
           <CardContent className="flex flex-1 flex-col items-center overflow-auto p-6">
-            <div className="relative inline-block" ref={setContainerRef}>
+            <div className="relative inline-block">
               <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
                 <Page
                   className="shadow-lg"
