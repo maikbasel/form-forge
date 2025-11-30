@@ -2,17 +2,477 @@ import { useCallback, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import { Card, CardContent } from "@repo/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/card";
+import { ScrollArea } from "@repo/ui/components/scroll-area";
+import { Select } from "@repo/ui/components/select";
+import { Separator } from "@repo/ui/components/separator";
 import { useSheet } from "@repo/ui/context/sheet-context";
 import { useResizeObserver } from "@wojtekmaj/react-hooks";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  X,
+} from "lucide-react";
 import useSWR from "swr";
 import { z } from "zod";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const resizeObserverOptions = {};
+
+type ActionRole = {
+  key: string;
+  label: string;
+  required: boolean;
+  hint: string;
+};
+
+type ActionType = {
+  id: string;
+  name: string;
+  description: string;
+  endpoint: string;
+  roles: ActionRole[];
+};
+
+type FieldMapping = Record<string, string>;
+
+type AppliedAction = {
+  actionType: string;
+  actionName: string;
+  endpoint: string;
+  mapping: FieldMapping;
+};
+
+const ACTION_TYPES: ActionType[] = [
+  {
+    id: "ability-modifier",
+    name: "Ability Modifier",
+    description: "Calculate ability modifier from ability score",
+    endpoint: "ability-modifier",
+    roles: [
+      {
+        key: "abilityScoreFieldName",
+        label: "Ability Score",
+        required: true,
+        hint: "The base ability score (e.g., STR, DEX)",
+      },
+      {
+        key: "abilityModifierFieldName",
+        label: "Target Modifier",
+        required: true,
+        hint: "Where the calculated modifier will appear",
+      },
+    ],
+  },
+  {
+    id: "skill-modifier",
+    name: "Skill Modifier",
+    description: "Calculate skill modifier with proficiency",
+    endpoint: "skill-modifier",
+    roles: [
+      {
+        key: "abilityModifierFieldName",
+        label: "Ability Modifier",
+        required: true,
+        hint: "The relevant ability modifier (e.g., WIS_mod for Perception)",
+      },
+      {
+        key: "proficiencyBonusFieldName",
+        label: "Proficiency Bonus",
+        required: true,
+        hint: "Character's proficiency bonus",
+      },
+      {
+        key: "proficiencyFieldName",
+        label: "Proficiency Checkbox",
+        required: true,
+        hint: "Checkbox indicating proficiency in this skill",
+      },
+      {
+        key: "skillModifierFieldName",
+        label: "Target Skill",
+        required: true,
+        hint: "Where the skill modifier will appear",
+      },
+      {
+        key: "expertiseFieldName",
+        label: "Expertise Checkbox",
+        required: false,
+        hint: "Checkbox for double proficiency (expertise)",
+      },
+      {
+        key: "halfProfFieldName",
+        label: "Half-Prof Checkbox",
+        required: false,
+        hint: "Checkbox for half proficiency (Jack of All Trades)",
+      },
+    ],
+  },
+  {
+    id: "saving-throw-modifier",
+    name: "Saving Throw Modifier",
+    description: "Calculate saving throw modifier",
+    endpoint: "saving-throw-modifier",
+    roles: [
+      {
+        key: "abilityModifierFieldName",
+        label: "Ability Modifier",
+        required: true,
+        hint: "The relevant ability modifier",
+      },
+      {
+        key: "proficiencyBonusFieldName",
+        label: "Proficiency Bonus",
+        required: true,
+        hint: "Character's proficiency bonus",
+      },
+      {
+        key: "proficiencyFieldName",
+        label: "Proficiency Checkbox",
+        required: true,
+        hint: "Checkbox indicating proficiency in this save",
+      },
+      {
+        key: "savingThrowModifierFieldName",
+        label: "Target Saving Throw",
+        required: true,
+        hint: "Where the save modifier will appear",
+      },
+    ],
+  },
+];
+
+type ActionConfigModalProps = {
+  selectedFields: string[];
+  onClose: () => void;
+  onApply: (action: AppliedAction) => void;
+};
+
+function ActionConfigModal({
+  selectedFields,
+  onClose,
+  onApply,
+}: Readonly<ActionConfigModalProps>) {
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+  const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
+  const [draggedField, setDraggedField] = useState<string | null>(null);
+
+  const currentAction = ACTION_TYPES.find((a) => a.id === selectedAction);
+
+  const assignField = (roleKey: string, fieldName: string) => {
+    setFieldMapping((prev) => ({
+      ...prev,
+      [roleKey]: fieldName,
+    }));
+  };
+
+  const removeAssignment = (roleKey: string) => {
+    setFieldMapping((prev) => {
+      const next = { ...prev };
+      delete next[roleKey];
+      return next;
+    });
+  };
+
+  const getUnassignedFields = () => {
+    const assigned = new Set(Object.values(fieldMapping));
+    return selectedFields.filter((f) => !assigned.has(f));
+  };
+
+  const isValid = () => {
+    if (!currentAction) {
+      return false;
+    }
+    const requiredRoles = currentAction.roles.filter((r) => r.required);
+    return requiredRoles.every((role) => fieldMapping[role.key]);
+  };
+
+  const handleApply = () => {
+    if (!isValid()) {
+      return;
+    }
+
+    onApply({
+      actionType: selectedAction,
+      actionName: currentAction.name,
+      endpoint: currentAction.endpoint,
+      mapping: fieldMapping,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+      <Card className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden">
+        {/* Header */}
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Configure Calculation Action</CardTitle>
+              <CardDescription>
+                Map selected fields to their roles in the calculation
+              </CardDescription>
+            </div>
+            <Button onClick={onClose} size="icon" variant="ghost">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Action Selection Sidebar */}
+          <div className="w-80 border-r bg-muted/30">
+            <ScrollArea className="h-full p-6">
+              <h3 className="mb-4 font-semibold text-sm">Action Type</h3>
+              <div className="space-y-3">
+                {ACTION_TYPES.map((action) => (
+                  <button
+                    className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
+                      selectedAction === action.id
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border bg-card hover:border-primary/50 hover:bg-accent"
+                    }`}
+                    key={action.id}
+                    onClick={() => {
+                      setSelectedAction(action.id);
+                      setFieldMapping({});
+                    }}
+                    type="button"
+                  >
+                    <div className="mb-1 font-semibold text-sm">
+                      {action.name}
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      {action.description}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Mapping Area */}
+          <div className="flex-1">
+            <ScrollArea className="h-full p-6">
+              {currentAction ? (
+                <div className="mx-auto max-w-3xl space-y-6">
+                  {/* Unassigned Fields Pool */}
+                  <div>
+                    <div className="mb-3 flex items-center justify-between">
+                      <h3 className="font-semibold text-sm">
+                        Available Fields
+                      </h3>
+                      <Badge variant="secondary">
+                        {getUnassignedFields().length} fields
+                      </Badge>
+                    </div>
+                    <div
+                      className="flex min-h-[80px] flex-wrap gap-2 rounded-lg border-2 border-muted-foreground/25 border-dashed bg-muted/30 p-4"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        // Handle dropping back to pool (remove assignment)
+                        const roleKey = e.dataTransfer.getData("roleKey");
+                        if (roleKey) {
+                          removeAssignment(roleKey);
+                        }
+                      }}
+                    >
+                      {getUnassignedFields().length === 0 ? (
+                        <span className="text-muted-foreground text-sm italic">
+                          All fields assigned
+                        </span>
+                      ) : (
+                        getUnassignedFields().map((field) => (
+                          <div
+                            className="cursor-move rounded-md border-2 border-border bg-card px-3 py-2 font-mono text-sm shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
+                            draggable
+                            key={field}
+                            onDragEnd={() => setDraggedField(null)}
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData("fieldName", field);
+                              setDraggedField(field);
+                            }}
+                          >
+                            {field}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Role Assignment Slots */}
+                  <div>
+                    <h3 className="mb-4 font-semibold text-sm">Field Roles</h3>
+                    <div className="space-y-4">
+                      {currentAction.roles.map((role) => {
+                        const assignedField = fieldMapping[role.key];
+
+                        return (
+                          <div
+                            className={`rounded-lg border-2 p-4 transition-all ${
+                              assignedField
+                                ? "border-green-500 bg-green-500/5"
+                                : role.required
+                                  ? "border-primary border-dashed bg-primary/5"
+                                  : "border-muted-foreground/25 border-dashed bg-muted/20"
+                            } ${draggedField && !assignedField ? "ring-2 ring-primary/50" : ""}`}
+                            key={role.key}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const fieldName =
+                                e.dataTransfer.getData("fieldName");
+                              if (fieldName) {
+                                assignField(role.key, fieldName);
+                              }
+                            }}
+                          >
+                            <div className="mb-3 flex items-start justify-between">
+                              <div>
+                                <div className="mb-1 flex items-center gap-2">
+                                  <span className="font-semibold text-sm">
+                                    {role.label}
+                                  </span>
+                                  {role.required ? (
+                                    <Badge
+                                      className="text-xs"
+                                      variant="default"
+                                    >
+                                      Required
+                                    </Badge>
+                                  ) : (
+                                    <Badge
+                                      className="text-xs"
+                                      variant="secondary"
+                                    >
+                                      Optional
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-muted-foreground text-xs">
+                                  {role.hint}
+                                </p>
+                              </div>
+                              {assignedField && (
+                                <Button
+                                  className="h-8 w-8"
+                                  onClick={() => removeAssignment(role.key)}
+                                  size="icon"
+                                  variant="ghost"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+
+                            {assignedField ? (
+                              <div
+                                className="flex cursor-move items-center gap-2 rounded-md border-2 border-green-500 bg-card px-3 py-2.5"
+                                draggable
+                                onDragEnd={() => setDraggedField(null)}
+                                onDragStart={(e) => {
+                                  e.dataTransfer.setData("roleKey", role.key);
+                                  setDraggedField(assignedField);
+                                }}
+                              >
+                                <Check className="h-4 w-4 text-green-600" />
+                                <span className="font-medium font-mono text-sm">
+                                  {assignedField}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="rounded-md border-2 border-dashed p-3 text-center text-muted-foreground text-sm italic">
+                                  Drag a field here
+                                </div>
+
+                                {/* Dropdown as alternative */}
+                                {getUnassignedFields().length > 0 && (
+                                  <Select
+                                    onValueChange={(value) => {
+                                      if (value) assignField(role.key, value);
+                                    }}
+                                    placeholder="Or select from list..."
+                                    value=""
+                                  >
+                                    {getUnassignedFields().map((field) => (
+                                      <option key={field} value={field}>
+                                        {field}
+                                      </option>
+                                    ))}
+                                  </Select>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <AlertCircle className="mx-auto mb-3 h-12 w-12 opacity-50" />
+                    <p className="font-medium">
+                      Select an action type to begin
+                    </p>
+                    <p className="mt-1 text-sm">
+                      Choose from the options on the left
+                    </p>
+                  </div>
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t bg-muted/30 p-6">
+          <div className="text-sm">
+            {currentAction && (
+              <>
+                {isValid() ? (
+                  <span className="flex items-center gap-2 font-medium text-green-600">
+                    <Check className="h-4 w-4" />
+                    Ready to apply
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2 font-medium text-amber-600">
+                    <AlertCircle className="h-4 w-4" />
+                    Assign all required fields
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={onClose} variant="outline">
+              Cancel
+            </Button>
+            <Button disabled={!isValid()} onClick={handleApply}>
+              Apply Calculation
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 const SheetFieldSchema = z.object({
   name: z.string(),
@@ -66,6 +526,8 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([]); // All fields from all pages
   const [selectedFields, setSelectedFields] = useState<string[]>([]); // Changed from single to array
   const [scale, setScale] = useState(1);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [appliedActions, setAppliedActions] = useState<AppliedAction[]>([]);
   const { sheetId } = useSheet();
 
   const onResize = useCallback<ResizeObserverCallback>((entries) => {
@@ -166,22 +628,86 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setFieldPositions(allFields);
   };
 
+  const handleApplyAction = (config: AppliedAction) => {
+    setAppliedActions((prev) => [...prev, config]);
+    setShowActionModal(false);
+    setSelectedFields([]);
+
+    // Here you would make the API call
+    console.log("Applying action:", config);
+    console.log("API endpoint:", `/dnd5e/{sheet_id}/${config.endpoint}`);
+    console.log("Request body:", config.mapping);
+  };
+
+  const removeAppliedAction = (index: number) => {
+    setAppliedActions((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-background">
       {/* PDF viewer with overlays */}
-      <div className="flex flex-1 flex-col">
-        <Card className="flex flex-1 flex-col">
-          <CardContent className="flex flex-1 flex-col items-center overflow-auto p-6">
-            {/* Selection counter */}
-            <div className="mb-4 rounded-md bg-blue-50 px-4 py-2 text-sm">
-              <span className="font-medium">
-                {selectedFields.length} of 6 fields selected
-              </span>
-              {selectedFields.length >= 6 && (
-                <span className="ml-2 text-blue-600">(Maximum reached)</span>
-              )}
+      <div className="flex flex-1 flex-col p-6">
+        <Card className="flex flex-1 flex-col overflow-hidden">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">
+                  Character Sheet Editor
+                </CardTitle>
+                <CardDescription>
+                  Select fields to configure calculations
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                {selectedFields.length > 0 && (
+                  <>
+                    <Button
+                      onClick={() => setSelectedFields([])}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Clear
+                    </Button>
+                    <Button onClick={() => setShowActionModal(true)} size="sm">
+                      Configure Action
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
 
+            {/* Selection Status */}
+            <div className="mt-4 flex items-center gap-4">
+              <div className="text-sm">
+                <span className="font-semibold">{selectedFields.length}</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  of 6 fields selected
+                </span>
+              </div>
+
+              {selectedFields.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedFields.map((field) => (
+                    <Badge className="gap-1" key={field} variant="secondary">
+                      {field}
+                      <button
+                        className="ml-1 hover:text-destructive"
+                        onClick={() => handleFieldSelect(field)}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardHeader>
+
+          <Separator />
+
+          <CardContent className="flex flex-1 flex-col items-center overflow-auto p-6">
             <div className="relative inline-block">
               <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
                 <Page
@@ -247,6 +773,103 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
           </div>
         </Card>
       </div>
+
+      {/* Sidebar - Applied Actions */}
+      <div className="w-96 p-6 pl-0">
+        <Card className="flex h-full flex-col">
+          <CardHeader>
+            <CardTitle className="text-lg">Applied Actions</CardTitle>
+            <CardDescription>
+              {appliedActions.length} calculation
+              {appliedActions.length !== 1 ? "s" : ""} configured
+            </CardDescription>
+          </CardHeader>
+
+          <Separator />
+
+          <ScrollArea className="flex-1 p-6">
+            {appliedActions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                <div className="mb-3 rounded-full bg-muted p-3">
+                  <AlertCircle className="h-6 w-6" />
+                </div>
+                <p className="font-medium">No actions configured yet</p>
+                <p className="mt-1 text-sm">
+                  Select fields and configure an action
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {appliedActions.map((action, index) => {
+                  const actionType = ACTION_TYPES.find(
+                    (a) => a.id === action.actionType
+                  );
+                  return (
+                    <Card className="bg-muted/50" key={index}>
+                      <CardHeader className="p-4 pb-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-semibold text-sm">
+                              {actionType.name}
+                            </div>
+                            <div className="mt-0.5 text-muted-foreground text-xs">
+                              /{actionType.endpoint}
+                            </div>
+                          </div>
+                          <Button
+                            className="-mt-1 h-7 w-7"
+                            onClick={() => removeAppliedAction(index)}
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <div className="space-y-1.5">
+                          {Object.entries(action.mapping).map(
+                            ([roleKey, fieldName]) => {
+                              const role = actionType.roles.find(
+                                (r) => r.key === roleKey
+                              );
+                              return (
+                                <div
+                                  className="flex items-start gap-2 text-xs"
+                                  key={roleKey}
+                                >
+                                  <span className="min-w-[100px] text-muted-foreground">
+                                    {role.label}:
+                                  </span>
+                                  <Badge
+                                    className="font-mono text-xs"
+                                    variant="outline"
+                                  >
+                                    {fieldName}
+                                  </Badge>
+                                </div>
+                              );
+                            }
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </Card>
+      </div>
+
+      {/* Action Configuration Modal */}
+      {showActionModal && (
+        <ActionConfigModal
+          onApply={handleApplyAction}
+          onClose={() => setShowActionModal(false)}
+          selectedFields={selectedFields}
+        />
+      )}
     </div>
   );
 }
