@@ -10,6 +10,7 @@ import {
   useDraggable,
   useDroppable,
 } from "@dnd-kit/core";
+import { Toggle } from "@radix-ui/react-toggle";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -29,6 +30,7 @@ import {
 } from "@repo/ui/components/select";
 import { Separator } from "@repo/ui/components/separator";
 import { useSheet } from "@repo/ui/context/sheet-context";
+import { cn } from "@repo/ui/lib/utils";
 import {
   AlertCircle,
   Check,
@@ -42,19 +44,19 @@ import { z } from "zod";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-type ActionRole = {
+type FieldRole = {
   key: string;
   label: string;
   required: boolean;
   hint: string;
 };
 
-type ActionType = {
+type Action = {
   id: string;
   name: string;
   description: string;
   endpoint: string;
-  roles: ActionRole[];
+  roles: FieldRole[];
 };
 
 type FieldMapping = Record<string, string>;
@@ -66,7 +68,7 @@ type AppliedAction = {
   mapping: FieldMapping;
 };
 
-const ACTION_TYPES: ActionType[] = [
+const ACTIONS: Action[] = [
   {
     id: "ability-modifier",
     name: "Ability Modifier",
@@ -224,8 +226,8 @@ function AvailableFieldsPool({ fields }: Readonly<{ fields: string[] }>) {
 }
 
 // Role Drop Zone Component
-type RoleDropZoneProps = {
-  role: ActionRole;
+type FieldRoleDropZoneProps = {
+  role: FieldRole;
   assignedField: string | undefined;
   onRemove: () => void;
   onSelectField: (field: string) => void;
@@ -233,14 +235,14 @@ type RoleDropZoneProps = {
   isDragging: boolean;
 };
 
-function RoleDropZone({
+function FieldRoleDropZone({
   role,
   assignedField,
   onRemove,
   onSelectField,
   unassignedFields,
   isDragging,
-}: Readonly<RoleDropZoneProps>) {
+}: Readonly<FieldRoleDropZoneProps>) {
   const { setNodeRef, isOver } = useDroppable({
     id: `role-${role.key}`,
   });
@@ -263,13 +265,20 @@ function RoleDropZone({
 
   return (
     <div
-      className={`rounded-lg border-2 p-4 transition-all ${
-        assignedField
-          ? "border-green-500 bg-green-500/5"
-          : role.required
-            ? "border-primary border-dashed bg-primary/5"
-            : "border-muted-foreground/25 border-dashed bg-muted/20"
-      } ${isOver && !assignedField ? "ring-2 ring-primary/50" : ""}`}
+      className={cn(
+        "rounded-lg border-2 p-4 transition-all",
+
+        assignedField && "border-green-500 bg-green-500/5",
+
+        !assignedField &&
+          role.required &&
+          "border-primary border-dashed bg-primary/5",
+
+        !(assignedField || role.required) &&
+          "border-muted-foreground/25 border-dashed bg-muted/20",
+
+        isOver && !assignedField && "ring-2 ring-primary/50"
+      )}
       ref={setNodeRef}
     >
       <div className="mb-3 flex items-start justify-between">
@@ -353,7 +362,7 @@ function ActionConfigModal({
   const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const currentAction = ACTION_TYPES.find((a) => a.id === selectedAction);
+  const currentAction = ACTIONS.find((a) => a.id === selectedAction);
 
   const assignField = (roleKey: string, fieldName: string) => {
     setFieldMapping((prev) => ({
@@ -404,7 +413,9 @@ function ActionConfigModal({
     const { active, over } = event;
     setActiveId(null);
 
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const fieldName = active.id as string;
     const targetId = over.id as string;
@@ -456,7 +467,7 @@ function ActionConfigModal({
             <ScrollArea className="h-full p-6">
               <h3 className="mb-4 font-semibold text-sm">Action Type</h3>
               <div className="space-y-3">
-                {ACTION_TYPES.map((action) => (
+                {ACTIONS.map((action) => (
                   <button
                     className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
                       selectedAction === action.id
@@ -507,7 +518,7 @@ function ActionConfigModal({
                           const assignedField = fieldMapping[role.key];
 
                           return (
-                            <RoleDropZone
+                            <FieldRoleDropZone
                               assignedField={assignedField}
                               isDragging={!!activeId}
                               key={role.key}
@@ -818,17 +829,21 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                 const canSelect = selectedFields.length < 6 || isSelected;
 
                 return (
-                  <div
-                    className={`box-border transition-all duration-200 ${
-                      isSelected
-                        ? "z-20 cursor-pointer border-2 border-blue-500 bg-blue-500/25 shadow-xl"
-                        : canSelect
-                          ? "z-10 cursor-pointer border-2 border-yellow-400/50 bg-yellow-400/10 hover:border-yellow-400 hover:bg-yellow-400/30"
-                          : "z-10 cursor-not-allowed border-2 border-gray-300/50 bg-gray-300/10 opacity-50"
-                    }
-                    `}
+                  <Toggle
+                    aria-label={`Select field ${field.name}`}
+                    className={cn(
+                      "box-border transition-all duration-200",
+                      "data-[state=on]:z-20 data-[state=on]:border-2 data-[state=on]:border-blue-500 data-[state=on]:bg-blue-500/25 data-[state=on]:shadow-xl",
+                      "data-[state=off]:z-10 data-[state=off]:border-2 data-[state=off]:border-yellow-400/50 data-[state=off]:bg-yellow-400/10",
+                      "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30",
+                      "disabled:cursor-not-allowed disabled:border-gray-300/50 disabled:bg-gray-300/10 disabled:opacity-50"
+                    )}
+                    disabled={!canSelect}
                     key={`${field.name}-${index}`}
-                    onClick={() => canSelect && handleFieldSelect(field.name)}
+                    onPressedChange={() =>
+                      canSelect && handleFieldSelect(field.name)
+                    }
+                    pressed={isSelected}
                     style={{
                       position: "absolute",
                       left: `${field.bounds.left}px`,
@@ -895,9 +910,9 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
               </div>
             ) : (
               <div className="space-y-3">
-                {appliedActions.map((action, index) => {
-                  const actionType = ACTION_TYPES.find(
-                    (a) => a.id === action.actionType
+                {appliedActions.map((appliedAction, index) => {
+                  const action = ACTIONS.find(
+                    (a) => a.id === appliedAction.actionType
                   );
                   return (
                     <Card className="bg-muted/50" key={index}>
@@ -905,10 +920,10 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="font-semibold text-sm">
-                              {actionType.name}
+                              {action.name}
                             </div>
                             <div className="mt-0.5 text-muted-foreground text-xs">
-                              /{actionType.endpoint}
+                              /{action.endpoint}
                             </div>
                           </div>
                           <Button
@@ -923,9 +938,9 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
                         <div className="space-y-1.5">
-                          {Object.entries(action.mapping).map(
+                          {Object.entries(appliedAction.mapping).map(
                             ([roleKey, fieldName]) => {
-                              const role = actionType.roles.find(
+                              const role = action.roles.find(
                                 (r) => r.key === roleKey
                               );
                               return (
