@@ -62,8 +62,8 @@ type Action = {
 type FieldMapping = Record<string, string>;
 
 type AppliedAction = {
-  actionType: string;
-  actionName: string;
+  id: string;
+  name: string;
   endpoint: string;
   mapping: FieldMapping;
 };
@@ -393,13 +393,17 @@ function ActionConfigModal({
   };
 
   const handleApply = () => {
+    if (!currentAction) {
+      return;
+    }
+
     if (!isValid()) {
       return;
     }
 
     onApply({
-      actionType: selectedAction,
-      actionName: currentAction.name,
+      id: currentAction.id,
+      name: currentAction.name,
       endpoint: currentAction.endpoint,
       mapping: fieldMapping,
     });
@@ -911,11 +915,47 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
             ) : (
               <div className="space-y-3">
                 {appliedActions.map((appliedAction, index) => {
-                  const action = ACTIONS.find(
-                    (a) => a.id === appliedAction.actionType
-                  );
+                  const action = ACTIONS.find((a) => a.id === appliedAction.id);
+
+                  if (!action) {
+                    // TODO: Improve error handling
+                    return (
+                      <Card
+                        className="border-destructive bg-muted/50"
+                        key={`${appliedAction.id.toLowerCase()}-${index}`}
+                      >
+                        <CardHeader className="p-4 pb-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="mt-0.5 h-4 w-4 text-destructive" />
+                              <div>
+                                <div className="font-semibold text-destructive text-sm">
+                                  Unknown Action
+                                </div>
+                                <div className="mt-0.5 text-muted-foreground text-xs">
+                                  {appliedAction.id}
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              className="-mt-1 h-7 w-7"
+                              onClick={() => removeAppliedAction(index)}
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    );
+                  }
+
                   return (
-                    <Card className="bg-muted/50" key={index}>
+                    <Card
+                      className="bg-muted/50"
+                      key={`${appliedAction.id.toLowerCase()}-${index}`}
+                    >
                       <CardHeader className="p-4 pb-3">
                         <div className="flex items-start justify-between">
                           <div>
@@ -940,20 +980,31 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                         <div className="space-y-1.5">
                           {Object.entries(appliedAction.mapping).map(
                             ([roleKey, fieldName]) => {
-                              const role = action.roles.find(
+                              const fieldRole = action.roles.find(
                                 (r) => r.key === roleKey
                               );
+
+                              // TODO: Improve error handling
                               return (
                                 <div
                                   className="flex items-start gap-2 text-xs"
                                   key={roleKey}
                                 >
                                   <span className="min-w-[100px] text-muted-foreground">
-                                    {role.label}:
+                                    {fieldRole ? (
+                                      <>{fieldRole.label}:</>
+                                    ) : (
+                                      <span className="flex items-center gap-1 text-destructive">
+                                        <AlertCircle className="h-3 w-3" />
+                                        {roleKey}:
+                                      </span>
+                                    )}
                                   </span>
                                   <Badge
                                     className="font-mono text-xs"
-                                    variant="outline"
+                                    variant={
+                                      fieldRole ? "outline" : "destructive"
+                                    }
                                   >
                                     {fieldName}
                                   </Badge>
