@@ -3,8 +3,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@repo/ui/*": ["../../packages/ui/src/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@repo/ui/*": [
+        "../../packages/ui/src/*"
+      ]
     },
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -15,7 +19,9 @@
     "target": "ES2020",
     "strictNullChecks": true
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"
