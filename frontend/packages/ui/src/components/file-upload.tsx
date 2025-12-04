@@ -1,15 +1,15 @@
 "use client";
 
-import {Slot} from "@radix-ui/react-slot";
-import {cn} from "@repo/ui/lib/utils";
+import { Slot } from "@radix-ui/react-slot";
+import { cn } from "@repo/ui/lib/utils";
 import {
-    FileArchiveIcon,
-    FileAudioIcon,
-    FileCodeIcon,
-    FileCogIcon,
-    FileIcon,
-    FileTextIcon,
-    FileVideoIcon,
+  FileArchiveIcon,
+  FileAudioIcon,
+  FileCodeIcon,
+  FileCogIcon,
+  FileIcon,
+  FileTextIcon,
+  FileVideoIcon,
 } from "lucide-react";
 import * as React from "react";
 

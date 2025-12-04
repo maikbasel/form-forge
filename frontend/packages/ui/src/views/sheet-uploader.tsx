@@ -1,21 +1,21 @@
-import {Button} from "@repo/ui/components/button";
+import { Button } from "@repo/ui/components/button";
 import {
-    FileUpload,
-    FileUploadDropzone,
-    FileUploadItem,
-    FileUploadItemDelete,
-    FileUploadItemMetadata,
-    FileUploadItemPreview,
-    FileUploadItemProgress,
-    FileUploadList,
-    type FileUploadProps,
-    FileUploadTrigger,
+  FileUpload,
+  FileUploadDropzone,
+  FileUploadItem,
+  FileUploadItemDelete,
+  FileUploadItemMetadata,
+  FileUploadItemPreview,
+  FileUploadItemProgress,
+  FileUploadList,
+  type FileUploadProps,
+  FileUploadTrigger,
 } from "@repo/ui/components/file-upload";
+import { useSheet } from "@repo/ui/context/sheet-context";
 import axios from "axios";
-import {Upload, X} from "lucide-react";
-import {useCallback, useState} from "react";
-import {toast} from "sonner";
-import {useSheet} from "@repo/ui/context/sheet-context";
+import { Upload, X } from "lucide-react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ["application/pdf"];

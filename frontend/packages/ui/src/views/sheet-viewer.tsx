@@ -620,7 +620,7 @@ const fetcher = (url: string) =>
     .then((data) => ListSheetFieldsResponseSchema.parse(data));
 
 type SheetViewerProps = {
-  file?: File;
+  file?: string;
 };
 
 type FieldBounds = {

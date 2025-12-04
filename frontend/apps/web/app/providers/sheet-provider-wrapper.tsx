@@ -1,15 +1,10 @@
 "use client";
 
-import {SheetProvider} from "@repo/ui/context/sheet-context";
+import { SheetProvider } from "@repo/ui/context/sheet-context";
+import type React from "react";
 
 export default function SheetProviderWrapper({
   children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-      <SheetProvider>
-          {children}
-      </SheetProvider>
-  );
+}: Readonly<React.ComponentProps<typeof SheetProvider>>) {
+  return <SheetProvider>{children}</SheetProvider>;
 }
