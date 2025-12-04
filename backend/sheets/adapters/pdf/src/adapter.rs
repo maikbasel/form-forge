@@ -1,10 +1,10 @@
 use async_trait::async_trait;
-use lopdf::{Document, Object};
+use lopdf::Document;
 use sheets_core::error::{PdfError, SheetError};
 use sheets_core::ports::driven::SheetPdfPort;
-use sheets_core::sheet::{SheetFieldRect, Sheet, SheetField};
+use sheets_core::sheet::{Sheet, SheetField};
 use std::fs;
-use tracing::{debug, error, info, instrument};
+use tracing::{debug, error, instrument};
 
 #[derive(Default)]
 pub struct SheetsPdf;
@@ -219,48 +219,8 @@ impl SheetsPdf {
             PdfError::ParseError(e.to_string())
         })?;
 
-        let rect_array = fields_dict
-            .get(b"Rect")
-            .and_then(|obj| obj.as_array())
-            .map_err(|e| {
-                error!(error = ?e, "failed to get field rect");
-                PdfError::ParseError(e.to_string())
-            })?;
-
-        if rect_array.len() != 4 {
-            error!(rect = ?rect_array, "field Rect does not have 4 elements; skipping");
-            return Ok(());
-        }
-
-        let x_left_upper_corner = Self::pdf_number_to_f32(&rect_array[0])?;
-        let y_left_upper_corner = Self::pdf_number_to_f32(&rect_array[1])?; // Y
-        let width = Self::pdf_number_to_f32(&rect_array[2])?;
-        let height = Self::pdf_number_to_f32(&rect_array[3])?;
-
-        debug!(x = x_left_upper_corner, y = y_left_upper_corner, width = width, height = height, "rect");
-
-        let rect = SheetFieldRect {
-            x: x_left_upper_corner.min(width),
-            y: y_left_upper_corner.min(height),
-            width: (width - x_left_upper_corner).abs(),
-            height: (height - y_left_upper_corner).abs(),
-        };
-
-        debug!(rect = ?rect, "normalized rect");
-
-        fields.push(SheetField::new(field_name, rect));
+        fields.push(SheetField::new(field_name));
 
         Ok(())
-    }
-
-    fn pdf_number_to_f32(obj: &Object) -> Result<f32, PdfError> {
-        match obj {
-            Object::Integer(i) => Ok(*i as f32),
-            Object::Real(r) => Ok(*r),
-            other => Err(PdfError::ParseError(format!(
-                "expected number in Rect, found: {:?}",
-                other
-            ))),
-        }
     }
 }

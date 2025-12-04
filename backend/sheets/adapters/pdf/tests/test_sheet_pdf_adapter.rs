@@ -7,7 +7,7 @@ mod tests {
     use rstest::{fixture, rstest};
     use sheets_core::error::PdfError;
     use sheets_core::ports::driven::SheetPdfPort;
-    use sheets_core::sheet::{Sheet, SheetField, SheetFieldRect};
+    use sheets_core::sheet::{Sheet, SheetField};
     use sheets_pdf::adapter::SheetsPdf;
     use std::fs;
     use std::path::PathBuf;
@@ -90,18 +90,9 @@ mod tests {
         let sheet_path = here.join("tests/fixtures/list_fields_test.pdf");
         let sheet = Sheet::new(sheet_path, Some("list_fields_test.pdf".to_string()));
         let mut expected: Vec<SheetField> = vec![
-            SheetField::new(
-                "Text Field",
-                SheetFieldRect::new(20.6275997, 797.900024, 147.238403, 28.8069458),
-            ),
-            SheetField::new(
-                "Combo Box",
-                SheetFieldRect::new(17.4267998, 673.422974, 155.063202, 27.7400513),
-            ),
-            SheetField::new(
-                "List Box",
-                SheetFieldRect::new(15.6485004, 628.96698, 160.753494, 29.163_025),
-            ),
+            SheetField::new("Text Field"),
+            SheetField::new("Combo Box"),
+            SheetField::new("List Box"),
         ];
         expected.sort_by_key(|field| field.name.clone());
 

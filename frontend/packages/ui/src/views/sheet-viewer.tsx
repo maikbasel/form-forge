@@ -597,12 +597,6 @@ function ActionConfigModal({
 
 const SheetFieldSchema = z.object({
   name: z.string(),
-  rect: z.object({
-    x: z.number(),
-    y: z.number(),
-    width: z.number(),
-    height: z.number(),
-  }),
 });
 
 const ListSheetFieldsResponseSchema = z.object({
