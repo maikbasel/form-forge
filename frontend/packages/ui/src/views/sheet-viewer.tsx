@@ -36,13 +36,46 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Download,
   Trash2,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import useSWR from "swr";
 import { z } from "zod";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+const FILENAME_REGEX = /filename\*=UTF-8''(.+)|filename="?(.+)"?/i;
+
+function extractFilenameFromHeader(contentDisposition: string | null): string {
+  if (!contentDisposition) {
+    return "sheet.pdf";
+  }
+
+  const filenameMatch = FILENAME_REGEX.exec(contentDisposition);
+  if (!filenameMatch) {
+    return "sheet.pdf";
+  }
+
+  const matchedFilename = filenameMatch[1] || filenameMatch[2];
+  if (!matchedFilename) {
+    return "sheet.pdf";
+  }
+
+  return decodeURIComponent(matchedFilename);
+}
+
+function triggerBrowserDownload(blob: Blob, filename: string): void {
+  const url = globalThis.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  globalThis.URL.revokeObjectURL(url);
+}
 
 type FieldRole = {
   key: string;
@@ -641,6 +674,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   const [selectedFields, setSelectedFields] = useState<string[]>([]); // Changed from single to array
   const [showActionModal, setShowActionModal] = useState(false);
   const [appliedActions, setAppliedActions] = useState<AppliedAction[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { sheetId } = useSheet();
 
   const nextPage = () => {
@@ -746,6 +780,32 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setAppliedActions((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleDownloadSheet = async () => {
+    if (!sheetId) {
+      return;
+    }
+
+    setIsDownloading(true);
+
+    try {
+      const response = await fetch(`http://localhost:8081/sheets/${sheetId}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const filename = extractFilenameFromHeader(contentDisposition);
+
+      triggerBrowserDownload(blob, filename);
+    } catch (err) {
+      toast(`Failed to download sheet: ${err}`);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background">
       {/* PDF viewer with overlays */}
@@ -762,6 +822,15 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                 </CardDescription>
               </div>
               <div className="flex gap-2">
+                <Button
+                  disabled={isDownloading || !sheetId}
+                  onClick={handleDownloadSheet}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {isDownloading ? "Downloading..." : "Download"}
+                </Button>
                 {selectedFields.length > 0 && (
                   <>
                     <Button
@@ -889,7 +958,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
             <CardTitle className="text-lg">Applied Actions</CardTitle>
             <CardDescription>
               {appliedActions.length} calculation
-              {appliedActions.length !== 1 ? "s" : ""} configured
+              {appliedActions.length === 1 ? "" : "s"} configured
             </CardDescription>
           </CardHeader>
 
