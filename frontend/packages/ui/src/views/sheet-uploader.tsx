@@ -2,31 +2,31 @@ import { Button } from "@repo/ui/components/button";
 import {
   FileUpload,
   FileUploadDropzone,
-  FileUploadItem,
-  FileUploadItemDelete,
-  FileUploadItemMetadata,
-  FileUploadItemPreview,
-  FileUploadItemProgress,
-  FileUploadList,
   type FileUploadProps,
   FileUploadTrigger,
 } from "@repo/ui/components/file-upload";
 import { useSheet } from "@repo/ui/context/sheet-context";
 import axios from "axios";
-import { Upload, X } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ["application/pdf"];
 
-export default function SheetUploader() {
+type SheetUploaderProps = {
+  onUploadSuccess?: (sheetId: string) => void;
+};
+
+export default function SheetUploader({
+  onUploadSuccess,
+}: SheetUploaderProps = {}) {
   const [files, setFiles] = useState<File[]>([]);
   const { setSheetPath, setSheetId } = useSheet();
 
   const onUpload: NonNullable<FileUploadProps["onUpload"]> = useCallback(
-    async (files, { onProgress, onSuccess, onError }) => {
-      const file = files[0];
+    async (filesToUpload, { onProgress, onSuccess, onError }) => {
+      const file = filesToUpload[0];
       if (!file) {
         throw new Error("No file selected");
       }
@@ -34,7 +34,7 @@ export default function SheetUploader() {
       const formData = new FormData();
       formData.append("sheet", file);
 
-      const uploadPromises = files.map(async (file) => {
+      const uploadPromises = filesToUpload.map(async (currentFile) => {
         try {
           // TODO: Generate client from OpenAPI spec.
           const response = await axios.post(
@@ -47,7 +47,7 @@ export default function SheetUploader() {
                   return;
                 }
                 const progress = (event.loaded / event.total) * 100;
-                onProgress(file, progress);
+                onProgress(currentFile, progress);
               },
             }
           );
@@ -58,15 +58,24 @@ export default function SheetUploader() {
             throw new Error("Location header is missing");
           }
 
+          const extractedSheetId = location.split("/").pop();
+          if (!extractedSheetId) {
+            // noinspection ExceptionCaughtLocallyJS
+            throw new Error("Failed to extract sheet ID from location");
+          }
+
           setSheetPath(location);
-          setSheetId(location.split("/").pop());
+          setSheetId(extractedSheetId);
 
           // Make sure we end at 100% and mark success
-          onProgress(file, 100);
-          onSuccess(file);
+          onProgress(currentFile, 100);
+          onSuccess(currentFile);
+
+          // Call the success callback if provided
+          onUploadSuccess?.(extractedSheetId);
         } catch (error) {
           onError(
-            file,
+            currentFile,
             error instanceof Error ? error : new Error("Upload failed")
           );
         }
@@ -75,7 +84,7 @@ export default function SheetUploader() {
       // Wait for all uploads to complete
       await Promise.all(uploadPromises);
     },
-    [setSheetPath]
+    [setSheetPath, setSheetId, onUploadSuccess]
   );
 
   const onFileReject = useCallback((file: File, message: string) => {
@@ -100,33 +109,15 @@ export default function SheetUploader() {
           <div className="flex items-center justify-center rounded-full border p-2.5">
             <Upload className="size-6 text-muted-foreground" />
           </div>
-          <p className="font-medium text-sm">Drag & drop files here</p>
-          <p className="text-muted-foreground text-xs">
-            Or click to browse (max 2 files)
-          </p>
+          <p className="font-medium text-sm">Drag & drop your PDF Sheet here</p>
+          <p className="text-muted-foreground text-xs">Or click to browse</p>
         </div>
         <FileUploadTrigger asChild>
           <Button className="mt-2 w-fit" size="sm" variant="outline">
-            Browse files
+            Browse sheets
           </Button>
         </FileUploadTrigger>
       </FileUploadDropzone>
-      <FileUploadList>
-        {files.map((file, index) => (
-          <FileUploadItem className="flex-col" key={index} value={file}>
-            <div className="flex w-full items-center gap-2">
-              <FileUploadItemPreview />
-              <FileUploadItemMetadata />
-              <FileUploadItemDelete asChild>
-                <Button className="size-7" size="icon" variant="ghost">
-                  <X />
-                </Button>
-              </FileUploadItemDelete>
-            </div>
-            <FileUploadItemProgress />
-          </FileUploadItem>
-        ))}
-      </FileUploadList>
     </FileUpload>
   );
 }

@@ -1,38 +1,35 @@
 "use client";
 
-import { useSheet } from "@repo/ui/context/sheet-context";
 import SheetUploader from "@repo/ui/views/sheet-uploader";
-import dynamic from "next/dynamic";
-
-const SheetViewer = dynamic(() => import("@repo/ui/views/sheet-viewer"), {
-  ssr: false,
-});
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 
 export default function Home() {
-  const { sheetPath } = useSheet();
-  let fileUrl: string | undefined;
+  const router = useRouter();
 
-  if (sheetPath) {
-    fileUrl = `http://localhost:8081${sheetPath.startsWith("/") ? sheetPath : `/${sheetPath}`}`;
-  }
+  const handleUploadSuccess = useCallback(
+    (sheetId: string) => {
+      router.push(`/sheets/${sheetId}`);
+    },
+    [router]
+  );
 
   // TODO: Make this configurable.
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:flex-row">
-      {/* Uploader: top on mobile, left on larger screens */}
-      <section className="w-full md:w-1/3 md:max-w-sm">
-        <SheetUploader />
-      </section>
-
-      {/* Viewer: bottom on mobile, right on larger screens */}
-      <section className="min-h-[300px] flex-1">
-        {fileUrl && (
-          <div className="h-full">
-            <SheetViewer file={fileUrl} />
-          </div>
-        )}
-      </section>
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <h1 className="font-bold text-3xl tracking-tight">
+            Upload PDF Character Sheet
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Make your D&D character sheet calculate ability modifiers, skill
+            checks, and other values automatically
+          </p>
+        </div>
+        <SheetUploader onUploadSuccess={handleUploadSuccess} />
+      </div>
     </div>
   );
 }
