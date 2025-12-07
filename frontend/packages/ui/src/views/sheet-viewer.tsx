@@ -37,7 +37,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  Trash2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -800,10 +799,6 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     }
   };
 
-  const removeAppliedAction = (index: number) => {
-    setAppliedActions((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const handleDownloadSheet = async () => {
     if (!sheetId) {
       return;
@@ -1025,14 +1020,6 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                                 </div>
                               </div>
                             </div>
-                            <Button
-                              className="-mt-1 h-7 w-7"
-                              onClick={() => removeAppliedAction(index)}
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
                           </div>
                         </CardHeader>
                       </Card>
@@ -1054,14 +1041,6 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                               /{action.endpoint}
                             </div>
                           </div>
-                          <Button
-                            className="-mt-1 h-7 w-7"
-                            onClick={() => removeAppliedAction(index)}
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                          </Button>
                         </div>
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
