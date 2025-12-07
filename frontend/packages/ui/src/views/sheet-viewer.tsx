@@ -765,6 +765,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   };
 
   const handleApplyAction = async (config: AppliedAction) => {
+    // TODO: Handle case where an action will overrides a previously applied action.
     if (!sheetId) {
       toast.error("No sheet ID available");
       return;
