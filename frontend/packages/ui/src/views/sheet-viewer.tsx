@@ -687,7 +687,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
 
   const handleFieldSelect = (fieldName: string) => {
     setSelectedFields((prev) => {
-      // If field is already selected, remove it
+      // If a field is already selected, remove it
       if (prev.includes(fieldName)) {
         return prev.filter((f) => f !== fieldName);
       }
@@ -765,15 +765,39 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setFieldPositions(allFields);
   };
 
-  const handleApplyAction = (config: AppliedAction) => {
-    setAppliedActions((prev) => [...prev, config]);
-    setShowActionModal(false);
-    setSelectedFields([]);
+  const handleApplyAction = async (config: AppliedAction) => {
+    if (!sheetId) {
+      toast.error("No sheet ID available");
+      return;
+    }
 
-    // Here you would make the API call
-    console.log("Applying action:", config);
-    console.log("API endpoint:", `/dnd5e/{sheet_id}/${config.endpoint}`);
-    console.log("Request body:", config.mapping);
+    console.info(config);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8081/dnd5e/${sheetId}/${config.endpoint}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(config.mapping),
+        }
+      );
+
+      if (!response.ok) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      setAppliedActions((prev) => [...prev, config]);
+      setShowActionModal(false);
+      setSelectedFields([]);
+      toast.success(`${config.name} applied successfully`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast.error(`Failed to apply ${config.name}: ${message}`);
+    }
   };
 
   const removeAppliedAction = (index: number) => {
@@ -791,6 +815,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
       const response = await fetch(`http://localhost:8081/sheets/${sheetId}`);
 
       if (!response.ok) {
+        // noinspection ExceptionCaughtLocallyJS
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
