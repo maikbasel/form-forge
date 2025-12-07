@@ -16,8 +16,8 @@
     --popover: 38 30% 92%;
     --popover-foreground: 30 15% 15%;
 
-    /* Primary - Deep burgundy/red (d20 inspired) */
-    --primary: 0 55% 45%;
+    /* Primary - Aged leather/dark wood */
+    --primary: 25 35% 30%;
     --primary-foreground: 0 0% 98%;
 
     /* Secondary - Aged leather brown */
@@ -52,49 +52,39 @@
   }
 
   .dark {
-    /* Background - Dark leather and candlelit atmosphere */
     --background: 25 20% 12%;
     --foreground: 40 30% 92%;
 
-    /* Card - Slightly lighter dark leather */
     --card: 25 18% 16%;
     --card-foreground: 40 30% 92%;
 
-    /* Popover */
     --popover: 25 18% 16%;
     --popover-foreground: 40 30% 92%;
 
-    /* Primary - Bright d20 red */
-    --primary: 0 70% 55%;
+    --primary: 30 40% 45%;
     --primary-foreground: 0 0% 10%;
 
-    /* Secondary - Worn leather */
     --secondary: 30 15% 25%;
     --secondary-foreground: 40 30% 92%;
 
-    /* Muted - Dim candlelight */
     --muted: 25 15% 22%;
     --muted-foreground: 40 15% 65%;
 
-    /* Accent - Glowing gold */
     --accent: 45 85% 60%;
     --accent-foreground: 25 20% 12%;
 
-    /* Destructive - Hellfire */
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    /* Border - Subtle edges */
     --border: 30 12% 28%;
     --input: 30 12% 28%;
     --ring: 0 70% 55%;
 
-    /* Chart colors - Dark fantasy palette */
-    --chart-1: 0 70% 55%; /* Bright red */
-    --chart-2: 45 85% 60%; /* Bright gold */
-    --chart-3: 140 50% 50%; /* Emerald */
-    --chart-4: 210 60% 55%; /* Sapphire blue */
-    --chart-5: 280 60% 60%; /* Amethyst purple */
+    --chart-1: 0 70% 55%;
+    --chart-2: 45 85% 60%;
+    --chart-3: 140 50% 50%;
+    --chart-4: 210 60% 55%;
+    --chart-5: 280 60% 60%;
   }
 }
 
