@@ -193,7 +193,22 @@ impl SheetsPdf {
             PdfError::ParseError(e.to_string())
         })?;
 
-        let supports_calculation = matches!(field_type, "Tx" | "Ch");
+        let supports_calculation = match field_type {
+            "Tx" | "Ch" => true,
+            "Btn" => {
+                // Include radio buttons but exclude push buttons
+                // Ff flags: bit 16 (65536) = Pushbutton, bit 15 (32768) = Radio
+                if let Ok(flags) = fields_dict.get(b"Ff").and_then(|obj| obj.as_i64()) {
+                    let is_pushbutton = (flags & 65536) != 0;
+                    let is_radio = (flags & 32768) != 0;
+                    is_radio && !is_pushbutton
+                } else {
+                    // No flags mean it's a checkbox, include it
+                    true
+                }
+            }
+            _ => false,
+        };
 
         // This heuristic is okay for now, though real-world widgets
         // are sometimes separate annotations with /Parent.

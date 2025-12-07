@@ -91,6 +91,8 @@ mod tests {
         let sheet = Sheet::new(sheet_path, Some("list_fields_test.pdf".to_string()));
         let mut expected: Vec<SheetField> = vec![
             SheetField::new("Text Field"),
+            SheetField::new("Check Box"),
+            SheetField::new("Radio Button"),
             SheetField::new("Combo Box"),
             SheetField::new("List Box"),
         ];
@@ -100,7 +102,7 @@ mod tests {
 
         assert!(actual.is_ok());
         let mut fields = actual.unwrap();
-        assert_eq!(fields.len(), 3);
+        assert_eq!(fields.len(), 5);
         fields.sort_by_key(|field| field.name.clone());
         assert_eq!(fields, expected);
     }
