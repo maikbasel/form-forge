@@ -5,12 +5,13 @@ use actions_web::handler::{
     attach_skill_modifier_calculation_script,
 };
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, web};
+use actix_web::{App, HttpResponse, HttpServer, get, web};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
 use common::error::ApiErrorResponse;
 use common::telemetry;
 use dotenvy::dotenv;
+use serde::Serialize;
 use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
 use sheets_core::ports::driving::SheetService;
 use sheets_db::adapter::SheetReferenceDb;
@@ -27,6 +28,29 @@ use tracing_actix_web::TracingLogger;
 use utoipa::OpenApi;
 use utoipa_actix_web::AppExt;
 use utoipa_swagger_ui::SwaggerUi;
+
+/// Health check response
+#[derive(Serialize, utoipa::ToSchema)]
+struct HealthResponse {
+    status: String,
+    version: String,
+}
+
+#[utoipa::path(
+    get,
+    path = "/health",
+    tag = "Health",
+    responses(
+        (status = 200, description = "Service is healthy", body = HealthResponse)
+    )
+)]
+#[get("/health")]
+async fn health_check() -> HttpResponse {
+    HttpResponse::Ok().json(HealthResponse {
+        status: "ok".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+    })
+}
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -70,9 +94,14 @@ async fn main() -> Result<()> {
 
     #[derive(OpenApi)]
     #[openapi(
-        paths(sheets_web::handler::upload_sheet, sheets_web::handler::download_sheet),
-        components(schemas(UploadSheetRequest, UploadSheetResponse, ApiErrorResponse)),
+        paths(
+            health_check,
+            sheets_web::handler::upload_sheet,
+            sheets_web::handler::download_sheet
+        ),
+        components(schemas(HealthResponse, UploadSheetRequest, UploadSheetResponse, ApiErrorResponse)),
         tags(
+        (name = "Health", description = "Health check endpoint"),
         (name = "Sheets", description = "Operations related to form-fillable PDF sheets"),
         (name = "DnD 5e", description = "Operations related to attaching calculation scripts to D&D 5e character sheet's AcroForm fields"),
         ),
@@ -98,6 +127,7 @@ async fn main() -> Result<()> {
             .openapi(ApiDoc::openapi())
             .app_data(web::Data::new(sheet_service.clone()))
             .app_data(web::Data::new(action_service.clone()))
+            .service(health_check)
             .service(upload_sheet)
             .service(download_sheet)
             .service(get_sheet_form_fields)

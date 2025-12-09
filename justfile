@@ -2,7 +2,7 @@ set shell := ["bash", "-cu"]
 
 backend_dir := "backend"
 frontend_dir := "frontend"
-compose_file := "compose.yml"
+compose_file := "compose.dev.yml"
 
 up:
     @echo "🐳 Starting Docker infrastructure..."

@@ -34,15 +34,20 @@ impl DatabaseConfig {
     }
 
     pub fn initialize() -> Result<Self> {
-        let host = "localhost";
-        let user = "postgres";
-        let password = "postgres";
-        let database = "form-forge";
-        let max_connections = 5;
+        let host = std::env::var("DB_HOST").unwrap_or_else(|_| "localhost".to_string());
+        let port = std::env::var("DB_PORT")
+            .unwrap_or_else(|_| "5434".to_string())
+            .parse::<u16>()?;
+        let user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres".to_string());
+        let password = std::env::var("DB_PASSWORD").unwrap_or_else(|_| "postgres".to_string());
+        let database = std::env::var("DB_NAME").unwrap_or_else(|_| "form-forge".to_string());
+        let max_connections = std::env::var("DB_MAX_CONNECTIONS")
+            .unwrap_or_else(|_| "5".to_string())
+            .parse::<u32>()?;
 
         Ok(Self::new(
             host,
-            5434,
+            port,
             user,
             password,
             database,

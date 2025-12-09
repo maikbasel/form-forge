@@ -21,19 +21,15 @@ COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 
-# Install dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --prefer-offline
 
-# Copy all source code
 COPY apps/web ./apps/web
 COPY packages ./packages
 
-# Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build the application
 RUN pnpm --filter web build
 
 # Runtime stage
@@ -66,9 +62,7 @@ USER nextjs
 # Expose the application port
 EXPOSE 3000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
 
-# Start the application
 CMD ["node", "apps/web/server.js"]

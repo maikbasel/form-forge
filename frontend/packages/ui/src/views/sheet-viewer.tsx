@@ -30,6 +30,7 @@ import {
 } from "@repo/ui/components/select";
 import { Separator } from "@repo/ui/components/separator";
 import { useSheet } from "@repo/ui/context/sheet-context";
+import { API_BASE_URL } from "@repo/ui/lib/api";
 import { cn } from "@repo/ui/lib/utils";
 import {
   AlertCircle,
@@ -708,7 +709,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
 
   // TODO: Generate client from OpenAPI spec.
   const { data, error } = useSWR(
-    sheetId ? `http://localhost:8081/sheets/${sheetId}/fields` : null,
+    sheetId ? `${API_BASE_URL}/sheets/${sheetId}/fields` : null,
     fetcher
   );
 
@@ -775,7 +776,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
 
     try {
       const response = await fetch(
-        `http://localhost:8081/dnd5e/${sheetId}/${config.endpoint}`,
+        `${API_BASE_URL}/dnd5e/${sheetId}/${config.endpoint}`,
         {
           method: "PUT",
           headers: {
@@ -808,7 +809,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setIsDownloading(true);
 
     try {
-      const response = await fetch(`http://localhost:8081/sheets/${sheetId}`);
+      const response = await fetch(`${API_BASE_URL}/sheets/${sheetId}`);
 
       if (!response.ok) {
         // noinspection ExceptionCaughtLocallyJS

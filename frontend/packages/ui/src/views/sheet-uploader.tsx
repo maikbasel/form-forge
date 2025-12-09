@@ -6,6 +6,7 @@ import {
   FileUploadTrigger,
 } from "@repo/ui/components/file-upload";
 import { useSheet } from "@repo/ui/context/sheet-context";
+import { API_BASE_URL } from "@repo/ui/lib/api";
 import axios from "axios";
 import { Upload } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -38,7 +39,7 @@ export default function SheetUploader({
         try {
           // TODO: Generate client from OpenAPI spec.
           const response = await axios.post(
-            "http://localhost:8081/sheets",
+            `${API_BASE_URL}/sheets`,
             formData,
             {
               headers: { "Content-Type": "multipart/form-data" },

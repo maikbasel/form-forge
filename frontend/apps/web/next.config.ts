@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@repo/ui"],
+  output: "standalone",
   // This is needed to support CORS headers for the API
   async headers() {
     return [

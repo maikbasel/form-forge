@@ -31,7 +31,7 @@ function useLazyRef<T>(fn: () => T) {
     ref.current = fn();
   }
 
-  return ref as React.RefObject<T>;
+  return ref as React.MutableRefObject<T>;
 }
 
 type Direction = "ltr" | "rtl";
@@ -599,38 +599,48 @@ function FileUploadRoot(props: FileUploadRootProps) {
     [dropzoneId, inputId, listId, labelId, dir, disabled, urlCache]
   );
 
-  const RootPrimitive = asChild ? Slot : "div";
-
   return (
     <StoreContext.Provider value={store}>
       <FileUploadContext.Provider value={contextValue}>
-        <RootPrimitive
-          data-disabled={disabled ? "" : undefined}
-          data-slot="file-upload"
-          dir={dir}
-          {...rootProps}
-          className={cn("relative flex flex-col gap-2", className)}
-        >
-          {children}
-          <input
-            accept={accept}
-            aria-describedby={dropzoneId}
-            aria-labelledby={labelId}
-            className="sr-only"
-            disabled={disabled}
-            id={inputId}
-            multiple={multiple}
-            name={name}
-            onChange={onInputChange}
-            ref={inputRef}
-            required={required}
-            tabIndex={-1}
-            type="file"
-          />
-          <span className="sr-only" id={labelId}>
-            {label ?? "File upload"}
-          </span>
-        </RootPrimitive>
+        {asChild ? (
+          <Slot
+            data-disabled={disabled ? "" : undefined}
+            data-slot="file-upload"
+            dir={dir}
+            {...rootProps}
+            className={cn("relative flex flex-col gap-2", className)}
+          >
+            {children}
+          </Slot>
+        ) : (
+          <div
+            data-disabled={disabled ? "" : undefined}
+            data-slot="file-upload"
+            dir={dir}
+            {...rootProps}
+            className={cn("relative flex flex-col gap-2", className)}
+          >
+            {children}
+          </div>
+        )}
+        <input
+          accept={accept}
+          aria-describedby={dropzoneId}
+          aria-labelledby={labelId}
+          className="sr-only"
+          disabled={disabled}
+          id={inputId}
+          multiple={multiple}
+          name={name}
+          onChange={onInputChange}
+          ref={inputRef}
+          required={required}
+          tabIndex={-1}
+          type="file"
+        />
+        <span className="sr-only" id={labelId}>
+          {label ?? "File upload"}
+        </span>
       </FileUploadContext.Provider>
     </StoreContext.Provider>
   );

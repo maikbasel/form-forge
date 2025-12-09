@@ -2,6 +2,7 @@
 
 import { Button } from "@repo/ui/components/button";
 import { Skeleton } from "@repo/ui/components/skeleton";
+import { API_BASE_URL } from "@repo/ui/lib/api";
 import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -35,7 +36,7 @@ type SheetViewerClientProps = {
 };
 
 export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
-  const fileUrl = `http://localhost:8081/sheets/${sheetId}`;
+  const fileUrl = `${API_BASE_URL}/sheets/${sheetId}`;
 
   return (
     <div className="flex h-full flex-col gap-4">

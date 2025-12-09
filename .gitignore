@@ -1,1 +1,9 @@
 .idea
+
+# Environment files
+.env*
+!.env.example
+
+# Docker volumes
+backend_data/
+db_data/

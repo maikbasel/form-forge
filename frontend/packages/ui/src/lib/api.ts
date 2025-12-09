@@ -1,3 +1,6 @@
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8081";
+
 export enum HttpStatus {
   OK = 200,
   CREATED = 201,

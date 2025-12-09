@@ -65,6 +65,7 @@ dotenvy.workspace = true
 utoipa.workspace = true
 utoipa-swagger-ui.workspace = true
 utoipa-actix-web.workspace = true
+serde.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
