@@ -19,7 +19,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
-COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --prefer-offline

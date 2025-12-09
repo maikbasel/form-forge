@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack --port 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --max-warnings 0",
+    "lint": "npx ultracite check",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -23,7 +23,6 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20",
     "@types/react": "18.3.1",
