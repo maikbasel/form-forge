@@ -11,6 +11,11 @@ export type UploadSheetResult = {
   location: string;
 };
 
+export type DownloadSheetResult = {
+  blob: Blob;
+  filename: string;
+};
+
 export type UploadProgressCallback = (progress: number) => void;
 
 export type UploadOptions = {

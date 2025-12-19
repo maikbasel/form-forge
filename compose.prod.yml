@@ -54,9 +54,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        # Pass any build-time environment variables if needed
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8081}
     restart: unless-stopped
     depends_on:
       backend:

@@ -8,7 +8,7 @@ import {
 import { Textarea } from "@repo/ui/components/textarea";
 import { fetch as tauri } from "@tauri-apps/plugin-http";
 import { useState } from "react";
-import type { TextAnalysisResult } from "../types/text-analysis.js";
+import type { TextAnalysisResult } from "../types/text-analysis";
 
 const fetchFn =
   typeof window !== "undefined" && "__TAURI__" in window ? tauri : fetch;

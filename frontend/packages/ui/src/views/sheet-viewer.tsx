@@ -33,7 +33,7 @@ import { useApiClient } from "@repo/ui/context/api-client-context";
 import { useSheet } from "@repo/ui/context/sheet-context";
 import { API_BASE_URL } from "@repo/ui/lib/api";
 import { cn } from "@repo/ui/lib/utils";
-import { ApiClientError } from "@repo/ui/types/api.js";
+import { ApiClientError } from "@repo/ui/types/api";
 import {
   AlertCircle,
   Check,
@@ -773,8 +773,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setIsDownloading(true);
 
     try {
-      const blob = await apiClient.downloadSheet(sheetId);
-      const filename = `sheet-${sheetId}.pdf`;
+      const { blob, filename } = await apiClient.downloadSheet(sheetId);
 
       triggerBrowserDownload(blob, filename);
       toast.success("Sheet downloaded successfully");

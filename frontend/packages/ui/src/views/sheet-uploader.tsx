@@ -15,7 +15,7 @@ import {
 import { Progress } from "@repo/ui/components/progress";
 import { useApiClient } from "@repo/ui/context/api-client-context";
 import { useSheet } from "@repo/ui/context/sheet-context";
-import { ApiClientError } from "@repo/ui/types/api.js";
+import { ApiClientError } from "@repo/ui/types/api";
 import { Loader2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";

@@ -1,47 +1,47 @@
 import type { ApiClient } from "@repo/ui/api/api-client";
-import type { AppliedAction } from "@repo/ui/types/action.ts";
-import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api.ts";
+import type { AppliedAction } from "@repo/ui/types/action";
+import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api";
 import type {
+  DownloadSheetResult,
   FormField,
   UploadOptions,
   UploadSheetResult,
-} from "@repo/ui/types/sheet.ts";
+} from "@repo/ui/types/sheet";
+import { UploadSheetResponseSchema } from "@repo/ui/types/sheet";
+import axios from "axios";
 import {
-  ListSheetFieldsResponseSchema,
-  UploadSheetResponseSchema,
-} from "@repo/ui/types/sheet.ts";
-import axios, { type AxiosError } from "axios";
+  applyAction as applyActionServer,
+  getSheetFields as getSheetFieldsServer,
+} from "./actions.ts";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+function parseApiError(data: unknown): { message: string } {
+  const parsedError = ApiErrorSchema.safeParse(data);
+  if (parsedError.success) {
+    return parsedError.data;
+  }
 
-const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "message" in data &&
+    typeof data.message === "string"
+  ) {
+    return { message: data.message };
+  }
+
+  return { message: "Unknown error" };
+}
+
+function handleFetchError(response: Response, data: unknown): never {
+  const apiError = parseApiError(data);
+  throw new ApiClientError(response.status, apiError);
+}
 
 function handleAxiosError(error: unknown): never {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError;
-    const status = axiosError.response?.status || 0;
-    const errorData = axiosError.response?.data || {
-      message: axiosError.message,
-    };
-
-    const parsedError = ApiErrorSchema.safeParse(errorData);
-    const apiError = parsedError.success
-      ? parsedError.data
-      : {
-          message:
-            typeof errorData === "object" &&
-            errorData !== null &&
-            "message" in errorData &&
-            typeof errorData.message === "string"
-              ? errorData.message
-              : "Unknown error",
-        };
-
+    const status = error.response?.status || 0;
+    const errorData = error.response?.data || { message: error.message };
+    const apiError = parseApiError(errorData);
     throw new ApiClientError(status, apiError);
   }
 
@@ -59,8 +59,8 @@ export const apiClient: ApiClient = {
     formData.append("sheet", file);
 
     try {
-      const response = await axios.post<unknown>("/sheets", formData, {
-        baseURL: API_BASE_URL,
+      // Upload to Next.js API route which proxies to backend
+      const response = await axios.post<unknown>("/api/sheets", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -77,7 +77,8 @@ export const apiClient: ApiClient = {
       const location = response.headers.location;
 
       if (!location) {
-        throw new ApiClientError(response.status, {
+        // noinspection ExceptionCaughtLocallyJS
+          throw new ApiClientError(response.status, {
           message: "Missing Location header in response",
         });
       }
@@ -92,33 +93,35 @@ export const apiClient: ApiClient = {
   },
 
   async getSheetFields(sheetId: string): Promise<FormField[]> {
-    try {
-      const response = await axiosInstance.get<unknown>(
-        `/sheets/${sheetId}/fields`
-      );
-      const parsed = ListSheetFieldsResponseSchema.parse(response.data);
-      return parsed.fields;
-    } catch (error) {
-      handleAxiosError(error);
-    }
+    return await getSheetFieldsServer(sheetId);
   },
 
-  async downloadSheet(sheetId: string): Promise<Blob> {
-    try {
-      const response = await axiosInstance.get<Blob>(`/sheets/${sheetId}`, {
-        responseType: "blob",
-      });
-      return response.data;
-    } catch (error) {
-      handleAxiosError(error);
+  async downloadSheet(sheetId: string): Promise<DownloadSheetResult> {
+    const response = await fetch(`/api/sheets/${sheetId}`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const data = await response
+        .json()
+        .catch(() => ({ message: "Unknown error" }));
+      handleFetchError(response, data);
     }
+
+    // Extract filename from Content-Disposition header
+    const contentDisposition = response.headers.get("Content-Disposition");
+    const filenameMatch = contentDisposition?.match(
+      /filename\*?=['"]?(?:UTF-8'')?([^'";\r\n]+)/
+    );
+    const filename = filenameMatch?.[1]
+      ? decodeURIComponent(filenameMatch[1])
+      : `sheet-${sheetId}.pdf`;
+
+    const blob = await response.blob();
+    return { blob, filename };
   },
 
   async applyAction(sheetId: string, action: AppliedAction): Promise<void> {
-    try {
-      await axiosInstance.post(`/sheets/${sheetId}/actions`, action);
-    } catch (error) {
-      handleAxiosError(error);
-    }
+    return await applyActionServer(sheetId, action);
   },
 };
