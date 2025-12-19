@@ -30,7 +30,7 @@ import {
 } from "@repo/ui/components/select";
 import { Separator } from "@repo/ui/components/separator";
 import { useApiClient } from "@repo/ui/context/api-client-context";
-import { ApiClientError } from "@repo/ui/api/types";
+import { ApiClientError } from "@repo/ui/types/types";
 import { useSheet } from "@repo/ui/context/sheet-context";
 import { cn } from "@repo/ui/lib/utils";
 import {

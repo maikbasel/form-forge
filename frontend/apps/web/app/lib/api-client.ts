@@ -4,13 +4,13 @@ import type {
   FormField,
   UploadOptions,
   UploadSheetResult,
-} from "@repo/ui/api/types";
+} from "@repo/ui/types/types";
 import {
   ApiClientError,
   ApiErrorSchema,
   ListSheetFieldsResponseSchema,
   UploadSheetResponseSchema,
-} from "@repo/ui/api/types";
+} from "@repo/ui/types/types";
 import axios, { type AxiosError } from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";

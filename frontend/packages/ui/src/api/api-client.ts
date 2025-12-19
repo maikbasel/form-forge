@@ -1,4 +1,4 @@
-import type {AppliedAction, FormField, UploadOptions, UploadSheetResult} from "@repo/ui/api/types.js";
+import type {AppliedAction, FormField, UploadOptions, UploadSheetResult} from "@repo/ui/types/types";
 
 
 export type ApiClient = {
