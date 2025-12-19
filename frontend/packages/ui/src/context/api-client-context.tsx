@@ -7,8 +7,8 @@ export function ApiClientProvider({
   client,
   children,
 }: Readonly<{
-    client: ApiClient;
-    children: ReactNode;
+  client: ApiClient;
+  children: ReactNode;
 }>) {
   return (
     <ApiClientContext.Provider value={client}>
