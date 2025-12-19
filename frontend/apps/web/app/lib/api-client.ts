@@ -1,16 +1,15 @@
 import type { ApiClient } from "@repo/ui/api/api-client";
+import type { AppliedAction } from "@repo/ui/types/action.ts";
+import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api.ts";
 import type {
-  AppliedAction,
   FormField,
   UploadOptions,
   UploadSheetResult,
-} from "@repo/ui/types/types";
+} from "@repo/ui/types/sheet.ts";
 import {
-  ApiClientError,
-  ApiErrorSchema,
   ListSheetFieldsResponseSchema,
   UploadSheetResponseSchema,
-} from "@repo/ui/types/types";
+} from "@repo/ui/types/sheet.ts";
 import axios, { type AxiosError } from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";

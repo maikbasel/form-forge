@@ -30,9 +30,10 @@ import {
 } from "@repo/ui/components/select";
 import { Separator } from "@repo/ui/components/separator";
 import { useApiClient } from "@repo/ui/context/api-client-context";
-import { ApiClientError } from "@repo/ui/types/types";
 import { useSheet } from "@repo/ui/context/sheet-context";
+import { API_BASE_URL } from "@repo/ui/lib/api";
 import { cn } from "@repo/ui/lib/utils";
+import { ApiClientError } from "@repo/ui/types/api.js";
 import {
   AlertCircle,
   Check,
@@ -43,7 +44,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
-import {API_BASE_URL} from "@repo/ui/lib/api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
