@@ -4,6 +4,7 @@ use common::error::ApiErrorResponse;
 use sheets_core::error::SheetError;
 use std::fmt;
 
+// TODO: Implement application/problem+json
 #[derive(Debug)]
 pub struct ApiError {
     status: StatusCode,
