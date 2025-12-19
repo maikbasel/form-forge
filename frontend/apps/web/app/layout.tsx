@@ -4,8 +4,10 @@ import "@repo/ui/globals.css";
 import { Toaster } from "@repo/ui/components/sonner";
 import { Footer } from "@/app/components/footer";
 import { Header } from "@/app/components/header";
+import ApiClientProviderWrapper from "@/app/providers/api-client-provider-wrapper";
 import SheetProviderWrapper from "@/app/providers/sheet-provider-wrapper";
 import { ThemeProvider } from "@/app/providers/theme-provider";
+import type React from "react";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -39,17 +41,19 @@ export default function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <SheetProviderWrapper>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="container mx-auto flex-1 px-4 py-8">
-                {children}
-              </main>
-              <Footer />
-            </div>
+          <ApiClientProviderWrapper>
+            <SheetProviderWrapper>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main className="container mx-auto flex-1 px-4 py-8">
+                  {children}
+                </main>
+                <Footer />
+              </div>
 
-            <Toaster />
-          </SheetProviderWrapper>
+              <Toaster />
+            </SheetProviderWrapper>
+          </ApiClientProviderWrapper>
         </ThemeProvider>
       </body>
     </html>

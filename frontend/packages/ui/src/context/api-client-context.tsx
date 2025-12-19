@@ -1,4 +1,4 @@
-import type { ApiClient } from "@repo/ui/api/client.js";
+import type { ApiClient } from "@repo/ui/api/api-client.js";
 import { createContext, type ReactNode, useContext } from "react";
 
 const ApiClientContext = createContext<ApiClient | null>(null);
@@ -6,10 +6,10 @@ const ApiClientContext = createContext<ApiClient | null>(null);
 export function ApiClientProvider({
   client,
   children,
-}: {
-  client: ApiClient;
-  children: ReactNode;
-}) {
+}: Readonly<{
+    client: ApiClient;
+    children: ReactNode;
+}>) {
   return (
     <ApiClientContext.Provider value={client}>
       {children}

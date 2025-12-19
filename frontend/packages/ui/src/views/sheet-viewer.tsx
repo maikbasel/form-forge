@@ -29,8 +29,9 @@ import {
   SelectValue,
 } from "@repo/ui/components/select";
 import { Separator } from "@repo/ui/components/separator";
+import { useApiClient } from "@repo/ui/context/api-client-context";
+import { ApiClientError } from "@repo/ui/api/types";
 import { useSheet } from "@repo/ui/context/sheet-context";
-import { API_BASE_URL } from "@repo/ui/lib/api";
 import { cn } from "@repo/ui/lib/utils";
 import {
   AlertCircle,
@@ -42,29 +43,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
-import { z } from "zod";
+import {API_BASE_URL} from "@repo/ui/lib/api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
-const FILENAME_REGEX = /filename\*=UTF-8''(.+)|filename="?(.+)"?/i;
-
-function extractFilenameFromHeader(contentDisposition: string | null): string {
-  if (!contentDisposition) {
-    return "sheet.pdf";
-  }
-
-  const filenameMatch = FILENAME_REGEX.exec(contentDisposition);
-  if (!filenameMatch) {
-    return "sheet.pdf";
-  }
-
-  const matchedFilename = filenameMatch[1] || filenameMatch[2];
-  if (!matchedFilename) {
-    return "sheet.pdf";
-  }
-
-  return decodeURIComponent(matchedFilename);
-}
 
 function triggerBrowserDownload(blob: Blob, filename: string): void {
   const url = globalThis.URL.createObjectURL(blob);
@@ -628,24 +609,6 @@ function ActionConfigModal({
   );
 }
 
-const SheetFieldSchema = z.object({
-  name: z.string(),
-});
-
-const ListSheetFieldsResponseSchema = z.object({
-  fields: z.array(SheetFieldSchema),
-});
-
-const fetcher = (url: string) =>
-  fetch(url)
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-      return res.json();
-    })
-    .then((data) => ListSheetFieldsResponseSchema.parse(data));
-
 type SheetViewerProps = {
   file?: string;
 };
@@ -670,12 +633,13 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([]); // All fields from all pages
-  const [selectedFields, setSelectedFields] = useState<string[]>([]); // Changed from single to array
+  const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([]);
+  const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [showActionModal, setShowActionModal] = useState(false);
   const [appliedActions, setAppliedActions] = useState<AppliedAction[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const { sheetId } = useSheet();
+  const apiClient = useApiClient();
 
   const nextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, numPages));
@@ -707,10 +671,9 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     }
   };
 
-  // TODO: Generate client from OpenAPI spec.
   const { data, error } = useSWR(
-    sheetId ? `${API_BASE_URL}/sheets/${sheetId}/fields` : null,
-    fetcher
+    sheetId ? `sheet-fields-${sheetId}` : null,
+    () => (sheetId ? apiClient.getSheetFields(sheetId) : Promise.resolve([]))
   );
 
   if (error) {
@@ -729,7 +692,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     (f) => f.page === currentPage
   );
 
-  const apiFields = data?.fields.map((f) => f.name) || [];
+  const apiFields = data?.map((f) => f.name) || [];
 
   const onDocumentLoadSuccess = async (doc: pdfjs.PDFDocumentProxy) => {
     setNumPages(doc.numPages);
@@ -797,6 +760,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
       toast.success(`${config.name} applied successfully`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
+      console.error(message);
       toast.error(`Failed to apply ${config.name}: ${message}`);
     }
   };
@@ -809,20 +773,20 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setIsDownloading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/sheets/${sheetId}`);
-
-      if (!response.ok) {
-        // noinspection ExceptionCaughtLocallyJS
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const blob = await response.blob();
-      const contentDisposition = response.headers.get("Content-Disposition");
-      const filename = extractFilenameFromHeader(contentDisposition);
+      const blob = await apiClient.downloadSheet(sheetId);
+      const filename = `sheet-${sheetId}.pdf`;
 
       triggerBrowserDownload(blob, filename);
+      toast.success("Sheet downloaded successfully");
     } catch (err) {
-      toast(`Failed to download sheet: ${err}`);
+      const errorMessage =
+        err instanceof ApiClientError
+          ? err.apiError.message
+          : err instanceof Error
+            ? err.message
+            : "Unknown error";
+
+      toast.error(`Failed to download sheet: ${errorMessage}`);
     } finally {
       setIsDownloading(false);
     }

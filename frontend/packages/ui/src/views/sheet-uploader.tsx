@@ -13,9 +13,9 @@ import {
   FileUploadTrigger,
 } from "@repo/ui/components/file-upload";
 import { Progress } from "@repo/ui/components/progress";
+import { useApiClient } from "@repo/ui/context/api-client-context";
+import { ApiClientError } from "@repo/ui/api/types";
 import { useSheet } from "@repo/ui/context/sheet-context";
-import { API_BASE_URL } from "@repo/ui/lib/api";
-import axios from "axios";
 import { Loader2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ export default function SheetUploader({
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const { setSheetPath, setSheetId } = useSheet();
+  const apiClient = useApiClient();
 
   const onUpload: NonNullable<FileUploadProps["onUpload"]> = useCallback(
     async (filesToUpload, { onProgress, onSuccess, onError }) => {
@@ -51,43 +52,18 @@ export default function SheetUploader({
       const controller = new AbortController();
       setAbortController(controller);
 
-      const formData = new FormData();
-      formData.append("sheet", file);
-
       const uploadPromises = filesToUpload.map(async (currentFile) => {
         try {
-          // TODO: Generate client from OpenAPI spec.
-          const response = await axios.post(
-            `${API_BASE_URL}/sheets`,
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              signal: controller.signal,
-              onUploadProgress: (event) => {
-                if (!event.total) {
-                  return;
-                }
-                const progress = (event.loaded / event.total) * 100;
-                setUploadProgress(progress);
-                onProgress(currentFile, progress);
-              },
-            }
-          );
+          const result = await apiClient.uploadSheet(currentFile, {
+            signal: controller.signal,
+            onProgress: (progress) => {
+              setUploadProgress(progress);
+              onProgress(currentFile, progress);
+            },
+          });
 
-          const location = response.headers.location;
-          if (!location) {
-            // noinspection ExceptionCaughtLocallyJS
-            throw new Error("Location header is missing");
-          }
-
-          const extractedSheetId = location.split("/").pop();
-          if (!extractedSheetId) {
-            // noinspection ExceptionCaughtLocallyJS
-            throw new Error("Failed to extract sheet ID from location");
-          }
-
-          setSheetPath(location);
-          setSheetId(extractedSheetId);
+          setSheetPath(result.location);
+          setSheetId(result.id);
 
           // Make sure we end at 100% and mark success
           setUploadProgress(100);
@@ -98,21 +74,25 @@ export default function SheetUploader({
           setIsProcessing(true);
 
           // Call the success callback if provided
-          onUploadSuccess?.(extractedSheetId);
+          onUploadSuccess?.(result.id);
         } catch (error) {
           setIsUploading(false);
           setUploadProgress(0);
           setAbortController(null);
 
-          if (axios.isCancel(error)) {
+          if (error instanceof Error && error.message === "Upload aborted") {
             toast.info("Upload cancelled");
             return;
           }
 
-          onError(
-            currentFile,
-            error instanceof Error ? error : new Error("Upload failed")
-          );
+          const errorMessage =
+            error instanceof ApiClientError
+              ? error.apiError.message
+              : error instanceof Error
+                ? error.message
+                : "Upload failed";
+
+          onError(currentFile, new Error(errorMessage));
         }
       });
 
@@ -121,7 +101,7 @@ export default function SheetUploader({
       setIsUploading(false);
       setAbortController(null);
     },
-    [setSheetPath, setSheetId, onUploadSuccess]
+    [setSheetPath, setSheetId, onUploadSuccess, apiClient]
   );
 
   const handleCancelUpload = useCallback(() => {
