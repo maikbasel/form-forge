@@ -43,22 +43,3 @@ export async function getSheetFields(sheetId: string): Promise<FormField[]> {
   return parsed.fields;
 }
 
-export async function applyAction(
-  sheetId: string,
-  action: AttachActionRequest
-): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/sheets/${sheetId}/actions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(action),
-  });
-
-  if (!response.ok) {
-    const data = await response
-      .json()
-      .catch(() => ({ message: "Unknown error" }));
-    handleFetchError(response, data);
-  }
-}

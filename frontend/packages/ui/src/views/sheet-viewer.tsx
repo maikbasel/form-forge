@@ -75,7 +75,7 @@ type ActionConfig = {
 
 type FieldMapping = Record<string, string>;
 
-type AppliedAction = {
+type AttachedAction = {
   id: string;
   name: string;
   endpoint: string;
@@ -364,13 +364,13 @@ function FieldRoleDropZone({
 type ActionConfigModalProps = {
   selectedFields: string[];
   onClose: () => void;
-  onApply: (action: AppliedAction) => void;
+  onAttach: (action: AttachedAction) => void;
 };
 
 function ActionConfigModal({
   selectedFields,
   onClose,
-  onApply,
+  onAttach,
 }: Readonly<ActionConfigModalProps>) {
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
@@ -406,7 +406,7 @@ function ActionConfigModal({
     return requiredRoles.every((role) => fieldMapping[role.key]);
   };
 
-  const handleApply = () => {
+  const handleAttach = () => {
     if (!currentAction) {
       return;
     }
@@ -415,7 +415,7 @@ function ActionConfigModal({
       return;
     }
 
-    onApply({
+    onAttach({
       id: currentAction.id,
       name: currentAction.name,
       endpoint: currentAction.endpoint,
@@ -586,7 +586,7 @@ function ActionConfigModal({
               (isValid() ? (
                 <span className="flex items-center gap-2 font-medium text-green-600">
                   <Check className="h-4 w-4" />
-                  Ready to apply
+                  Ready to attach
                 </span>
               ) : (
                 <span className="flex items-center gap-2 font-medium text-amber-600">
@@ -599,8 +599,8 @@ function ActionConfigModal({
             <Button onClick={onClose} variant="outline">
               Cancel
             </Button>
-            <Button disabled={!isValid()} onClick={handleApply}>
-              Apply Calculation
+            <Button disabled={!isValid()} onClick={handleAttach}>
+              Attach Calculation
             </Button>
           </div>
         </div>
@@ -636,7 +636,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([]);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [appliedActions, setAppliedActions] = useState<AppliedAction[]>([]);
+  const [attachedActions, setAttachedActions] = useState<AttachedAction[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const { sheetId } = useSheet();
   const apiClient = useApiClient();
@@ -723,28 +723,28 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setFieldPositions(allFields);
   };
 
-  const handleApplyAction = async (config: AppliedAction) => {
-    // TODO: Handle case where an action will overrides a previously applied action.
+  const handleAttachAction = async (config: AttachedAction) => {
+    // TODO: Handle case where an action will overrides a previously attached action.
     if (!sheetId) {
       toast.error("No sheet ID available");
       return;
     }
 
     try {
-      // Transform AppliedAction to Action for the API
+      // Transform AttachedAction to Action for the API
       const action: AttachActionRequest = {
         type: config.id as AttachActionRequest["type"],
         mapping: config.mapping,
       } as AttachActionRequest;
 
-      await apiClient.applyAction(sheetId, action);
+      await apiClient.attachAction(sheetId, action);
 
-      setAppliedActions((prev) => [...prev, config]);
+      setAttachedActions((prev) => [...prev, config]);
       setShowActionModal(false);
       // Only unselect fields that were used in the action
       const usedFields = new Set(Object.values(config.mapping));
       setSelectedFields((prev) => prev.filter((field) => !usedFields.has(field)));
-      toast.success(`${config.name} applied successfully`);
+      toast.success(`${config.name} attached successfully`);
     } catch (err) {
       const errorMessage =
         err instanceof ApiClientError
@@ -754,7 +754,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
             : "Unknown error";
 
       console.error(errorMessage);
-      toast.error(`Failed to apply ${config.name}: ${errorMessage}`);
+      toast.error(`Failed to attach ${config.name}: ${errorMessage}`);
     }
   };
 
@@ -914,21 +914,21 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
         </Card>
       </div>
 
-      {/* Sidebar - Applied Actions */}
+      {/* Sidebar - Attached Actions */}
       <div className="w-96 p-6 pl-0">
         <Card className="flex h-full flex-col">
           <CardHeader>
-            <CardTitle className="text-lg">Applied Actions</CardTitle>
+            <CardTitle className="text-lg">Attached Actions</CardTitle>
             <CardDescription>
-              {appliedActions.length} calculation
-              {appliedActions.length === 1 ? "" : "s"} configured
+              {attachedActions.length} calculation
+              {attachedActions.length === 1 ? "" : "s"} configured
             </CardDescription>
           </CardHeader>
 
           <Separator />
 
           <ScrollArea className="flex-1 p-6">
-            {appliedActions.length === 0 ? (
+            {attachedActions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                 <div className="mb-3 rounded-full bg-muted p-3">
                   <AlertCircle className="h-6 w-6" />
@@ -940,15 +940,15 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
               </div>
             ) : (
               <div className="space-y-3">
-                {appliedActions.map((appliedAction, index) => {
-                  const action = ACTIONS.find((a) => a.id === appliedAction.id);
+                {attachedActions.map((attachedAction, index) => {
+                  const action = ACTIONS.find((a) => a.id === attachedAction.id);
 
                   if (!action) {
                     // TODO: Improve error handling
                     return (
                       <Card
                         className="border-destructive bg-muted/50"
-                        key={`${appliedAction.id.toLowerCase()}-${index}`}
+                        key={`${attachedAction.id.toLowerCase()}-${index}`}
                       >
                         <CardHeader className="p-4 pb-3">
                           <div className="flex items-start justify-between">
@@ -959,7 +959,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                                   Unknown Action
                                 </div>
                                 <div className="mt-0.5 text-muted-foreground text-xs">
-                                  {appliedAction.id}
+                                  {attachedAction.id}
                                 </div>
                               </div>
                             </div>
@@ -972,7 +972,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                   return (
                     <Card
                       className="bg-muted/50"
-                      key={`${appliedAction.id.toLowerCase()}-${index}`}
+                      key={`${attachedAction.id.toLowerCase()}-${index}`}
                     >
                       <CardHeader className="p-4 pb-3">
                         <div className="flex items-start justify-between">
@@ -988,7 +988,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
                         <div className="space-y-1.5">
-                          {Object.entries(appliedAction.mapping).map(
+                          {Object.entries(attachedAction.mapping).map(
                             ([roleKey, fieldName]) => {
                               const fieldRole = action.roles.find(
                                 (r) => r.key === roleKey
@@ -1036,7 +1036,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
       {/* Action Configuration Modal */}
       {showActionModal && (
         <ActionConfigModal
-          onApply={handleApplyAction}
+          onAttach={handleAttachAction}
           onClose={() => setShowActionModal(false)}
           selectedFields={selectedFields}
         />

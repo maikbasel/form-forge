@@ -14,7 +14,7 @@ export type ApiClient = {
   uploadSheet(file: File, options?: UploadOptions): Promise<UploadSheetResult>;
   getSheetFields(sheetId: string): Promise<FormField[]>;
   downloadSheet(sheetId: string): Promise<DownloadSheetResult>;
-  applyAction(sheetId: string, action: AttachActionRequest): Promise<void>;
+  attachAction(sheetId: string, action: AttachActionRequest): Promise<void>;
 };
 
 export function parseApiError(data: unknown): { message: string } {

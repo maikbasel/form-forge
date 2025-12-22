@@ -85,7 +85,7 @@ export const apiClient: ApiClient = {
     return { blob, filename };
   },
 
-  async applyAction(
+  async attachAction(
     sheetId: string,
     action: AttachActionRequest
   ): Promise<void> {

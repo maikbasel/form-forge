@@ -108,7 +108,7 @@ async fn main() -> Result<()> {
         info(
             title = "Form Forge API",
             version = "0.1.0",
-            description = r#"A REST API for uploading D&D 5e character sheet PDFs, discovering form fields, and applying predefined calculation actions. Users map fields to actions (e.g. ability mods, skills, proficiency) to generate dynamic, self-calculating PDFs. No custom JavaScript is required—only safe, declarative actions from a curated catalog."#,
+            description = r#"A REST API for uploading D&D 5e character sheet PDFs, discovering form fields, and attaching predefined calculation actions. Users map fields to actions (e.g. ability mods, skills, proficiency) to generate dynamic, self-calculating PDFs. No custom JavaScript is required—only safe, declarative actions from a curated catalog."#,
             license(name = "MIT", url = "https://opensource.org/license/MIT")
         ),
         servers(
