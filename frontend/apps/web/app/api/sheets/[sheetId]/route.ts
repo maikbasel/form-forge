@@ -1,7 +1,6 @@
+import { API_BASE_URL } from "@repo/ui/lib/api";
 import { ApiErrorSchema } from "@repo/ui/types/api";
 import { NextResponse } from "next/server";
-
-const API_BASE_URL = process.env.API_URL || "http://localhost:8081";
 
 export async function GET(
   _request: Request,

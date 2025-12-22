@@ -1,8 +1,7 @@
+import { API_BASE_URL } from "@repo/ui/lib/api";
 import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api";
 import { UploadSheetResponseSchema } from "@repo/ui/types/sheet";
 import { NextResponse } from "next/server";
-
-const API_BASE_URL = process.env.API_URL || "http://localhost:8081";
 
 export async function POST(request: Request) {
   try {

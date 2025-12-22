@@ -1,11 +1,10 @@
 "use server";
 
+import { API_BASE_URL } from "@repo/ui/lib/api";
 import type { AttachActionRequest } from "@repo/ui/types/action";
 import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api";
 import type { FormField } from "@repo/ui/types/sheet";
 import { ListSheetFieldsResponseSchema } from "@repo/ui/types/sheet";
-
-const API_BASE_URL = process.env.API_URL || "http://localhost:8081";
 
 function handleFetchError(response: Response, data: unknown): never {
   const parsedError = ApiErrorSchema.safeParse(data);
