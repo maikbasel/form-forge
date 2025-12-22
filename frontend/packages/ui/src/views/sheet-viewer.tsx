@@ -31,8 +31,8 @@ import {
 import { Separator } from "@repo/ui/components/separator";
 import { useApiClient } from "@repo/ui/context/api-client-context";
 import { useSheet } from "@repo/ui/context/sheet-context";
-import { API_BASE_URL } from "@repo/ui/lib/api";
 import { cn } from "@repo/ui/lib/utils";
+import type { AttachActionRequest } from "@repo/ui/types/action";
 import { ApiClientError } from "@repo/ui/types/api";
 import {
   AlertCircle,
@@ -65,7 +65,7 @@ type FieldRole = {
   hint: string;
 };
 
-type Action = {
+type ActionConfig = {
   id: string;
   name: string;
   description: string;
@@ -82,7 +82,7 @@ type AppliedAction = {
   mapping: FieldMapping;
 };
 
-const ACTIONS: Action[] = [
+const ACTIONS: ActionConfig[] = [
   {
     id: "ability-modifier",
     name: "Ability Modifier",
@@ -735,33 +735,29 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
       return;
     }
 
-    console.info(config);
-
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/dnd5e/${sheetId}/${config.endpoint}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(config.mapping),
-        }
-      );
+      // Transform AppliedAction to Action for the API
+      const action: AttachActionRequest = {
+        type: config.id as AttachActionRequest["type"],
+        mapping: config.mapping,
+      } as AttachActionRequest;
 
-      if (!response.ok) {
-        // noinspection ExceptionCaughtLocallyJS
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      await apiClient.applyAction(sheetId, action);
 
       setAppliedActions((prev) => [...prev, config]);
       setShowActionModal(false);
       setSelectedFields([]);
       toast.success(`${config.name} applied successfully`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      console.error(message);
-      toast.error(`Failed to apply ${config.name}: ${message}`);
+      const errorMessage =
+        err instanceof ApiClientError
+          ? err.apiError.message
+          : err instanceof Error
+            ? err.message
+            : "Unknown error";
+
+      console.error(errorMessage);
+      toast.error(`Failed to apply ${config.name}: ${errorMessage}`);
     }
   };
 

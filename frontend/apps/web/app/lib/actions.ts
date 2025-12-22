@@ -1,6 +1,6 @@
 "use server";
 
-import type { AppliedAction } from "@repo/ui/types/action";
+import type { AttachActionRequest } from "@repo/ui/types/action";
 import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api";
 import type { FormField } from "@repo/ui/types/sheet";
 import { ListSheetFieldsResponseSchema } from "@repo/ui/types/sheet";
@@ -46,7 +46,7 @@ export async function getSheetFields(sheetId: string): Promise<FormField[]> {
 
 export async function applyAction(
   sheetId: string,
-  action: AppliedAction
+  action: AttachActionRequest
 ): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/sheets/${sheetId}/actions`, {
     method: "POST",

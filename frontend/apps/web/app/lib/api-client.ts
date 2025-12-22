@@ -1,5 +1,5 @@
 import type { ApiClient } from "@repo/ui/api/api-client";
-import type { AppliedAction } from "@repo/ui/types/action";
+import type { AttachActionRequest } from "@repo/ui/types/action";
 import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api";
 import type {
   DownloadSheetResult,
@@ -9,10 +9,7 @@ import type {
 } from "@repo/ui/types/sheet";
 import { UploadSheetResponseSchema } from "@repo/ui/types/sheet";
 import axios from "axios";
-import {
-  applyAction as applyActionServer,
-  getSheetFields as getSheetFieldsServer,
-} from "./actions.ts";
+import { getSheetFields as getSheetFieldsServer } from "./actions.ts";
 
 function parseApiError(data: unknown): { message: string } {
   const parsedError = ApiErrorSchema.safeParse(data);
@@ -50,6 +47,7 @@ function handleAxiosError(error: unknown): never {
   });
 }
 
+const filenameRegex = /filename\*?=['"]?(?:UTF-8'')?([^'";\r\n]+)/;
 export const apiClient: ApiClient = {
   async uploadSheet(
     file: File,
@@ -78,7 +76,7 @@ export const apiClient: ApiClient = {
 
       if (!location) {
         // noinspection ExceptionCaughtLocallyJS
-          throw new ApiClientError(response.status, {
+        throw new ApiClientError(response.status, {
           message: "Missing Location header in response",
         });
       }
@@ -110,9 +108,7 @@ export const apiClient: ApiClient = {
 
     // Extract filename from Content-Disposition header
     const contentDisposition = response.headers.get("Content-Disposition");
-    const filenameMatch = contentDisposition?.match(
-      /filename\*?=['"]?(?:UTF-8'')?([^'";\r\n]+)/
-    );
+    const filenameMatch = contentDisposition?.match(filenameRegex);
     const filename = filenameMatch?.[1]
       ? decodeURIComponent(filenameMatch[1])
       : `sheet-${sheetId}.pdf`;
@@ -121,7 +117,20 @@ export const apiClient: ApiClient = {
     return { blob, filename };
   },
 
-  async applyAction(sheetId: string, action: AppliedAction): Promise<void> {
-    return await applyActionServer(sheetId, action);
+  async applyAction(sheetId: string, action: AttachActionRequest): Promise<void> {
+    const response = await fetch(`/api/dnd5e/${sheetId}/${action.type}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(action.mapping),
+    });
+
+    if (!response.ok) {
+      const data = await response
+        .json()
+        .catch(() => ({ message: "Unknown error" }));
+      handleFetchError(response, data);
+    }
   },
 };

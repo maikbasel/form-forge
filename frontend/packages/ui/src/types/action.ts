@@ -33,12 +33,7 @@ export type AttachSkillModifierRequest = z.infer<
   typeof AttachSkillModifierRequestSchema
 >;
 
-export type ActionType =
-  | "ability-modifier"
-  | "skill-modifier"
-  | "saving-throw-modifier";
-
-export type AppliedAction =
+export type AttachActionRequest =
   | {
       type: "ability-modifier";
       mapping: AttachAbilityModifierRequest;
@@ -51,3 +46,4 @@ export type AppliedAction =
       type: "saving-throw-modifier";
       mapping: AttachSavingThrowModifierRequest;
     };
+
