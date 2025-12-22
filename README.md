@@ -1,5 +1,15 @@
 # Form Forge
 
+## TODO
+
+- [ ] Restructure Monorepo
+- [ ] Fix Biome issues
+- [ ] Pre-commit hooks for frontend
+- [ ] CI for frontend
+- [ ] Generate ApiClient from OpenAPI spec
+- [ ] Refactor backend
+- [ ] Return field type from BE and stop user from mapping fields with different type
+
 ## Using qpdf to flatten and “de-binary” a PDF file
 
 `qpdf --qdf --object-streams=disable --stream-data=uncompress <input.pdf> <output.qdf.pdf>`
