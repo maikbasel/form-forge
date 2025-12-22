@@ -1,3 +1,11 @@
+import type { AttachActionRequest } from "@repo/ui/types/action.js";
+import type {
+  DownloadSheetResult,
+  FormField,
+  UploadOptions,
+  UploadSheetResult,
+} from "@repo/ui/types/sheet.js";
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8081";
 
@@ -103,3 +111,10 @@ export async function parseApiResponse<T, E = unknown>(
   }
   return data as ApiResponse<T, E>;
 }
+
+export type ApiClient = {
+  uploadSheet(file: File, options?: UploadOptions): Promise<UploadSheetResult>;
+  getSheetFields(sheetId: string): Promise<FormField[]>;
+  downloadSheet(sheetId: string): Promise<DownloadSheetResult>;
+  applyAction(sheetId: string, action: AttachActionRequest): Promise<void>;
+};

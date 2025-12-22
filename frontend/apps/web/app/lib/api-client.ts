@@ -1,4 +1,4 @@
-import type { ApiClient } from "@repo/ui/api/api-client";
+import type { ApiClient } from "@repo/ui/lib/api";
 import type { AttachActionRequest } from "@repo/ui/types/action";
 import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api";
 import type {
@@ -117,7 +117,10 @@ export const apiClient: ApiClient = {
     return { blob, filename };
   },
 
-  async applyAction(sheetId: string, action: AttachActionRequest): Promise<void> {
+  async applyAction(
+    sheetId: string,
+    action: AttachActionRequest
+  ): Promise<void> {
     const response = await fetch(`/api/dnd5e/${sheetId}/${action.type}`, {
       method: "PUT",
       headers: {

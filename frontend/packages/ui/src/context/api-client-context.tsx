@@ -1,4 +1,4 @@
-import type { ApiClient } from "@repo/ui/api/api-client";
+import type { ApiClient } from "@repo/ui/lib/api";
 import { createContext, type ReactNode, useContext } from "react";
 
 const ApiClientContext = createContext<ApiClient | null>(null);
