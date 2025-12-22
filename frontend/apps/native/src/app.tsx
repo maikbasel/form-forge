@@ -1,7 +1,5 @@
-import { AnalyzeTextView } from "@repo/ui/views/analyzeTextView";
-
 function App() {
-  return <AnalyzeTextView />;
+  return <div>Not implemented yet</div>;
 }
 
 export default App;
