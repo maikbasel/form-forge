@@ -741,7 +741,9 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
 
       setAppliedActions((prev) => [...prev, config]);
       setShowActionModal(false);
-      setSelectedFields([]);
+      // Only unselect fields that were used in the action
+      const usedFields = new Set(Object.values(config.mapping));
+      setSelectedFields((prev) => prev.filter((field) => !usedFields.has(field)));
       toast.success(`${config.name} applied successfully`);
     } catch (err) {
       const errorMessage =
