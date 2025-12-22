@@ -656,11 +656,6 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
         return prev.filter((f) => f !== fieldName);
       }
 
-      // If we already have 6 fields selected, don't add more
-      if (prev.length >= 6) {
-        return prev;
-      }
-
       // Add the new field
       return [...prev, fieldName];
     });
@@ -830,33 +825,23 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
               </div>
             </div>
 
-            {/* Selection Status */}
-            <div className="mt-4 flex items-center gap-4">
-              <div className="text-sm">
-                <span className="font-semibold">{selectedFields.length}</span>
-                <span className="text-muted-foreground">
-                  {" "}
-                  of 6 fields selected
-                </span>
+            {/* Selected Fields */}
+            {selectedFields.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {selectedFields.map((field) => (
+                  <Badge className="gap-1" key={field} variant="secondary">
+                    {field}
+                    <button
+                      className="ml-1 hover:text-destructive"
+                      onClick={() => handleFieldSelect(field)}
+                      type="button"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
               </div>
-
-              {selectedFields.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedFields.map((field) => (
-                    <Badge className="gap-1" key={field} variant="secondary">
-                      {field}
-                      <button
-                        className="ml-1 hover:text-destructive"
-                        onClick={() => handleFieldSelect(field)}
-                        type="button"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </CardHeader>
 
           <Separator />
@@ -874,7 +859,6 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
               {/* Overlays for current page only */}
               {currentPageFields.map((field, index) => {
                 const isSelected = selectedFields.includes(field.name);
-                const canSelect = selectedFields.length < 6 || isSelected;
 
                 return (
                   <Toggle
@@ -883,14 +867,10 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                       "box-border transition-all duration-200",
                       "data-[state=on]:z-20 data-[state=on]:border-2 data-[state=on]:border-blue-500 data-[state=on]:bg-blue-500/25 data-[state=on]:shadow-xl",
                       "data-[state=off]:z-10 data-[state=off]:border-2 data-[state=off]:border-yellow-400/50 data-[state=off]:bg-yellow-400/10",
-                      "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30",
-                      "disabled:cursor-not-allowed disabled:border-gray-300/50 disabled:bg-gray-300/10 disabled:opacity-50"
+                      "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30"
                     )}
-                    disabled={!canSelect}
                     key={`${field.name}-${index}`}
-                    onPressedChange={() =>
-                      canSelect && handleFieldSelect(field.name)
-                    }
+                    onPressedChange={() => handleFieldSelect(field.name)}
                     pressed={isSelected}
                     style={{
                       position: "absolute",
