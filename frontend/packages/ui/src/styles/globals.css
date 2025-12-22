@@ -16,8 +16,8 @@
     --popover: 38 30% 92%;
     --popover-foreground: 30 15% 15%;
 
-    /* Primary - Aged leather/dark wood */
-    --primary: 25 35% 30%;
+    /* Primary - Arcane Blue */
+    --primary: 220 70% 45%;
     --primary-foreground: 0 0% 98%;
 
     /* Secondary - Aged leather brown */
@@ -61,8 +61,8 @@
     --popover: 25 18% 16%;
     --popover-foreground: 40 30% 92%;
 
-    --primary: 30 40% 45%;
-    --primary-foreground: 0 0% 10%;
+    --primary: 220 70% 45%;
+    --primary-foreground: 0 0% 98%;
 
     --secondary: 30 15% 25%;
     --secondary-foreground: 40 30% 92%;
