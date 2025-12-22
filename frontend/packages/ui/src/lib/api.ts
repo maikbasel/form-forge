@@ -1,116 +1,14 @@
-import type { AttachActionRequest } from "@repo/ui/types/action.js";
+import type { AttachActionRequest } from "@repo/ui/types/action";
+import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api";
 import type {
   DownloadSheetResult,
   FormField,
   UploadOptions,
   UploadSheetResult,
-} from "@repo/ui/types/sheet.js";
+} from "@repo/ui/types/sheet";
+import axios from "axios";
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8081";
-
-export enum HttpStatus {
-  OK = 200,
-  CREATED = 201,
-  NO_CONTENT = 204,
-  BAD_REQUEST = 400,
-  UNAUTHORIZED = 401,
-  FORBIDDEN = 403,
-  NOT_FOUND = 404,
-  INTERNAL_SERVER_ERROR = 500,
-}
-
-export type ApiResponse<T, E = unknown> =
-  | { success: true; data: T; error?: never }
-  | {
-      success: false;
-      data?: never;
-      error: { code: string; message: string; details?: E };
-    };
-
-export class ApiError extends Error {
-  constructor(
-    public statusCode: number,
-    public code: string,
-    message: string,
-    public details?: unknown
-  ) {
-    super(message);
-    this.name = "ApiError";
-  }
-}
-
-export function createResponse<T>(data: T, status = HttpStatus.OK): Response {
-  if (data === undefined || data === null) {
-    throw new Error("Response data cannot be null or undefined");
-  }
-
-  const body: ApiResponse<T> = {
-    success: true,
-    data,
-  };
-
-  return Response.json(body, {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-    },
-  });
-}
-
-export function createErrorResponse(error: Error | ApiError): Response {
-  const apiError =
-    error instanceof ApiError
-      ? error
-      : new ApiError(
-          HttpStatus.INTERNAL_SERVER_ERROR,
-          "INTERNAL_SERVER_ERROR",
-          "An unexpected error occurred"
-        );
-
-  const body: ApiResponse<never> = {
-    success: false,
-    error: {
-      code: apiError.code,
-      message: apiError.message,
-      details: apiError.details,
-    },
-  };
-
-  return Response.json(body, {
-    status: apiError.statusCode,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-    },
-  });
-}
-
-export function isSuccessResponse<T, E>(
-  response: ApiResponse<T, E>
-): response is ApiResponse<T, E> & { success: true } {
-  return response.success === true;
-}
-
-export async function parseApiResponse<T, E = unknown>(
-  response: Response
-): Promise<ApiResponse<T, E>> {
-  const data = await response.json();
-  if (!response.ok) {
-    const error = data.error || {
-      code: "UNKNOWN_ERROR",
-      message: "Unknown error occurred",
-    };
-    throw new ApiError(
-      response.status,
-      error.code,
-      error.message,
-      error.details
-    );
-  }
-  return data as ApiResponse<T, E>;
-}
+export const API_BASE_URL = process.env.API_URL ?? "http://localhost:8081";
 
 export type ApiClient = {
   uploadSheet(file: File, options?: UploadOptions): Promise<UploadSheetResult>;
@@ -118,3 +16,41 @@ export type ApiClient = {
   downloadSheet(sheetId: string): Promise<DownloadSheetResult>;
   applyAction(sheetId: string, action: AttachActionRequest): Promise<void>;
 };
+
+export function parseApiError(data: unknown): { message: string } {
+  const parsedError = ApiErrorSchema.safeParse(data);
+  if (parsedError.success) {
+    return parsedError.data;
+  }
+
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "message" in data &&
+    typeof data.message === "string"
+  ) {
+    return { message: data.message };
+  }
+
+  return { message: "Unknown error" };
+}
+
+export function handleFetchError(response: Response, data: unknown): never {
+  const apiError = parseApiError(data);
+  throw new ApiClientError(response.status, apiError);
+}
+
+export function handleAxiosError(error: unknown): never {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status || 0;
+    const errorData = error.response?.data || { message: error.message };
+    const apiError = parseApiError(errorData);
+    throw new ApiClientError(status, apiError);
+  }
+
+  throw new ApiClientError(0, {
+    message: error instanceof Error ? error.message : "Unknown error",
+  });
+}
+
+export const downloadSheetFilenameRegex = /filename\*?=['"]?(?:UTF-8'')?([^'";\r\n]+)/;

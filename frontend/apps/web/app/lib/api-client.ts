@@ -1,6 +1,11 @@
-import type { ApiClient } from "@repo/ui/lib/api";
+import {
+  type ApiClient,
+  downloadSheetFilenameRegex,
+  handleAxiosError,
+  handleFetchError,
+} from "@repo/ui/lib/api";
 import type { AttachActionRequest } from "@repo/ui/types/action";
-import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api";
+import { ApiClientError } from "@repo/ui/types/api";
 import type {
   DownloadSheetResult,
   FormField,
@@ -11,43 +16,6 @@ import { UploadSheetResponseSchema } from "@repo/ui/types/sheet";
 import axios from "axios";
 import { getSheetFields as getSheetFieldsServer } from "./actions.ts";
 
-function parseApiError(data: unknown): { message: string } {
-  const parsedError = ApiErrorSchema.safeParse(data);
-  if (parsedError.success) {
-    return parsedError.data;
-  }
-
-  if (
-    typeof data === "object" &&
-    data !== null &&
-    "message" in data &&
-    typeof data.message === "string"
-  ) {
-    return { message: data.message };
-  }
-
-  return { message: "Unknown error" };
-}
-
-function handleFetchError(response: Response, data: unknown): never {
-  const apiError = parseApiError(data);
-  throw new ApiClientError(response.status, apiError);
-}
-
-function handleAxiosError(error: unknown): never {
-  if (axios.isAxiosError(error)) {
-    const status = error.response?.status || 0;
-    const errorData = error.response?.data || { message: error.message };
-    const apiError = parseApiError(errorData);
-    throw new ApiClientError(status, apiError);
-  }
-
-  throw new ApiClientError(0, {
-    message: error instanceof Error ? error.message : "Unknown error",
-  });
-}
-
-const filenameRegex = /filename\*?=['"]?(?:UTF-8'')?([^'";\r\n]+)/;
 export const apiClient: ApiClient = {
   async uploadSheet(
     file: File,
@@ -108,7 +76,7 @@ export const apiClient: ApiClient = {
 
     // Extract filename from Content-Disposition header
     const contentDisposition = response.headers.get("Content-Disposition");
-    const filenameMatch = contentDisposition?.match(filenameRegex);
+    const filenameMatch = contentDisposition?.match(downloadSheetFilenameRegex);
     const filename = filenameMatch?.[1]
       ? decodeURIComponent(filenameMatch[1])
       : `sheet-${sheetId}.pdf`;
