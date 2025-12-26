@@ -39,6 +39,65 @@ export default function SheetUploader({
   const { setSheetPath, setSheetId } = useSheet();
   const apiClient = useApiClient();
 
+  const getErrorMessage = useCallback((error: unknown): string => {
+    if (error instanceof ApiClientError) {
+      return error.apiError.message;
+    }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return "Upload failed";
+  }, []);
+
+  const uploadSingleFile = useCallback(
+    async (options: {
+      file: File;
+      controller: AbortController;
+      onProgress: (file: File, progress: number) => void;
+      onSuccess: (file: File) => void;
+      onError: (file: File, error: Error) => void;
+    }) => {
+      const { file, controller, onProgress, onSuccess, onError } = options;
+
+      try {
+        const result = await apiClient.uploadSheet(file, {
+          signal: controller.signal,
+          onProgress: (progress) => {
+            setUploadProgress(progress);
+            onProgress(file, progress);
+          },
+        });
+
+        setSheetPath(result.location);
+        setSheetId(result.id);
+
+        // Make sure we end at 100% and mark success
+        setUploadProgress(100);
+        onProgress(file, 100);
+        onSuccess(file);
+
+        // Show the processing state before navigation
+        setIsProcessing(true);
+
+        // Call the success callback if provided
+        onUploadSuccess?.(result.id);
+      } catch (error) {
+        setIsUploading(false);
+        setUploadProgress(0);
+        setAbortController(null);
+
+        if (error instanceof Error && error.message === "Upload aborted") {
+          toast.info("Upload cancelled");
+          return;
+        }
+
+        const errorMessage = getErrorMessage(error);
+        onError(file, new Error(errorMessage));
+      }
+    },
+    [apiClient, setSheetPath, setSheetId, onUploadSuccess, getErrorMessage]
+  );
+
   const onUpload: NonNullable<FileUploadProps["onUpload"]> = useCallback(
     async (filesToUpload, { onProgress, onSuccess, onError }) => {
       const file = filesToUpload[0];
@@ -52,56 +111,22 @@ export default function SheetUploader({
       const controller = new AbortController();
       setAbortController(controller);
 
-      const uploadPromises = filesToUpload.map(async (currentFile) => {
-        try {
-          const result = await apiClient.uploadSheet(currentFile, {
-            signal: controller.signal,
-            onProgress: (progress) => {
-              setUploadProgress(progress);
-              onProgress(currentFile, progress);
-            },
-          });
-
-          setSheetPath(result.location);
-          setSheetId(result.id);
-
-          // Make sure we end at 100% and mark success
-          setUploadProgress(100);
-          onProgress(currentFile, 100);
-          onSuccess(currentFile);
-
-          // Show the processing state before navigation
-          setIsProcessing(true);
-
-          // Call the success callback if provided
-          onUploadSuccess?.(result.id);
-        } catch (error) {
-          setIsUploading(false);
-          setUploadProgress(0);
-          setAbortController(null);
-
-          if (error instanceof Error && error.message === "Upload aborted") {
-            toast.info("Upload cancelled");
-            return;
-          }
-
-          const errorMessage =
-            error instanceof ApiClientError
-              ? error.apiError.message
-              : error instanceof Error
-                ? error.message
-                : "Upload failed";
-
-          onError(currentFile, new Error(errorMessage));
-        }
-      });
+      const uploadPromises = filesToUpload.map((currentFile) =>
+        uploadSingleFile({
+          file: currentFile,
+          controller,
+          onProgress,
+          onSuccess,
+          onError,
+        })
+      );
 
       // Wait for all uploads to complete
       await Promise.all(uploadPromises);
       setIsUploading(false);
       setAbortController(null);
     },
-    [setSheetPath, setSheetId, onUploadSuccess, apiClient]
+    [uploadSingleFile]
   );
 
   const handleCancelUpload = useCallback(() => {

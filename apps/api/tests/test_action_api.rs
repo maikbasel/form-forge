@@ -66,7 +66,7 @@ mod tests {
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_ability_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/crates/actions/core/js/dnd_helpers.js"
+            "/crates/actions/core/js/dnd-helpers.js"
         ));
         //endregion
 
@@ -152,7 +152,7 @@ mod tests {
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_saving_throw_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/crates/actions/core/js/dnd_helpers.js"
+            "/crates/actions/core/js/dnd-helpers.js"
         ));
         //endregion
 
@@ -243,7 +243,7 @@ mod tests {
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_skill_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/crates/actions/core/js/dnd_helpers.js"
+            "/crates/actions/core/js/dnd-helpers.js"
         ));
         //endregion
 

@@ -41,7 +41,7 @@ impl ActionService {
         debug!(path = %sheet_path.display(), "sheet path resolved and readable");
 
         let dnd_helpers_js =
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/js/dnd_helpers.js"));
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/js/dnd-helpers.js"));
         self.action_pdf_port
             .add_doc_level_js(dnd_helpers_js, &sheet_path)?;
 

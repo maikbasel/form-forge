@@ -748,12 +748,14 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
       );
       toast.success(`${config.name} attached successfully`);
     } catch (err) {
-      const errorMessage =
-        err instanceof ApiClientError
-          ? err.apiError.message
-          : err instanceof Error
-            ? err.message
-            : "Unknown error";
+      let errorMessage: string;
+      if (err instanceof ApiClientError) {
+        errorMessage = err.apiError.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = "Unknown error";
+      }
 
       console.error(errorMessage);
       toast.error(`Failed to attach ${config.name}: ${errorMessage}`);
@@ -773,12 +775,14 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
       triggerBrowserDownload(blob, filename);
       toast.success("Sheet downloaded successfully");
     } catch (err) {
-      const errorMessage =
-        err instanceof ApiClientError
-          ? err.apiError.message
-          : err instanceof Error
-            ? err.message
-            : "Unknown error";
+      let errorMessage: string;
+      if (err instanceof ApiClientError) {
+        errorMessage = err.apiError.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = "Unknown error";
+      }
 
       toast.error(`Failed to download sheet: ${errorMessage}`);
     } finally {

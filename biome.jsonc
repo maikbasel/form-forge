@@ -1,4 +1,78 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite/core", "ultracite/react", "ultracite/next"]
+  "extends": ["ultracite/core", "ultracite/react", "ultracite/next"],
+  "overrides": [
+    {
+      "includes": ["apps/api/crates/actions/core/js/**/*.js"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "useMaxParams": "off"
+          },
+          "style": {
+            "noRestrictedGlobals": "off"
+          },
+          "correctness": {
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAtRules": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/postcss.config.mjs", "**/tailwind.config.ts"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/ui/src/components/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noNamespaceImport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/ui/src/components/file-upload.tsx"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "nursery": {
+            "useMaxParams": "off",
+            "noShadow": "off"
+          },
+          "correctness": {
+            "useImageSize": "off"
+          },
+          "a11y": {
+            "noSvgWithoutTitle": "off",
+            "noInteractiveElementToNoninteractiveRole": "off",
+            "noStaticElementInteractions": "off"
+          },
+          "style": {
+            "useForOf": "off",
+            "noNestedTernary": "off"
+          }
+        }
+      }
+    }
+  ]
 }
