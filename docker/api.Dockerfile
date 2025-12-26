@@ -45,7 +45,7 @@ RUN mkdir -p src && \
 RUN cargo build --release --no-default-features --features json-logs
 
 # Remove dummy sources and build artifacts
-RUN rm -rf src crates/common/src crates/sheets crates/actions target/release/.fingerprint/form-forge-* \
+RUN rm -rf src crates/common/src crates/sheets crates/actions target/release/.fingerprint/form-forge-api-* \
     target/release/.fingerprint/common-* target/release/.fingerprint/sheets_* \
     target/release/.fingerprint/actions_*
 
@@ -72,7 +72,7 @@ WORKDIR /app
 RUN mkdir -p /app/data && chown -R appuser:appuser /app
 
 # Copy binary from builder
-COPY --from=builder --chown=appuser:appuser /app/target/release/form-forge /app/form-forge
+COPY --from=builder --chown=appuser:appuser /app/target/release/form-forge-api /app/form-forge-api
 
 # Copy migrations
 COPY --from=builder --chown=appuser:appuser /app/migrations /app/migrations
@@ -86,4 +86,4 @@ EXPOSE 8081
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8081/health || exit 1
 
-CMD ["/app/form-forge"]
+CMD ["/app/form-forge-api"]
