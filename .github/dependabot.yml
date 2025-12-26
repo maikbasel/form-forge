@@ -1,18 +1,72 @@
 version: 2
 updates:
+  # Backend - Cargo dependencies
   - package-ecosystem: "cargo"
+    directory: "/apps/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      # Group patch updates together
+      patch:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+      # Group development dependencies
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Frontend - npm/pnpm dependencies (root workspace)
+  - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      # Group React ecosystem updates
+      react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      # Group Next.js ecosystem
+      nextjs:
+        patterns:
+          - "next*"
+      # Group tooling
+      tooling:
+        patterns:
+          - "turbo*"
+          - "@biomejs/biome"
+          - "ultracite"
+          - "typescript"
+      # Group patch updates
+      patch:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
 
+  # Docker
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/docker"
     schedule:
       interval: "weekly"
+      day: "monday"
 
+  # GitHub Actions
   - package-ecosystem: "github-actions"
-    # Workflow files stored in the default location of `.github/workflows`
-    # You don't need to specify `/.github/workflows` for `directory`. You can use `directory: "/"`.
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"
