@@ -233,7 +233,12 @@ impl SheetsPdf {
                     supported
                 } else {
                     // No flags mean it's a checkbox, include it
-                    debug!(field_type = "Btn", flags = "none", supported = true, "button field without flags (checkbox)");
+                    debug!(
+                        field_type = "Btn",
+                        flags = "none",
+                        supported = true,
+                        "button field without flags (checkbox)"
+                    );
                     true
                 }
             }

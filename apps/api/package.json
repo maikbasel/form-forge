@@ -6,6 +6,7 @@
     "dev": "cargo run",
     "build": "cargo build --release --no-default-features --features json-logs",
     "lint": "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+    "fix": "cargo fmt --all && cargo clippy --fix --workspace --all-targets --allow-dirty --allow-staged",
     "check-types": "cargo check --workspace --all-features --all-targets",
     "test": "cargo test"
   }
