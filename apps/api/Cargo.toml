@@ -28,7 +28,7 @@ async-trait = "0.1"
 sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid"] }
 tempfile = "3.21"
 testcontainers = "0.25"
-testcontainers-modules = { version = "0.13", features = ["postgres", "blocking"] }
+testcontainers-modules = { version = "0.14", features = ["postgres", "blocking"] }
 rstest = "0.26"
 pretty_assertions = "1.4"
 dotenvy = "0.15"
