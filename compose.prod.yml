@@ -21,8 +21,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./apps/api
+      dockerfile: ../../docker/api.Dockerfile
     restart: unless-stopped
     depends_on:
       db:
@@ -52,8 +52,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/web.Dockerfile
     restart: unless-stopped
     depends_on:
       backend:

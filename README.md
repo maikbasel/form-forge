@@ -12,7 +12,7 @@
 
 ## Using qpdf to flatten and “de-binary” a PDF file
 
-`qpdf --qdf --object-streams=disable --stream-data=uncompress <input.pdf> <output.qdf.pdf>`
+`qpdf --qdf --object-streams=disable --stream-data=uncompress <input.pdf> <output.pdf>`
 
 ## Structure
 

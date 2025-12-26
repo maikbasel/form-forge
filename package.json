@@ -1,0 +1,32 @@
+{
+  "name": "form-forge",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "check-types": "turbo check-types",
+    "shadcn": "pnpm --filter @repo/ui shadcn",
+    "tauri": "pnpm --filter native tauri dev",
+    "check": "npx ultracite@latest check",
+    "fix": "npx ultracite@latest fix",
+    "api": "cd apps/api && cargo run"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.4",
+    "turbo": "^2.3.3",
+    "typescript": "5.5.4",
+    "ultracite": "6.3.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^18.3.12",
+      "@types/react-dom": "^18.3.1"
+    }
+  }
+}

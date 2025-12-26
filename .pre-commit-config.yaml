@@ -3,8 +3,17 @@ repos:
     rev: v1.0
     hooks:
     -   id: fmt
-        args: ["--manifest-path", "backend/Cargo.toml", "--all", "--", "--check"]
+        args: ["--manifest-path", "apps/api/Cargo.toml", "--all", "--", "--check"]
     -   id: clippy
-        args: ["--manifest-path", "backend/Cargo.toml", "--workspace", "--all-targets", "--all-features", "--", "-D", "warnings"]
+        args: ["--manifest-path", "apps/api/Cargo.toml", "--workspace", "--all-targets", "--all-features", "--", "-D", "warnings"]
     -   id: cargo-check
-        args: ["--manifest-path", "backend/Cargo.toml", "--workspace", "--all-features", "--all-targets"]
+        args: ["--manifest-path", "apps/api/Cargo.toml", "--workspace", "--all-features", "--all-targets"]
+
+-   repo: local
+    hooks:
+    -   id: ultracite-fix
+        name: Format frontend with Ultracite
+        entry: pnpm dlx ultracite fix
+        language: system
+        files: \.(js|jsx|ts|tsx|json|jsonc)$
+        pass_filenames: false

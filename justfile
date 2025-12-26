@@ -1,31 +1,42 @@
 set shell := ["bash", "-cu"]
 
-backend_dir := "backend"
-frontend_dir := "frontend"
+backend_dir := "apps/api"
+web_dir := "apps/web"
+native_dir := "apps/native"
 compose_file := "compose.dev.yml"
 
+# List available recipes
+default:
+    @just --list
+
+# Start Docker infrastructure (PostgreSQL + Adminer)
 up:
     @echo "🐳 Starting Docker infrastructure..."
     docker compose -f {{compose_file}} up -d
     @echo "✅ Infrastructure is up!"
 
+# Stop Docker infrastructure
 down:
     @echo "🛑 Stopping Docker infrastructure..."
     docker compose -f {{compose_file}} down
     @echo "✅ Infrastructure stopped!"
 
+# Run backend API server (Rust/Actix-Web on port 8081)
 be:
     @echo "🦀 Starting backend..."
     cd {{backend_dir}} && cargo run
 
+# Run web frontend (Next.js on port 3000)
 web:
     @echo "⚛️  Starting web frontend..."
-    cd {{frontend_dir}} && pnpm --filter web dev
+    cd {{web_dir}} && pnpm --filter web dev
 
+# Run native frontend (Tauri desktop app)
 native:
     @echo "📱 Starting native frontend..."
-    cd {{frontend_dir}} && pnpm --filter native tauri dev
+    cd {{native_dir}} && pnpm --filter native tauri dev
 
+# Start all services (Docker + backend + web)
 dev:
     #!/usr/bin/env bash
     set -e

@@ -1,4 +1,14 @@
+# JetBrains
 .idea
+
+# Rust
+target/
+**/target/
+
+# Node
+node_modules/
+.turbo/
+.junie/
 
 # Environment files
 .env*
@@ -7,3 +17,35 @@
 # Docker volumes
 backend_data/
 db_data/
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+build
+dist
+.tauri/
+
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db

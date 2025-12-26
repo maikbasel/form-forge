@@ -1,0 +1,76 @@
+# ===========================
+# Rust Build Artifacts
+# ===========================
+target/
+**/*.rs.bk
+*.pdb
+
+# ===========================
+# Testing
+# ===========================
+tests/
+**/tests/
+
+# ===========================
+# IDE & Editor
+# ===========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===========================
+# Git & VCS
+# ===========================
+.git/
+.gitignore
+.github/
+.gitlab-ci.yml
+
+# ===========================
+# Environment & Config
+# ===========================
+.env
+.env.local
+.env.*.local
+.env.example
+
+# ===========================
+# Documentation
+# ===========================
+README.md
+docs/
+*.md
+
+# ===========================
+# Docker
+# ===========================
+Dockerfile
+.dockerignore
+docker-compose.yml
+compose.yml
+
+# ===========================
+# Logs
+# ===========================
+*.log
+
+# ===========================
+# OS
+# ===========================
+.DS_Store
+Thumbs.db
+
+# ===========================
+# Development Tools
+# ===========================
+.pre-commit-config.yaml
+rustfmt.toml
+.editorconfig
+
+# ===========================
+# Package Manager
+# ===========================
+package.json
+node_modules/

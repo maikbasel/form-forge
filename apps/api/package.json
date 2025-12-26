@@ -1,0 +1,12 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cargo run",
+    "build": "cargo build --release --no-default-features --features json-logs",
+    "lint": "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+    "check-types": "cargo check --workspace --all-features --all-targets",
+    "test": "cargo test"
+  }
+}

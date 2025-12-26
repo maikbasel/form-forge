@@ -1,0 +1,82 @@
+# ===========================
+# Frontend .dockerignore
+# Context: root (for web app builds)
+# ===========================
+
+# ===========================
+# Backend (exclude from frontend builds)
+# ===========================
+apps/api/
+
+# ===========================
+# Node/Frontend
+# ===========================
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build outputs
+.next
+.turbo
+dist
+build
+out
+
+# Development files
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage
+.nyc_output
+
+# Tauri (not needed for web build)
+apps/native
+
+# ===========================
+# IDE & OS
+# ===========================
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===========================
+# Git & VCS
+# ===========================
+.git
+.gitignore
+.github/
+.gitlab-ci.yml
+
+# ===========================
+# Environment & Config
+# ===========================
+.env
+.env*.local
+.env.development
+.env.example
+!.env.example
+
+# ===========================
+# Documentation
+# ===========================
+README.md
+docs/
+
+# ===========================
+# Docker
+# ===========================
+docker/
+Dockerfile
+.dockerignore
+docker-compose.yml
+compose.yml
+compose.dev.yml
+compose.prod.yml
