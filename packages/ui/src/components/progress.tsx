@@ -7,17 +7,13 @@ import type * as React from "react";
 const Progress = ({
   className,
   value,
-  ref,
   ...props
-}: React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
-  ref?: React.RefObject<React.ElementRef<typeof ProgressPrimitive.Root> | null>;
-}) => (
+}: React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>) => (
   <ProgressPrimitive.Root
     className={cn(
       "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
       className
     )}
-    ref={ref}
     {...props}
   >
     <ProgressPrimitive.Indicator

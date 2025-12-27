@@ -8,13 +8,8 @@ const Separator = ({
   className,
   orientation = "horizontal",
   decorative = true,
-  ref,
   ...props
-}: React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root> & {
-  ref?: React.RefObject<React.ElementRef<
-    typeof SeparatorPrimitive.Root
-  > | null>;
-}) => (
+}: React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>) => (
   <SeparatorPrimitive.Root
     className={cn(
       "shrink-0 bg-border",
@@ -23,7 +18,6 @@ const Separator = ({
     )}
     decorative={decorative}
     orientation={orientation}
-    ref={ref}
     {...props}
   />
 );
