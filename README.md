@@ -1,71 +1,188 @@
 # Form Forge
 
-## TODO
+A PDF form processing application that enables non-technical D&D 5e players to add dynamic calculations to their PDF
+character sheets without writing JavaScript or understanding PDF AcroForm internals.
 
-- [ ] Restructure Monorepo
-- [ ] Fix Biome issues
-- [ ] Pre-commit hooks for frontend
-- [ ] CI for frontend
-- [ ] Generate ApiClient from OpenAPI spec
-- [ ] Refactor backend
-- [ ] Return field type from BE and stop user from mapping fields with different type
+## What It Does
 
-## Using qpdf to flatten and “de-binary” a PDF file
+Users upload a PDF character sheet, the application extracts form fields, and provides a visual interface to map
+calculations between fields (e.g., `Strength modifier = (Strength score - 10) / 2`). The application generates the
+necessary JavaScript and embeds it into the PDF AcroForm structure.
 
-`qpdf --qdf --object-streams=disable --stream-data=uncompress <input.pdf> <output.pdf>`
+## Tech Stack
 
-## Structure
+**Backend (Rust):**
 
-The root object of the PDF file contains a reference `/AcroForm 3 0 R` to the AcroForm dictionary:
+- Actix-Web for HTTP API
+- SQLx with PostgreSQL for persistence
+- lopdf for PDF parsing and manipulation
+- Hexagonal architecture
 
-```
-1 0 obj
-<<
-  /AcroForm 3 0 R
-  ...
->>
-endobj
-```
+**Frontend (TypeScript):**
 
-The actual AcroForm dictionary lives in object `3 0 obj`. That dictionary references an indirect `/Fields` object:
+- React 19 + Next.js (App Router) for web
+- Tauri for desktop application
+- Turborepo monorepo with pnpm workspaces
+- shadcn/ui components + Tailwind CSS
 
-```
-3 0 obj
-<<
-  ...
-  /Fields 26 0 R
->>
-endobj
-```
+## Prerequisites
 
-The `/Fields` is a big array if field references:
+- Rust (stable toolchain)
+- Node.js 23.10.0+
+- pnpm 9.15.5+
+- just (command runner)
+- Docker + Docker Compose
 
-```
-26 0 obj
-[
-  41 0 R
-  ...
-]
-endobj
-```
+Optional: asdf for version management (see `.tool-versions`)
 
-A typical entry (e.g. `41 0 obj`) is a terminal[^1] text field:
+## Setup
 
-```
-41 0 obj
-<<
-  ...
-  /FT /Tx
-  ...
-  /Subtype /Widget
-  /T (CharacterName 2)
-  ...
-  /V ()
->>
-endobj
+```bash
+# Clone and install dependencies
+pnpm install
+
+# Configure backend environment
+cp apps/api/.env.example apps/api/.env
+# Edit apps/api/.env if needed (defaults work for local development)
+
+# Start PostgreSQL
+just up
+
+# Run backend + web frontend
+just dev
 ```
 
-There’s no `/AA` (Additional Actions) or /CO (calculation order) on the field, so no per-field JS hook yet.
+Access points:
 
-[^1]: A terminal field is one that does not contain any children that are fields. A non-terminal field is one that has
-children that are fields.
+- Web: http://localhost:3000
+- API: http://localhost:8081
+- Swagger UI: http://localhost:8081/swagger-ui/
+- Adminer: http://localhost:8082
+
+## Development
+
+### Commands
+
+```bash
+# Full stack
+just dev              # Backend + web frontend
+just up               # Start Docker infrastructure only
+just down             # Stop Docker infrastructure
+
+# Backend only
+just be               # Run API server
+cd apps/api && cargo test
+cd apps/api && cargo fmt
+cd apps/api && cargo clippy
+
+# Frontend only
+just web              # Next.js web app
+just native           # Tauri desktop app
+pnpm build
+pnpm lint
+npx ultracite fix     # Format/fix (Biome-based)
+```
+
+### Code Quality
+
+- **Rust**: Uses rustfmt and clippy (enforced via pre-commit hooks)
+- **TypeScript**: Uses Ultracite (Biome preset) for formatting and linting
+- Install pre-commit hooks: `pre-commit install`
+
+## Project Structure
+
+```
+apps/
+  api/              # Rust backend
+    crates/
+      sheets/       # PDF upload, storage, field extraction
+      actions/      # JavaScript action attachment
+      common/       # Shared utilities (DB, telemetry, errors)
+  web/              # Next.js web application
+  native/           # Tauri desktop application
+
+packages/
+  ui/               # Shared React component library
+  typescript-config/# Shared TypeScript configs
+
+docs/               # Technical documentation
+```
+
+### Architecture
+
+The backend uses hexagonal architecture with two bounded contexts:
+
+- **Sheets**: Handles PDF form upload, storage, and field extraction
+- **Actions**: Handles JavaScript action generation and PDF modification
+
+See [Development Guide](.claude/CLAUDE.md) for detailed architecture documentation.
+
+## Deployment
+
+### Docker Compose
+
+The repository includes Docker Compose configuration for local development. For production deployment:
+
+```bash
+# Start all services (PostgreSQL + API + Web)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+**Environment variables** for production (create `.env` in project root):
+
+```bash
+# Database
+DATABASE_URL=postgres://postgres:password@db:5432/form-forge
+
+# API
+BIND_ADDR=0.0.0.0:8081
+
+# Frontend (Next.js)
+NEXT_PUBLIC_API_URL=http://your-domain:8081
+```
+
+**Volumes**: PDF files are stored in `./data/storage` (configure via backend environment). Ensure this directory is
+persisted in production.
+
+## Database
+
+PostgreSQL runs on port 5434 (local) or 5432 (Docker). Migrations auto-run on API startup via SQLx.
+
+Manual migration commands:
+
+```bash
+cd apps/api
+sqlx migrate run
+sqlx migrate revert
+```
+
+## Testing
+
+```bash
+# Rust tests (includes testcontainers for integration tests)
+cd apps/api && cargo test
+
+# Specific test
+cd apps/api && cargo test <test_name>
+
+# Specific crate
+cd apps/api && cargo test -p sheets-core
+```
+
+## API Documentation
+
+Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is running.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make changes following code quality standards (Ultracite/Clippy)
+4. Run tests and linting
+5. Submit a pull request
