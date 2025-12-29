@@ -11,10 +11,13 @@
     "tauri": "pnpm --filter native tauri dev",
     "check": "npx ultracite@latest check",
     "fix": "npx ultracite@latest fix",
-    "api": "cd apps/api && cargo run"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.4",
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^25.0.3",
     "turbo": "^2.3.3",
     "typescript": "5.5.4",
     "ultracite": "6.3.2"

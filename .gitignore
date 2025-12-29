@@ -49,3 +49,11 @@ yarn-error.log*
 .DS_Store
 *.pem
 Thumbs.db
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/tests/downloads/

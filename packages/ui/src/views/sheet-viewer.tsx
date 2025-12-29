@@ -343,7 +343,9 @@ function FieldRoleDropZone({
           {/* Dropdown as alternative */}
           {unassignedFields.length > 0 && (
             <Select onValueChange={onSelectField} value="">
-              <SelectTrigger>
+              <SelectTrigger
+                data-testid={`role-select-trigger-${role.label.toLowerCase().replaceAll(/\s+/g, "-")}`}
+              >
                 <SelectValue placeholder="Or select from list..." />
               </SelectTrigger>
               <SelectContent>
