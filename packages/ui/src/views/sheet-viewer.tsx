@@ -45,7 +45,7 @@ import {
 import { toast } from "sonner";
 import useSWR from "swr";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs"; // Worker was copied to public directory.
 
 function triggerBrowserDownload(blob: Blob, filename: string): void {
   const url = globalThis.URL.createObjectURL(blob);
