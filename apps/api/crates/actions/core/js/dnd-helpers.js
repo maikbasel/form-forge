@@ -1,9 +1,9 @@
-function _calculateModifierFromScore(scoreField) {
+function calculateModifierFromScore(scoreField) {
   const score = getNumberValueFromField(scoreField);
   event.value = Math.floor((score - 10) / 2);
 }
 
-function _calculateSaveFromFields(
+function calculateSaveFromFields(
   abilityModField,
   proficientField,
   proficiencyBonusField
@@ -14,7 +14,7 @@ function _calculateSaveFromFields(
   event.value = mod + (prof ? profBonus : 0);
 }
 
-function _calculateSkillFromFields(
+function calculateSkillFromFields(
   abilityModField,
   proficientField,
   expertiseField,
