@@ -4,7 +4,7 @@ use crate::ports::driven::{ActionPdfPort, SheetReferencePort, SheetStoragePort};
 use std::sync::Arc;
 use tracing::{Span, debug, info, instrument};
 use uuid::Uuid;
-
+// TODO: Add tests
 #[derive(Clone)]
 pub struct ActionService {
     sheet_reference_port: Arc<dyn SheetReferencePort>,
@@ -112,6 +112,8 @@ impl ActionService {
                 (action_js, skill_modifier_field_name, "SkillModifier")
             }
         };
+
+        debug!(action = action_label, target_field = %target_field, action_js = %action_js, "applying calculation action");
 
         // enrich span with dynamic fields
         let span = Span::current();
