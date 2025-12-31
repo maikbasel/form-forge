@@ -1,5 +1,10 @@
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { test } from "./fixtures";
+import { expect, test } from "./fixtures";
+import {
+  readDocumentJavaScript,
+  readFieldCalculationJS,
+} from "./utils/pdf-utils";
 
 test.describe("Sheet Workflow - Happy Path", () => {
   test("should upload PDF, add action, and download sheet", async ({
@@ -50,6 +55,19 @@ test.describe("Sheet Workflow - Happy Path", () => {
         download.suggestedFilename()
       );
       await download.saveAs(downloadPath);
+
+      // Read the PDF and verify JavaScript
+      const pdfBytes = await readFile(downloadPath);
+
+      // Verify document-level JavaScript
+      const docJS = await readDocumentJavaScript(pdfBytes);
+      expect(docJS).toHaveLength(1);
+      expect(docJS[0][0]).toBe("HelpersJS");
+      expect(docJS[0][1]).toContain("_calculateModifierFromScore");
+
+      // Verify field calculation JavaScript
+      const fieldJS = await readFieldCalculationJS(pdfBytes, "STRmod");
+      expect(fieldJS).toBe('calculateModifierFromScore("STR");');
     });
   });
 });
