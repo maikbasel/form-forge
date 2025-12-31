@@ -123,7 +123,7 @@ const ACTIONS: ActionConfig[] = [
       },
       {
         key: "proficiencyFieldName",
-        label: "Proficiency Checkbox",
+        label: "Proficiency",
         required: true,
         hint: "Checkbox indicating proficiency in this skill",
       },
@@ -135,13 +135,13 @@ const ACTIONS: ActionConfig[] = [
       },
       {
         key: "expertiseFieldName",
-        label: "Expertise Checkbox",
+        label: "Expertise",
         required: false,
         hint: "Checkbox for double proficiency (expertise)",
       },
       {
         key: "halfProfFieldName",
-        label: "Half-Prof Checkbox",
+        label: "Half-Prof",
         required: false,
         hint: "Checkbox for half proficiency (Jack of All Trades)",
       },
@@ -167,7 +167,7 @@ const ACTIONS: ActionConfig[] = [
       },
       {
         key: "proficiencyFieldName",
-        label: "Proficiency Checkbox",
+        label: "Proficiency",
         required: true,
         hint: "Checkbox indicating proficiency in this save",
       },

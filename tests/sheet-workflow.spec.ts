@@ -7,7 +7,7 @@ import {
 } from "./utils/pdf-utils";
 
 test.describe("Sheet Workflow - Happy Path", () => {
-  test("should upload PDF, add action, and download sheet", async ({
+  test("should upload PDF, add multiple actions, and download sheet", async ({
     uploadPage,
     sheetViewerPage,
   }) => {
@@ -26,7 +26,7 @@ test.describe("Sheet Workflow - Happy Path", () => {
       await sheetViewerPage.verifyPageLoaded();
     });
 
-    await test.step("Select fields for action", async () => {
+    await test.step("Select fields for ability modifier action", async () => {
       // For the D&D character sheet, we'll use STR (Strength) as an example
       await sheetViewerPage.selectField("STRmod");
       await sheetViewerPage.selectField("STR");
@@ -40,9 +40,56 @@ test.describe("Sheet Workflow - Happy Path", () => {
       await sheetViewerPage.attachAction();
     });
 
-    await test.step("Verify action attached successfully", async () => {
+    await test.step("Verify ability modifier action attached", async () => {
       await sheetViewerPage.verifySuccessToast("attached successfully");
       await sheetViewerPage.verifyActionAttached("Ability Modifier");
+    });
+
+    await test.step("Select fields for saving throw modifier action", async () => {
+      await sheetViewerPage.selectField("ST Strength");
+      await sheetViewerPage.selectField("STRmod");
+      await sheetViewerPage.selectField("Check Box 11");
+      await sheetViewerPage.selectField("ProfBonus");
+    });
+
+    await test.step("Configure saving throw modifier action", async () => {
+      await sheetViewerPage.openActionModal();
+      await sheetViewerPage.selectActionType("Saving Throw Modifier");
+      await sheetViewerPage.assignFieldToRole("STRmod", "Ability Modifier");
+      await sheetViewerPage.assignFieldToRole("Check Box 11", "Proficiency");
+      await sheetViewerPage.assignFieldToRole("ProfBonus", "Proficiency Bonus");
+      await sheetViewerPage.assignFieldToRole(
+        "ST Strength",
+        "Target Saving Throw"
+      );
+      await sheetViewerPage.attachAction();
+    });
+
+    await test.step("Verify saving throw modifier action attached", async () => {
+      await sheetViewerPage.verifySuccessToast("attached successfully");
+      await sheetViewerPage.verifyActionAttached("Saving Throw Modifier");
+    });
+
+    await test.step("Select fields for skill modifier action", async () => {
+      await sheetViewerPage.selectField("Athletics");
+      await sheetViewerPage.selectField("STRmod");
+      await sheetViewerPage.selectField("Check Box 26");
+      await sheetViewerPage.selectField("ProfBonus");
+    });
+
+    await test.step("Configure skill modifier action", async () => {
+      await sheetViewerPage.openActionModal();
+      await sheetViewerPage.selectActionType("Skill Modifier");
+      await sheetViewerPage.assignFieldToRole("STRmod", "Ability Modifier");
+      await sheetViewerPage.assignFieldToRole("Check Box 26", "Proficiency");
+      await sheetViewerPage.assignFieldToRole("ProfBonus", "Proficiency Bonus");
+      await sheetViewerPage.assignFieldToRole("Athletics", "Target Skill");
+      await sheetViewerPage.attachAction();
+    });
+
+    await test.step("Verify skill modifier action attached", async () => {
+      await sheetViewerPage.verifySuccessToast("attached successfully");
+      await sheetViewerPage.verifyActionAttached("Skill Modifier");
     });
 
     await test.step("Download and verify sheet", async () => {
@@ -65,9 +112,24 @@ test.describe("Sheet Workflow - Happy Path", () => {
       expect(docJS[0][0]).toBe("HelpersJS");
       expect(docJS[0][1]).toContain("_calculateModifierFromScore");
 
-      // Verify field calculation JavaScript
-      const fieldJS = await readFieldCalculationJS(pdfBytes, "STRmod");
-      expect(fieldJS).toBe('calculateModifierFromScore("STR");');
+      // Verify ability modifier field calculation
+      const abilityModJS = await readFieldCalculationJS(pdfBytes, "STRmod");
+      expect(abilityModJS).toBe('calculateModifierFromScore("STR");');
+
+      // Verify saving throw modifier field calculation
+      const savingThrowJS = await readFieldCalculationJS(
+        pdfBytes,
+        "ST Strength"
+      );
+      expect(savingThrowJS).toBe(
+        'calculateSavingThrowModifier("STRmod", "Check Box 11", "ProfBonus");'
+      );
+
+      // Verify skill modifier field calculation
+      const skillModJS = await readFieldCalculationJS(pdfBytes, "Athletics");
+      expect(skillModJS).toBe(
+        'calculateSkillModifier("STRmod", "Check Box 26", "ProfBonus");'
+      );
     });
   });
 });
