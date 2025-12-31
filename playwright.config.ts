@@ -32,7 +32,7 @@ export default defineConfig({
     baseURL: "http://localhost:3000",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "retain-on-failure",
+    trace: "on-first-retry",
 
     /* Run headless in CI, headed locally */
     headless: !!process.env.CI,
@@ -40,8 +40,8 @@ export default defineConfig({
     /* Capture screenshot on failure */
     screenshot: "only-on-failure",
 
-    /* Record video on failure */
-    video: "retain-on-failure",
+    /* Record video on failure - using on-first-retry improves WebKit performance */
+    video: "on-first-retry",
   },
 
   /* Configure projects for major browsers */
@@ -59,6 +59,7 @@ export default defineConfig({
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
+      timeout: 60_000,
     },
 
     /* Test against mobile viewports. */

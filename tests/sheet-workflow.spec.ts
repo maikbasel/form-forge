@@ -110,7 +110,9 @@ test.describe("Sheet Workflow - Happy Path", () => {
       const docJS = await readDocumentJavaScript(pdfBytes);
       expect(docJS).toHaveLength(1);
       expect(docJS[0][0]).toBe("HelpersJS");
-      expect(docJS[0][1]).toContain("_calculateModifierFromScore");
+      expect(docJS[0][1]).toContain("calculateModifierFromScore");
+      expect(docJS[0][1]).toContain("calculateSaveFromFields");
+      expect(docJS[0][1]).toContain("calculateSkillFromFields");
 
       // Verify ability modifier field calculation
       const abilityModJS = await readFieldCalculationJS(pdfBytes, "STRmod");
@@ -122,13 +124,13 @@ test.describe("Sheet Workflow - Happy Path", () => {
         "ST Strength"
       );
       expect(savingThrowJS).toBe(
-        'calculateSavingThrowModifier("STRmod", "Check Box 11", "ProfBonus");'
+        'calculateSaveFromFields("STRmod", "Check Box 11", "ProfBonus");'
       );
 
       // Verify skill modifier field calculation
       const skillModJS = await readFieldCalculationJS(pdfBytes, "Athletics");
       expect(skillModJS).toBe(
-        'calculateSkillModifier("STRmod", "Check Box 26", "ProfBonus");'
+        'calculateSkillFromFields("STRmod", "Check Box 26", undefined, undefined, "ProfBonus");'
       );
     });
   });

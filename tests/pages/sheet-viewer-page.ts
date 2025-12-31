@@ -55,7 +55,7 @@ export class SheetViewerPage {
   async verifyActionAttached(actionName: string) {
     // The attached action should appear in the sidebar
     await expect(
-      this.page.locator(".space-y-3").getByText(actionName)
+      this.page.locator(".space-y-3").getByText(actionName, { exact: true })
     ).toBeVisible();
   }
 
