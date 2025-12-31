@@ -24,7 +24,7 @@ down:
 # Run backend API server (Rust/Actix-Web on port 8081)
 be:
     @echo "🦀 Starting backend..."
-    cd {{backend_dir}} && cargo run
+    cd {{backend_dir}} && RUST_LOG=debug cargo run
 
 # Run web frontend (Next.js on port 3000)
 web:
