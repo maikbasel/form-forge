@@ -186,3 +186,12 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 3. Make changes following code quality standards (Ultracite/Clippy)
 4. Run tests and linting
 5. Submit a pull request
+
+## TO DO
+
+- [ ] When mapping selected fields to roles in the calc, move fields down when they were mapped. This way the user
+  doesn't need to scroll down.
+- [ ] Show tooltips on hover for form fields. 
+- [ ] Use S3-compatible storage for PDF files and update API.
+- [ ] Implement native application.
+- [ ] Add some way to make it easier for users to identify which selected field contains what character information.

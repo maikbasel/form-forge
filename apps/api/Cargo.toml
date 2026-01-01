@@ -25,10 +25,10 @@ anyhow = "1.0"
 thiserror = "2.0"
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
 async-trait = "0.1"
-sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid"] }
+sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid", "macros"] }
 tempfile = "3.21"
-testcontainers = "0.25"
-testcontainers-modules = { version = "0.13", features = ["postgres", "blocking"] }
+testcontainers = "0.26"
+testcontainers-modules = { version = "0.14", features = ["postgres", "blocking"] }
 rstest = "0.26"
 pretty_assertions = "1.4"
 dotenvy = "0.15"
@@ -46,6 +46,7 @@ validator = { version = "0.20", features = ["derive"] }
 name = "form-forge-api"
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 common = { path = "crates/common" }

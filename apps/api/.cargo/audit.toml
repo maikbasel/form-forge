@@ -1,0 +1,11 @@
+[advisories]
+ignore = [
+    # SQLx macros pull in MySQL support at compile time for parsing SQL queries,
+    # even though we only use PostgreSQL at runtime. This vulnerability is specific
+    # to MySQL's RSA authentication, which we don't use.
+    # See: https://github.com/launchbadge/sqlx/issues/3440
+    "RUSTSEC-2023-0071",
+    # rustls-pemfile is only used in test dependencies via testcontainers.
+    # The maintained fork is rustls-pemfile2, but testcontainers hasn't migrated yet.
+    "RUSTSEC-2025-0134"
+]
