@@ -9,8 +9,8 @@
     "check-types": "turbo check-types",
     "shadcn": "pnpm --filter @repo/ui shadcn",
     "tauri": "pnpm --filter native tauri dev",
-    "check": "npx ultracite@latest check",
-    "fix": "npx ultracite@latest fix",
+    "check": "pnpm exec ultracite check",
+    "fix": "pnpm exec ultracite fix",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

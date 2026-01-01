@@ -14,9 +14,9 @@ This project uses **Ultracite**, a zero-config Biome preset that enforces strict
 
 ## Quick Reference
 
-- **Format code**: `npx ultracite fix`
-- **Check for issues**: `npx ultracite check`
-- **Diagnose setup**: `npx ultracite doctor`
+- **Format code**: `pnpm exec ultracite fix`
+- **Check for issues**: `pnpm exec ultracite check`
+- **Diagnose setup**: `pnpm exec ultracite doctor`
 
 Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
 
@@ -130,7 +130,7 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 
 ---
 
-Most formatting and common issues are automatically fixed by Biome. Run `npx ultracite fix` before committing to ensure compliance.
+Most formatting and common issues are automatically fixed by Biome. Run `pnpm exec ultracite fix` before committing to ensure compliance.
 
 ---
 
@@ -196,10 +196,10 @@ pnpm lint
 pnpm check-types
 
 # Format and fix code issues (Biome/Ultracite)
-npx ultracite fix
+pnpm exec ultracite fix
 
 # Check for issues
-npx ultracite check
+pnpm exec ultracite check
 
 # Add shadcn/ui components
 pnpm shadcn add <component>
