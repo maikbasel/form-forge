@@ -54,7 +54,17 @@ async fn health_check() -> HttpResponse {
 
 #[actix_web::main]
 async fn main() -> Result<()> {
-    from_path(concat!(env!("CARGO_MANIFEST_DIR"), "/../../.env")).ok();
+    // Load environment-specific .env file based on APP_ENV
+    // Falls back to .env if APP_ENV is not set or file doesn't exist
+    let base_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
+    let env_file = env::var("APP_ENV")
+        .ok()
+        .map(|env| format!("{}/.env.{}", base_path, env))
+        .unwrap_or_else(|| format!("{}/.env", base_path));
+
+    from_path(&env_file)
+        .or_else(|_| from_path(format!("{}/.env", base_path)))
+        .ok();
 
     telemetry::initialize()?;
 

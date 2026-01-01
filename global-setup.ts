@@ -63,6 +63,10 @@ async function startBackend(): Promise<void> {
     cwd: "./apps/api",
     stdio: "inherit",
     detached: false,
+    env: {
+      ...process.env,
+      APP_ENV: "test", // Backend will load .env.test
+    },
   });
 
   // Wait for backend to be ready
