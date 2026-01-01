@@ -6,7 +6,7 @@ export default async function globalSetup() {
   console.info("🐳 Starting Docker infrastructure...");
 
   try {
-    execSync("docker compose -f compose.dev.yml up -d", { stdio: "inherit" });
+    execSync("docker compose -f compose.test.yml up -d", { stdio: "inherit" });
   } catch (error) {
     console.error("Failed to start Docker infrastructure:", error);
     throw error;

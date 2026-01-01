@@ -16,7 +16,7 @@ export default function globalTeardown() {
   console.info("🧹 Stopping Docker infrastructure...");
 
   try {
-    execSync("docker compose -f compose.dev.yml down", { stdio: "inherit" });
+    execSync("docker compose -f compose.test.yml down", { stdio: "inherit" });
     console.info("✅ Infrastructure stopped!");
   } catch (error) {
     console.error("Failed to stop Docker infrastructure:", error);

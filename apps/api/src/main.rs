@@ -5,12 +5,12 @@ use actions_web::handler::{
     attach_skill_modifier_calculation_script,
 };
 use actix_cors::Cors;
-use actix_web::{App, HttpResponse, HttpServer, get, web};
+use actix_web::{get, web, App, HttpResponse, HttpServer};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
 use common::error::ApiErrorResponse;
 use common::telemetry;
-use dotenvy::dotenv;
+use dotenvy::from_path;
 use serde::Serialize;
 use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
 use sheets_core::ports::driving::SheetService;
@@ -19,7 +19,7 @@ use sheets_pdf::adapter::SheetsPdf;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
 use sheets_web::handler::{
-    UploadSheetRequest, UploadSheetResponse, download_sheet, get_sheet_form_fields, upload_sheet,
+    download_sheet, get_sheet_form_fields, upload_sheet, UploadSheetRequest, UploadSheetResponse,
 };
 use sqlx::postgres::PgPoolOptions;
 use std::env;
@@ -54,7 +54,7 @@ async fn health_check() -> HttpResponse {
 
 #[actix_web::main]
 async fn main() -> Result<()> {
-    dotenv().ok();
+    from_path(concat!(env!("CARGO_MANIFEST_DIR"), "/../../.env")).ok();
 
     telemetry::initialize()?;
 

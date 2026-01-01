@@ -271,13 +271,26 @@ Key technologies:
 
 # Configuration
 
-## Backend Environment
+## Environment Configuration
 
-Create `apps/api/.env` based on `apps/api/.env.example`:
+Create `.env` in the project root based on `.env.example`:
 ```
-DATABASE_URL=postgres://postgres:postgres@localhost:5434/form-forge
-BIND_ADDR=127.0.0.1:8081
+# Database Configuration
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=form-forge
+DB_HOST=localhost
+DB_PORT=5434
+
+# Backend Configuration
+BIND_ADDR=0.0.0.0:8081
+RUST_LOG=info
+
+# Frontend Configuration
+API_URL=http://localhost:8081
 ```
+
+The backend loads this file using `dotenvy::from_path()` with `CARGO_MANIFEST_DIR` to resolve the path from `apps/api/` to the root.
 
 PostgreSQL runs on port 5434 (not default 5432) via Docker Compose.
 
