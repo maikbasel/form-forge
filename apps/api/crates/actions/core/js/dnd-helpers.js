@@ -1,6 +1,67 @@
+/**
+ * Calculate ability modifier from ability score
+ * @param {number} score - The ability score (e.g., Strength, Dexterity)
+ * @returns {number} The calculated modifier
+ */
+export function calculateModifier(score) {
+  return Math.floor((score - 10) / 2);
+}
+
+/**
+ * Calculate save bonus from ability modifier and proficiency
+ * @param {number} abilityMod - The ability modifier
+ * @param {boolean} isProficient - Whether proficient in this save
+ * @param {number} proficiencyBonus - The character's proficiency bonus
+ * @returns {number} The calculated save bonus
+ */
+export function calculateSaveBonus(abilityMod, isProficient, proficiencyBonus) {
+  return abilityMod + (isProficient ? proficiencyBonus : 0);
+}
+
+/**
+ * Calculate skill bonus from ability modifier and proficiency options
+ * @param {number} abilityMod - The ability modifier
+ * @param {boolean} proficient - Whether proficient in this skill
+ * @param {boolean} expertise - Whether has expertise in this skill
+ * @param {boolean} halfProf - Whether has half-proficiency (Jack of All Trades)
+ * @param {number} proficiencyBonus - The character's proficiency bonus
+ * @returns {number} The calculated skill bonus
+ */
+export function calculateSkillBonus(
+  abilityMod,
+  proficient,
+  expertise,
+  halfProf,
+  proficiencyBonus
+) {
+  const profMult = getProficiencyMultiplier(proficient, expertise, halfProf);
+  return Math.floor(abilityMod + profMult * proficiencyBonus);
+}
+
+/**
+ * Get proficiency multiplier based on proficiency type
+ * @param {boolean} proficient - Whether proficient
+ * @param {boolean} expertise - Whether has expertise (double proficiency)
+ * @param {boolean} half - Whether has half proficiency
+ * @returns {number} The proficiency multiplier (0, 0.5, 1, or 2)
+ */
+export function getProficiencyMultiplier(proficient, expertise, half) {
+  if (expertise) {
+    return 2;
+  }
+  if (proficient) {
+    return 1;
+  }
+  if (half) {
+    return 0.5;
+  }
+
+  return 0;
+}
+
 function calculateModifierFromScore(scoreField) {
   const score = getNumberValueFromField(scoreField);
-  event.value = Math.floor((score - 10) / 2);
+  event.value = calculateModifier(score);
 }
 
 function calculateSaveFromFields(
@@ -11,7 +72,7 @@ function calculateSaveFromFields(
   const mod = getNumberValueFromField(abilityModField);
   const prof = getBoolValueFromField(proficientField);
   const profBonus = getNumberValueFromField(proficiencyBonusField);
-  event.value = mod + (prof ? profBonus : 0);
+  event.value = calculateSaveBonus(mod, prof, profBonus);
 }
 
 function calculateSkillFromFields(
@@ -26,8 +87,7 @@ function calculateSkillFromFields(
   const ex = getBoolValueFromField(expertiseField);
   const half = getBoolValueFromField(halfProfField);
   const profBonus = getNumberValueFromField(proficiencyBonusField);
-  const profMult = getProficiencyMultiplier(prof, ex, half);
-  event.value = Math.floor(abilityMod + profMult * profBonus);
+  event.value = calculateSkillBonus(abilityMod, prof, ex, half, profBonus);
 }
 
 function getNumberValueFromField(fieldName) {
@@ -46,18 +106,4 @@ function getBoolValueFromField(fieldName) {
   }
   const v = f.value;
   return v !== "Off" && v !== 0 && v !== "" && v != null;
-}
-
-function getProficiencyMultiplier(proficient, expertise, half) {
-  if (expertise) {
-    return 2;
-  }
-  if (proficient) {
-    return 1;
-  }
-  if (half) {
-    return 0.5;
-  }
-
-  return 0;
 }

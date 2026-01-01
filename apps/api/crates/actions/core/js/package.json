@@ -1,0 +1,14 @@
+{
+  "name": "form-forge-pdf-helpers",
+  "version": "0.1.0",
+  "description": "JavaScript helpers for PDF form calculations",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8"
+  }
+}
