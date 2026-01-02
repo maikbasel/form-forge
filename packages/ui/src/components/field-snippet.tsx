@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useFieldPreview } from "../context/field-preview-context.tsx";
+import { useFieldSnippet } from "../context/field-snippet-context.tsx";
 
-interface FieldPreviewProps {
+interface FieldSnippetProps {
   fieldName: string;
 }
 
-export function FieldPreview({ fieldName }: Readonly<FieldPreviewProps>) {
-  const { fieldPositions, pdfDocument } = useFieldPreview();
+export function FieldSnippet({ fieldName }: Readonly<FieldSnippetProps>) {
+  const { fieldPositions, pdfDocument } = useFieldSnippet();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,14 @@ export function FieldPreview({ fieldName }: Readonly<FieldPreviewProps>) {
         const viewport = page.getViewport({ scale: 2 }); // Higher scale for better quality
 
         // Calculate cropped region with padding
-        const padding = 40; // pixels of context around the field
+        const padding = 140; // pixels of context around the field
+
+        if (!field.rect) {
+          setError("Field position unavailable");
+          setIsLoading(false);
+          return;
+        }
+
         const rect = field.rect; // [x1, y1, x2, y2]
 
         // Convert PDF coordinates to canvas coordinates
@@ -71,12 +78,28 @@ export function FieldPreview({ fieldName }: Readonly<FieldPreviewProps>) {
         }
 
         await page.render({
+          canvas: tempCanvas,
           canvasContext: tempContext,
           viewport,
         }).promise;
 
         // Copy cropped region to preview canvas
         context.drawImage(tempCanvas, x, y, width, height, 0, 0, width, height);
+
+        // Highlight the field
+        const fieldX = rect[0] * 2 - x;
+        const fieldY = viewport.height - rect[3] * 2 - y;
+        const fieldWidth = (rect[2] - rect[0]) * 2;
+        const fieldHeight = (rect[3] - rect[1]) * 2;
+
+        context.save();
+        context.fillStyle = "rgba(59, 130, 246, 0.25)";
+        context.fillRect(fieldX, fieldY, fieldWidth, fieldHeight);
+
+        context.strokeStyle = "rgba(59, 130, 246, 0.9)";
+        context.lineWidth = 2;
+        context.strokeRect(fieldX, fieldY, fieldWidth, fieldHeight);
+        context.restore();
 
         setIsLoading(false);
       } catch (err) {

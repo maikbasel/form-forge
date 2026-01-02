@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/card.tsx";
-import { FieldPreview } from "@repo/ui/components/field-preview.tsx";
+import { FieldSnippet } from "@repo/ui/components/field-snippet.tsx";
 import {
   HoverCard,
   HoverCardContent,
@@ -38,8 +38,8 @@ import { Separator } from "@repo/ui/components/separator.tsx";
 import { useApiClient } from "@repo/ui/context/api-client-context.tsx";
 import {
   type FieldPosition,
-  useFieldPreview,
-} from "@repo/ui/context/field-preview-context.tsx";
+  useFieldSnippet,
+} from "@repo/ui/context/field-snippet-context.tsx";
 import { useSheet } from "@repo/ui/context/sheet-context.tsx";
 import { cn } from "@repo/ui/lib/utils.ts";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
@@ -219,7 +219,7 @@ function DraggableField({ field }: Readonly<{ field: string }>) {
         </div>
       </HoverCardTrigger>
       <HoverCardContent align="start" className="w-80" side="right">
-        <FieldPreview fieldName={field} />
+        <FieldSnippet fieldName={field} />
       </HoverCardContent>
     </HoverCard>
   );
@@ -647,19 +647,19 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   const { sheetId } = useSheet();
   const apiClient = useApiClient();
   const {
-    setFieldPositions: setContextFieldPositions,
-    setPdfDocument: setContextPdfDocument,
-  } = useFieldPreview();
+    setFieldPositions: setFieldSnippetPositions,
+    setPdfDocument: setFieldSnippetPdfDocument,
+  } = useFieldSnippet();
 
   // Update context when field positions or PDF document change
   useEffect(() => {
-    setContextFieldPositions(fieldPositions);
-    setContextPdfDocument(pdfDocument);
+    setFieldSnippetPositions(fieldPositions);
+    setFieldSnippetPdfDocument(pdfDocument);
   }, [
     fieldPositions,
     pdfDocument,
-    setContextFieldPositions,
-    setContextPdfDocument,
+    setFieldSnippetPositions,
+    setFieldSnippetPdfDocument,
   ]);
 
   const nextPage = () => {

@@ -19,22 +19,22 @@ interface FieldBounds {
 export interface FieldPosition {
   name: string;
   page: number;
-  rect: number[]; // [x1, y1, x2, y2]
+  rect?: [number, number, number, number]; // [x1, y1, x2, y2]
   bounds: FieldBounds;
 }
 
-interface FieldPreviewContextState {
+interface FieldSnippetContextState {
   fieldPositions: FieldPosition[];
   setFieldPositions: (positions: FieldPosition[]) => void;
   pdfDocument: pdfjs.PDFDocumentProxy | null;
   setPdfDocument: (doc: pdfjs.PDFDocumentProxy | null) => void;
 }
 
-const FieldPreviewContext = createContext<FieldPreviewContextState | undefined>(
+const FieldSnippetContext = createContext<FieldSnippetContextState | undefined>(
   undefined
 );
 
-export function FieldPreviewProvider({
+export function FieldSnippetProvider({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([]);
@@ -53,17 +53,17 @@ export function FieldPreviewProvider({
   );
 
   return (
-    <FieldPreviewContext.Provider value={value}>
+    <FieldSnippetContext.Provider value={value}>
       {children}
-    </FieldPreviewContext.Provider>
+    </FieldSnippetContext.Provider>
   );
 }
 
-export function useFieldPreview() {
-  const ctx = useContext(FieldPreviewContext);
+export function useFieldSnippet() {
+  const ctx = useContext(FieldSnippetContext);
   if (!ctx) {
     throw new Error(
-      "useFieldPreview must be used within a FieldPreviewProvider"
+      "useFieldSnippet must be used within a FieldSnippetProvider"
     );
   }
   return ctx;
