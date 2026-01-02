@@ -41,9 +41,9 @@ Optional: asdf for version management (see `.tool-versions`)
 # Clone and install dependencies
 pnpm install
 
-# Configure backend environment
-cp apps/api/.env.example apps/api/.env
-# Edit apps/api/.env if needed (defaults work for local development)
+# Configure environment
+cp .env.example .env
+# Edit .env if needed (defaults work for local development)
 
 # Start PostgreSQL
 just up
