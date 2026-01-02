@@ -8,6 +8,15 @@
     "ultracite/biome/react",
     "ultracite/biome/next"
   ],
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["!**/*.test.ts", "!**/*.spec.ts", "!**/pdf.worker.min.mjs"]
+  },
   "overrides": [
     {
       "includes": ["apps/api/crates/actions/core/js/**/*.js"],
@@ -81,8 +90,5 @@
         }
       }
     }
-  ],
-  "files": {
-    "includes": ["!!.next"]
-  }
+  ]
 }
