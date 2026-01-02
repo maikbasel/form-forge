@@ -1,6 +1,13 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite/core", "ultracite/react", "ultracite/next"],
+  "extends": [
+    "ultracite/core",
+    "ultracite/react",
+    "ultracite/next",
+    "ultracite/biome/core",
+    "ultracite/biome/react",
+    "ultracite/biome/next"
+  ],
   "overrides": [
     {
       "includes": ["apps/api/crates/actions/core/js/**/*.js"],
@@ -74,5 +81,8 @@
         }
       }
     }
-  ]
+  ],
+  "files": {
+    "includes": ["!!.next"]
+  }
 }
