@@ -38,6 +38,7 @@ export class SheetViewerPage {
     const selectTrigger = this.page.getByTestId(
       `role-select-trigger-${roleLabel.toLowerCase().replace(/\s+/g, "-")}`
     );
+    await selectTrigger.scrollIntoViewIfNeeded();
     await selectTrigger.click();
 
     // Select the field from dropdown
