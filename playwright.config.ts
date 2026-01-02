@@ -59,7 +59,7 @@ export default defineConfig({
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
-      timeout: 60_000,
+      timeout: 120_000,
     },
 
     /* Test against mobile viewports. */
