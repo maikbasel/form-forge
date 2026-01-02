@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:23-alpine AS base
+FROM node:25-alpine AS base
 
 # Install pnpm
 ENV PNPM_HOME="/pnpm"
