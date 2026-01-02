@@ -14,14 +14,10 @@
     "@repo/ui": "workspace:*",
     "axios": "^1.13.2",
     "lucide-react": "^0.474.0",
-    "mongoose": "^8.9.5",
-    "natural": "^8.0.1",
     "next": "^15.4.10",
     "next-themes": "^0.4.6",
-    "pg": "^8.13.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "zod": "^3.24.1"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
