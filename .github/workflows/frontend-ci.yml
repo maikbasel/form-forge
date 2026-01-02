@@ -88,9 +88,6 @@ jobs:
       - name: Lint with Biome (Ultracite)
         run: pnpm check
 
-      - name: Check Turbo tasks
-        run: pnpm lint
-
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest

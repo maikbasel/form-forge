@@ -166,7 +166,7 @@ mod tests {
             .expect_read()
             .withf(move |path| *path == sheet_path)
             .times(1)
-            .returning(|path| Ok(path));
+            .returning(Ok);
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port
@@ -210,10 +210,7 @@ mod tests {
             .returning(move |_| Ok(sheet_reference.clone()));
 
         let mut sheet_storage_port = MockSheetStoragePort::new();
-        sheet_storage_port
-            .expect_read()
-            .times(1)
-            .returning(|path| Ok(path));
+        sheet_storage_port.expect_read().times(1).returning(Ok);
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port
@@ -262,10 +259,7 @@ mod tests {
             .returning(move |_| Ok(sheet_reference.clone()));
 
         let mut sheet_storage_port = MockSheetStoragePort::new();
-        sheet_storage_port
-            .expect_read()
-            .times(1)
-            .returning(|path| Ok(path));
+        sheet_storage_port.expect_read().times(1).returning(Ok);
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port
@@ -318,10 +312,7 @@ mod tests {
             .returning(move |_| Ok(sheet_reference.clone()));
 
         let mut sheet_storage_port = MockSheetStoragePort::new();
-        sheet_storage_port
-            .expect_read()
-            .times(1)
-            .returning(|path| Ok(path));
+        sheet_storage_port.expect_read().times(1).returning(Ok);
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port
@@ -443,10 +434,7 @@ mod tests {
             .returning(move |_| Ok(sheet_reference.clone()));
 
         let mut sheet_storage_port = MockSheetStoragePort::new();
-        sheet_storage_port
-            .expect_read()
-            .times(1)
-            .returning(|path| Ok(path));
+        sheet_storage_port.expect_read().times(1).returning(Ok);
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port

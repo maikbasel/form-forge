@@ -15,7 +15,6 @@
     "./tailwind.config": "./tailwind.config.ts"
   },
   "scripts": {
-    "lint": "pnpm exec ultracite check",
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit",
     "shadcn": "pnpm dlx shadcn@latest"
