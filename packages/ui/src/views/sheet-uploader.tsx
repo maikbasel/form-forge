@@ -23,9 +23,9 @@ import { toast } from "sonner";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ["application/pdf"];
 
-type SheetUploaderProps = {
+interface SheetUploaderProps {
   onUploadSuccess?: (sheetId: string) => void;
-};
+}
 
 export default function SheetUploader({
   onUploadSuccess,

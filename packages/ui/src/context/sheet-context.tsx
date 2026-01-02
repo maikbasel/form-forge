@@ -6,12 +6,12 @@ import {
   useState,
 } from "react";
 
-type SheetContextState = {
+interface SheetContextState {
   sheetPath: string | null;
   setSheetPath: (url: string | null) => void;
   sheetId: string | null;
   setSheetId: (id: string | null) => void;
-};
+}
 
 const SheetContext = createContext<SheetContextState | undefined>(undefined);
 

@@ -2,7 +2,7 @@ pub use crate::action::CalculationAction;
 use crate::error::ActionError;
 use crate::ports::driven::{ActionPdfPort, SheetReferencePort, SheetStoragePort};
 use std::sync::Arc;
-use tracing::{debug, info, instrument, Span};
+use tracing::{Span, debug, info, instrument};
 use uuid::Uuid;
 
 #[derive(Clone)]
