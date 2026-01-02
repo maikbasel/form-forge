@@ -5,7 +5,7 @@ use actions_web::handler::{
     attach_skill_modifier_calculation_script,
 };
 use actix_cors::Cors;
-use actix_web::{get, web, App, HttpResponse, HttpServer};
+use actix_web::{App, HttpResponse, HttpServer, get, web};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
 use common::error::ApiErrorResponse;
@@ -19,7 +19,7 @@ use sheets_pdf::adapter::SheetsPdf;
 use sheets_storage::adapter::SheetFileStorage;
 use sheets_storage::config::StorageConfig;
 use sheets_web::handler::{
-    download_sheet, get_sheet_form_fields, upload_sheet, UploadSheetRequest, UploadSheetResponse,
+    UploadSheetRequest, UploadSheetResponse, download_sheet, get_sheet_form_fields, upload_sheet,
 };
 use sqlx::postgres::PgPoolOptions;
 use std::env;

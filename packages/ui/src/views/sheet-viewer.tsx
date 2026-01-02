@@ -58,29 +58,29 @@ function triggerBrowserDownload(blob: Blob, filename: string): void {
   globalThis.URL.revokeObjectURL(url);
 }
 
-type FieldRole = {
+interface FieldRole {
   key: string;
   label: string;
   required: boolean;
   hint: string;
-};
+}
 
-type ActionConfig = {
+interface ActionConfig {
   id: string;
   name: string;
   description: string;
   endpoint: string;
   roles: FieldRole[];
-};
+}
 
 type FieldMapping = Record<string, string>;
 
-type AttachedAction = {
+interface AttachedAction {
   id: string;
   name: string;
   endpoint: string;
   mapping: FieldMapping;
-};
+}
 
 const ACTIONS: ActionConfig[] = [
   {
@@ -240,14 +240,14 @@ function AvailableFieldsPool({ fields }: Readonly<{ fields: string[] }>) {
 }
 
 // Role Drop Zone Component
-type FieldRoleDropZoneProps = {
+interface FieldRoleDropZoneProps {
   role: FieldRole;
   assignedField: string | undefined;
   onRemove: () => void;
   onSelectField: (field: string) => void;
   unassignedFields: string[];
   isDragging: boolean;
-};
+}
 
 function FieldRoleDropZone({
   role,
@@ -363,11 +363,11 @@ function FieldRoleDropZone({
   );
 }
 
-type ActionConfigModalProps = {
+interface ActionConfigModalProps {
   selectedFields: string[];
   onClose: () => void;
   onAttach: (action: AttachedAction) => void;
-};
+}
 
 function ActionConfigModal({
   selectedFields,
@@ -611,25 +611,25 @@ function ActionConfigModal({
   );
 }
 
-type SheetViewerProps = {
+interface SheetViewerProps {
   file?: string;
-};
+}
 
-type FieldBounds = {
+interface FieldBounds {
   left: number;
   top: number;
   right: number;
   bottom: number;
   width: number;
   height: number;
-};
+}
 
-type FieldPosition = {
+interface FieldPosition {
   name: string;
   page: number;
   rect: number[]; // [x1, y1, x2, y2]
   bounds: FieldBounds;
-};
+}
 
 export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   const scale = 1;

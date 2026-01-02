@@ -10,12 +10,12 @@ import axios from "axios";
 
 export const API_BASE_URL = process.env.API_URL ?? "http://localhost:8081";
 
-export type ApiClient = {
+export interface ApiClient {
   uploadSheet(file: File, options?: UploadOptions): Promise<UploadSheetResult>;
   getSheetFields(sheetId: string): Promise<FormField[]>;
   downloadSheet(sheetId: string): Promise<DownloadSheetResult>;
   attachAction(sheetId: string, action: AttachActionRequest): Promise<void>;
-};
+}
 
 export function parseApiError(data: unknown): { message: string } {
   const parsedError = ApiErrorSchema.safeParse(data);

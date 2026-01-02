@@ -6,22 +6,22 @@ export const UploadSheetResponseSchema = z.object({
 
 export type UploadSheetResponse = z.infer<typeof UploadSheetResponseSchema>;
 
-export type UploadSheetResult = {
+export interface UploadSheetResult {
   id: string;
   location: string;
-};
+}
 
-export type DownloadSheetResult = {
+export interface DownloadSheetResult {
   blob: Blob;
   filename: string;
-};
+}
 
 export type UploadProgressCallback = (progress: number) => void;
 
-export type UploadOptions = {
+export interface UploadOptions {
   signal?: AbortSignal;
   onProgress?: UploadProgressCallback;
-};
+}
 
 export const FormFieldSchema = z.object({
   name: z.string(),
