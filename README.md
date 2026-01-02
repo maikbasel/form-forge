@@ -1,5 +1,9 @@
 # Form Forge
 
+[![Backend CI](https://github.com/maikbasel/form-forge/workflows/Backend%20CI/badge.svg)](https://github.com/maikbasel/form-forge/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/maikbasel/form-forge/workflows/Frontend%20CI/badge.svg)](https://github.com/maikbasel/form-forge/actions/workflows/frontend-ci.yml)
+[![Playwright Tests](https://github.com/maikbasel/form-forge/workflows/Playwright%20Tests/badge.svg)](https://github.com/maikbasel/form-forge/actions/workflows/playwright.yml)
+
 A PDF form processing application that enables non-technical D&D 5e players to add dynamic calculations to their PDF
 character sheets without writing JavaScript or understanding PDF AcroForm internals.
 
@@ -184,6 +188,7 @@ cd apps/api && cargo test -p <crate_name>
 ```
 
 **Testing stack:**
+
 - `rstest` for parameterized tests
 - `testcontainers` for PostgreSQL integration tests
 - `mockall` for mocking port traits (via `#[cfg_attr(test, automock)]`)
@@ -221,12 +226,12 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 
 - [ ] When mapping selected fields to roles in the calc, move fields down when they were mapped. This way the user
   doesn't need to scroll down.
-- [ ] Show tooltips on hover for form fields. 
+- [ ] Show tooltips on hover for form fields.
 - [ ] Use S3-compatible storage for PDF files and update API.
 - [ ] Implement native application.
 - [ ] Loading indicator when clicking "Attach Calculation" button.
 - [ ] Extract and display nearby label text as hints for selected fields when mapping them to roles in the calculation.
-- [ ] BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role 
+- [ ] BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role
   mapping.
 - [ ] Add product tour.
 - [ ] Implement native application.
