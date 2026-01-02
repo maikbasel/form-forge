@@ -92,6 +92,7 @@ async function startBackend(): Promise<void> {
     env: {
       ...process.env,
       APP_ENV: "test", // Backend will load .env.test
+      RUST_LOG: "error", // Only show errors to reduce log overhead during tests
     },
   });
 
