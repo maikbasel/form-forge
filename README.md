@@ -230,7 +230,7 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [ ] Use S3-compatible storage for PDF files and update API.
 - [ ] Implement native application.
 - [ ] Loading indicator when clicking "Attach Calculation" button.
-- [ ] Extract and display nearby label text as hints for selected fields when mapping them to roles in the calculation.
+- [x] Add some way to make it easier for users to identify which selected field contains what character information.
 - [ ] BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role
   mapping.
 - [ ] Add product tour.
