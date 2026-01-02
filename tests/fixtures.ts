@@ -3,10 +3,10 @@ import { test as base } from "@playwright/test";
 import { SheetViewerPage } from "./pages/sheet-viewer-page";
 import { UploadPage } from "./pages/upload-page";
 
-type PageFixtures = {
+interface PageFixtures {
   uploadPage: UploadPage;
   sheetViewerPage: SheetViewerPage;
-};
+}
 
 export const test = base.extend<PageFixtures>({
   uploadPage: async ({ page }, use) => {

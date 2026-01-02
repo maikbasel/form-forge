@@ -61,6 +61,9 @@ async function waitForDatabase(): Promise<void> {
 async function startBackend(): Promise<void> {
   // Check if backend binary exists, build if not (for local testing)
   // In CI, this will be pre-built by the workflow step
+  console.info(
+    "🔧 Building backend (if needed, this may take a few minutes)..."
+  );
   try {
     execSync(
       "cargo build --release --message-format=short 2>&1 | grep -q 'Finished'",

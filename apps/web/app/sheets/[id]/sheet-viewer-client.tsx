@@ -30,9 +30,9 @@ function SheetViewerSkeleton() {
   );
 }
 
-type SheetViewerClientProps = {
+interface SheetViewerClientProps {
   sheetId: string;
-};
+}
 
 export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
   const fileUrl = `/api/sheets/${sheetId}`;
