@@ -848,7 +848,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
                       Clear
                     </Button>
                     <Button onClick={() => setShowActionModal(true)} size="sm">
-                      Configure Action
+                      Configure Calculation
                     </Button>
                   </>
                 )}

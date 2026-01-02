@@ -170,7 +170,7 @@ export default function SheetUploader({
           </div>
           <FileUploadTrigger asChild>
             <Button className="mt-2 w-fit" size="sm" variant="outline">
-              Browse sheets
+              Browse Sheets
             </Button>
           </FileUploadTrigger>
         </FileUploadDropzone>

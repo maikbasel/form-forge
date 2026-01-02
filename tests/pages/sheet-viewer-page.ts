@@ -1,7 +1,7 @@
 import type { Download, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-const CONFIGURE_ACTION_REGEX = /configure action/i;
+const CONFIGURE_ACTION_REGEX = /configure calculation/i;
 const ATTACH_CALCULATION_REGEX = /attach calculation/i;
 const DOWNLOAD_REGEX = /download/i;
 const PDF_FILENAME_REGEX = /\.pdf$/;
