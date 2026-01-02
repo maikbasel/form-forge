@@ -41,9 +41,9 @@ Optional: asdf for version management (see `.tool-versions`)
 # Clone and install dependencies
 pnpm install
 
-# Configure backend environment
-cp apps/api/.env.example apps/api/.env
-# Edit apps/api/.env if needed (defaults work for local development)
+# Configure environment
+cp .env.example .env
+# Edit .env if needed (defaults work for local development)
 
 # Start PostgreSQL
 just up
@@ -72,15 +72,17 @@ just down             # Stop Docker infrastructure
 # Backend only
 just be               # Run API server
 cd apps/api && cargo test
-cd apps/api && cargo fmt
-cd apps/api && cargo clippy
+cd apps/api && cargo fmt --all
+cd apps/api && cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 # Frontend only
 just web              # Next.js web app
 just native           # Tauri desktop app
-pnpm build
-pnpm lint
-npx ultracite fix     # Format/fix (Biome-based)
+pnpm build            # Build all packages
+pnpm lint             # Lint all packages
+pnpm check-types      # Type checking
+pnpm exec ultracite fix     # Format/fix (Biome-based)
+pnpm exec ultracite check   # Check for issues without fixing
 ```
 
 ### Code Quality
@@ -104,8 +106,6 @@ apps/
 packages/
   ui/               # Shared React component library
   typescript-config/# Shared TypeScript configs
-
-docs/               # Technical documentation
 ```
 
 ### Architecture
@@ -137,14 +137,19 @@ docker-compose down
 **Environment variables** for production (create `.env` in project root):
 
 ```bash
-# Database
-DATABASE_URL=postgres://postgres:password@db:5432/form-forge
+# Database Configuration
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DB=form-forge
+DB_HOST=db
+DB_PORT=5432
 
-# API
+# Backend Configuration
 BIND_ADDR=0.0.0.0:8081
+RUST_LOG=info
 
-# Frontend (Next.js)
-NEXT_PUBLIC_API_URL=http://your-domain:8081
+# Frontend Configuration
+API_URL=http://localhost:8081
 ```
 
 **Volumes**: PDF files are stored in `./data/storage` (configure via backend environment). Ensure this directory is
@@ -164,15 +169,40 @@ sqlx migrate revert
 
 ## Testing
 
+### Backend (Rust)
+
 ```bash
-# Rust tests (includes testcontainers for integration tests)
+# Run all tests (includes testcontainers for integration tests)
 cd apps/api && cargo test
 
-# Specific test
+# Run specific test
 cd apps/api && cargo test <test_name>
 
-# Specific crate
-cd apps/api && cargo test -p sheets-core
+# Run tests for specific crate
+cd apps/api && cargo test -p <crate_name>
+# Example: cd apps/api && cargo test -p sheets-core
+```
+
+**Testing stack:**
+- `rstest` for parameterized tests
+- `testcontainers` for PostgreSQL integration tests
+- `mockall` for mocking port traits (via `#[cfg_attr(test, automock)]`)
+- `pretty_assertions` for test assertions
+
+### Frontend (TypeScript)
+
+The monorepo uses Turborepo for orchestrating tests across packages.
+
+```bash
+# Run all tests across the monorepo (using Turborepo)
+pnpm test
+
+# Run tests for specific package
+pnpm --filter <package-name> test
+
+# Examples:
+# pnpm --filter web test
+# pnpm --filter ui test
 ```
 
 ## API Documentation
@@ -194,4 +224,9 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [ ] Show tooltips on hover for form fields. 
 - [ ] Use S3-compatible storage for PDF files and update API.
 - [ ] Implement native application.
-- [ ] Add some way to make it easier for users to identify which selected field contains what character information.
+- [ ] Loading indicator when clicking "Attach Calculation" button.
+- [ ] Extract and display nearby label text as hints for selected fields when mapping them to roles in the calculation.
+- [ ] BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role 
+  mapping.
+- [ ] Add product tour.
+- [ ] Implement native application.

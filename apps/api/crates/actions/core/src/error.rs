@@ -1,7 +1,7 @@
 use thiserror::Error;
 use uuid::Uuid;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum ActionError {
     #[error("sheet not found: {0}")]
     NotFound(Uuid),

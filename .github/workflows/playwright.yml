@@ -2,10 +2,45 @@ name: Playwright Tests
 on:
   push:
     branches: [ main, master ]
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+      - 'packages/**'
+      - 'tests/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/playwright.yml'
   pull_request:
     branches: [ main, master ]
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+      - 'packages/**'
+      - 'tests/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/playwright.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  e2e:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -13,12 +48,23 @@ jobs:
     - uses: actions/setup-node@v6
       with:
         node-version: lts/*
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: apps/api
+    - name: Build backend
+      run: cargo build --release
+      working-directory: ./apps/api
     - name: Install dependencies
       run: npm install -g pnpm && pnpm install
     - name: Install Playwright Browsers
       run: pnpm exec playwright install --with-deps
     - name: Run Playwright tests
       run: pnpm exec playwright test
+      env:
+        NODE_ENV: test
     - uses: actions/upload-artifact@v6
       if: ${{ !cancelled() }}
       with:

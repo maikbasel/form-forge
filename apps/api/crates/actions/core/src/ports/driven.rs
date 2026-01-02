@@ -1,5 +1,7 @@
 use crate::error::ActionError;
 use async_trait::async_trait;
+#[cfg(test)]
+use mockall::automock;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
@@ -15,6 +17,7 @@ impl SheetReference {
     }
 }
 
+#[cfg_attr(test, automock)]
 #[async_trait]
 pub trait ActionPdfPort: Send + Sync {
     fn add_doc_level_js(&self, js: &str, sheet_path: &Path) -> Result<(), ActionError>;
@@ -27,11 +30,13 @@ pub trait ActionPdfPort: Send + Sync {
     ) -> Result<(), ActionError>;
 }
 
+#[cfg_attr(test, automock)]
 #[async_trait]
 pub trait SheetReferencePort: Send + Sync {
     async fn find_by_id(&self, id: &Uuid) -> Result<SheetReference, ActionError>;
 }
 
+#[cfg_attr(test, automock)]
 #[async_trait]
 pub trait SheetStoragePort: Send + Sync {
     async fn read(&self, path: PathBuf) -> Result<PathBuf, ActionError>;

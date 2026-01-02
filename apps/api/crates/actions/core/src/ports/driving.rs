@@ -2,9 +2,9 @@ pub use crate::action::CalculationAction;
 use crate::error::ActionError;
 use crate::ports::driven::{ActionPdfPort, SheetReferencePort, SheetStoragePort};
 use std::sync::Arc;
-use tracing::{Span, debug, info, instrument};
+use tracing::{debug, info, instrument, Span};
 use uuid::Uuid;
-// TODO: Add tests
+
 #[derive(Clone)]
 pub struct ActionService {
     sheet_reference_port: Arc<dyn SheetReferencePort>,
@@ -134,5 +134,341 @@ impl ActionService {
         serde_json::to_string(&field_name).map_err(|e| {
             ActionError::InvalidAction(format!("failed to serialize field name: {}", e))
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ports::driven::{
+        MockActionPdfPort, MockSheetReferencePort, MockSheetStoragePort, SheetReference,
+    };
+    use pretty_assertions::assert_eq;
+    use std::path::PathBuf;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn test_should_attach_ability_modifier_calculation_script() {
+        // Arrange
+        let sheet_id = Uuid::new_v4();
+        let sheet_path = PathBuf::from("/tmp/test-sheet.pdf");
+        let sheet_reference = SheetReference::new(sheet_id, sheet_path.clone());
+
+        let mut sheet_reference_port = MockSheetReferencePort::new();
+        sheet_reference_port
+            .expect_find_by_id()
+            .withf(move |id| *id == sheet_id)
+            .times(1)
+            .returning(move |_| Ok(sheet_reference.clone()));
+
+        let mut sheet_storage_port = MockSheetStoragePort::new();
+        sheet_storage_port
+            .expect_read()
+            .withf(move |path| *path == sheet_path)
+            .times(1)
+            .returning(|path| Ok(path));
+
+        let mut action_pdf_port = MockActionPdfPort::new();
+        action_pdf_port
+            .expect_add_doc_level_js()
+            .times(1)
+            .returning(|_, _| Ok(()));
+        action_pdf_port
+            .expect_attach_calculation_js()
+            .withf(|js, _, target_field| {
+                js.contains("calculateModifierFromScore") && target_field == "modifier"
+            })
+            .times(1)
+            .returning(|_, _, _| Ok(()));
+
+        let service = ActionService::new(
+            Arc::new(sheet_reference_port),
+            Arc::new(sheet_storage_port),
+            Arc::new(action_pdf_port),
+        );
+
+        let action = CalculationAction::ability_modifier("score", "modifier");
+
+        // Act
+        let result = service.attach_calculation_script(&sheet_id, action).await;
+
+        // Assert
+        assert_eq!(result, Ok(()));
+    }
+
+    #[tokio::test]
+    async fn test_should_attach_saving_throw_modifier_calculation_script() {
+        // Arrange
+        let sheet_id = Uuid::new_v4();
+        let sheet_path = PathBuf::from("/tmp/test-sheet.pdf");
+        let sheet_reference = SheetReference::new(sheet_id, sheet_path.clone());
+
+        let mut sheet_reference_port = MockSheetReferencePort::new();
+        sheet_reference_port
+            .expect_find_by_id()
+            .times(1)
+            .returning(move |_| Ok(sheet_reference.clone()));
+
+        let mut sheet_storage_port = MockSheetStoragePort::new();
+        sheet_storage_port
+            .expect_read()
+            .times(1)
+            .returning(|path| Ok(path));
+
+        let mut action_pdf_port = MockActionPdfPort::new();
+        action_pdf_port
+            .expect_add_doc_level_js()
+            .times(1)
+            .returning(|_, _| Ok(()));
+        action_pdf_port
+            .expect_attach_calculation_js()
+            .withf(|js, _, target_field| {
+                js.contains("calculateSaveFromFields") && target_field == "save_modifier"
+            })
+            .times(1)
+            .returning(|_, _, _| Ok(()));
+
+        let service = ActionService::new(
+            Arc::new(sheet_reference_port),
+            Arc::new(sheet_storage_port),
+            Arc::new(action_pdf_port),
+        );
+
+        let action = CalculationAction::SavingThrowModifier {
+            ability_modifier_field_name: "ability_mod".to_string(),
+            proficiency_field_name: "proficient".to_string(),
+            proficiency_bonus_field_name: "prof_bonus".to_string(),
+            saving_throw_modifier_field_name: "save_modifier".to_string(),
+        };
+
+        // Act
+        let result = service.attach_calculation_script(&sheet_id, action).await;
+
+        // Assert
+        assert_eq!(result, Ok(()));
+    }
+
+    #[tokio::test]
+    async fn test_should_attach_skill_modifier_calculation_script_with_optional_fields() {
+        // Arrange
+        let sheet_id = Uuid::new_v4();
+        let sheet_path = PathBuf::from("/tmp/test-sheet.pdf");
+        let sheet_reference = SheetReference::new(sheet_id, sheet_path.clone());
+
+        let mut sheet_reference_port = MockSheetReferencePort::new();
+        sheet_reference_port
+            .expect_find_by_id()
+            .times(1)
+            .returning(move |_| Ok(sheet_reference.clone()));
+
+        let mut sheet_storage_port = MockSheetStoragePort::new();
+        sheet_storage_port
+            .expect_read()
+            .times(1)
+            .returning(|path| Ok(path));
+
+        let mut action_pdf_port = MockActionPdfPort::new();
+        action_pdf_port
+            .expect_add_doc_level_js()
+            .times(1)
+            .returning(|_, _| Ok(()));
+        action_pdf_port
+            .expect_attach_calculation_js()
+            .withf(|js, _, target_field| {
+                js.contains("calculateSkillFromFields")
+                    && js.contains("undefined")
+                    && target_field == "skill_mod"
+            })
+            .times(1)
+            .returning(|_, _, _| Ok(()));
+
+        let service = ActionService::new(
+            Arc::new(sheet_reference_port),
+            Arc::new(sheet_storage_port),
+            Arc::new(action_pdf_port),
+        );
+
+        let action = CalculationAction::SkillModifier {
+            ability_modifier_field_name: "ability_mod".to_string(),
+            proficiency_field_name: "proficient".to_string(),
+            expertise_field_name: None,
+            half_prof_field_name: None,
+            proficiency_bonus_field_name: "prof_bonus".to_string(),
+            skill_modifier_field_name: "skill_mod".to_string(),
+        };
+
+        // Act
+        let result = service.attach_calculation_script(&sheet_id, action).await;
+
+        // Assert
+        assert_eq!(result, Ok(()));
+    }
+
+    #[tokio::test]
+    async fn test_should_attach_skill_modifier_calculation_script_with_all_fields() {
+        // Arrange
+        let sheet_id = Uuid::new_v4();
+        let sheet_path = PathBuf::from("/tmp/test-sheet.pdf");
+        let sheet_reference = SheetReference::new(sheet_id, sheet_path.clone());
+
+        let mut sheet_reference_port = MockSheetReferencePort::new();
+        sheet_reference_port
+            .expect_find_by_id()
+            .times(1)
+            .returning(move |_| Ok(sheet_reference.clone()));
+
+        let mut sheet_storage_port = MockSheetStoragePort::new();
+        sheet_storage_port
+            .expect_read()
+            .times(1)
+            .returning(|path| Ok(path));
+
+        let mut action_pdf_port = MockActionPdfPort::new();
+        action_pdf_port
+            .expect_add_doc_level_js()
+            .times(1)
+            .returning(|_, _| Ok(()));
+        action_pdf_port
+            .expect_attach_calculation_js()
+            .withf(|js, _, target_field| {
+                js.contains("calculateSkillFromFields")
+                    && js.contains(r#""expertise""#)
+                    && js.contains(r#""half_prof""#)
+                    && target_field == "skill_mod"
+            })
+            .times(1)
+            .returning(|_, _, _| Ok(()));
+
+        let service = ActionService::new(
+            Arc::new(sheet_reference_port),
+            Arc::new(sheet_storage_port),
+            Arc::new(action_pdf_port),
+        );
+
+        let action = CalculationAction::SkillModifier {
+            ability_modifier_field_name: "ability_mod".to_string(),
+            proficiency_field_name: "proficient".to_string(),
+            expertise_field_name: Some("expertise".to_string()),
+            half_prof_field_name: Some("half_prof".to_string()),
+            proficiency_bonus_field_name: "prof_bonus".to_string(),
+            skill_modifier_field_name: "skill_mod".to_string(),
+        };
+
+        // Act
+        let result = service.attach_calculation_script(&sheet_id, action).await;
+
+        // Assert
+        assert_eq!(result, Ok(()));
+    }
+
+    #[tokio::test]
+    async fn test_should_return_error_when_sheet_not_found() {
+        // Arrange
+        let sheet_id = Uuid::new_v4();
+
+        let mut sheet_reference_port = MockSheetReferencePort::new();
+        sheet_reference_port
+            .expect_find_by_id()
+            .times(1)
+            .returning(move |id| Err(ActionError::NotFound(*id)));
+
+        let sheet_storage_port = MockSheetStoragePort::new();
+        let action_pdf_port = MockActionPdfPort::new();
+
+        let service = ActionService::new(
+            Arc::new(sheet_reference_port),
+            Arc::new(sheet_storage_port),
+            Arc::new(action_pdf_port),
+        );
+
+        let action = CalculationAction::ability_modifier("score", "modifier");
+
+        // Act
+        let result = service.attach_calculation_script(&sheet_id, action).await;
+
+        // Assert
+        assert_eq!(result, Err(ActionError::NotFound(sheet_id)));
+    }
+
+    #[tokio::test]
+    async fn test_should_return_error_when_sheet_storage_fails() {
+        // Arrange
+        let sheet_id = Uuid::new_v4();
+        let sheet_path = PathBuf::from("/tmp/test-sheet.pdf");
+        let sheet_reference = SheetReference::new(sheet_id, sheet_path.clone());
+
+        let mut sheet_reference_port = MockSheetReferencePort::new();
+        sheet_reference_port
+            .expect_find_by_id()
+            .times(1)
+            .returning(move |_| Ok(sheet_reference.clone()));
+
+        let mut sheet_storage_port = MockSheetStoragePort::new();
+        sheet_storage_port
+            .expect_read()
+            .times(1)
+            .returning(|_| Err(ActionError::InvalidAction("Storage error".to_string())));
+
+        let action_pdf_port = MockActionPdfPort::new();
+
+        let service = ActionService::new(
+            Arc::new(sheet_reference_port),
+            Arc::new(sheet_storage_port),
+            Arc::new(action_pdf_port),
+        );
+
+        let action = CalculationAction::ability_modifier("score", "modifier");
+
+        // Act
+        let result = service.attach_calculation_script(&sheet_id, action).await;
+
+        // Assert
+        assert_eq!(
+            result,
+            Err(ActionError::InvalidAction("Storage error".to_string()))
+        );
+    }
+
+    #[tokio::test]
+    async fn test_should_return_error_when_pdf_port_fails() {
+        // Arrange
+        let sheet_id = Uuid::new_v4();
+        let sheet_path = PathBuf::from("/tmp/test-sheet.pdf");
+        let sheet_reference = SheetReference::new(sheet_id, sheet_path.clone());
+
+        let mut sheet_reference_port = MockSheetReferencePort::new();
+        sheet_reference_port
+            .expect_find_by_id()
+            .times(1)
+            .returning(move |_| Ok(sheet_reference.clone()));
+
+        let mut sheet_storage_port = MockSheetStoragePort::new();
+        sheet_storage_port
+            .expect_read()
+            .times(1)
+            .returning(|path| Ok(path));
+
+        let mut action_pdf_port = MockActionPdfPort::new();
+        action_pdf_port
+            .expect_add_doc_level_js()
+            .times(1)
+            .returning(|_, _| Err(ActionError::InvalidAction("PDF error".to_string())));
+
+        let service = ActionService::new(
+            Arc::new(sheet_reference_port),
+            Arc::new(sheet_storage_port),
+            Arc::new(action_pdf_port),
+        );
+
+        let action = CalculationAction::ability_modifier("score", "modifier");
+
+        // Act
+        let result = service.attach_calculation_script(&sheet_id, action).await;
+
+        // Assert
+        assert_eq!(
+            result,
+            Err(ActionError::InvalidAction("PDF error".to_string()))
+        );
     }
 }

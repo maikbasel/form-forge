@@ -3,7 +3,7 @@
  * @param {number} score - The ability score (e.g., Strength, Dexterity)
  * @returns {number} The calculated modifier
  */
-export function calculateModifier(score) {
+function calculateModifier(score) {
   return Math.floor((score - 10) / 2);
 }
 
@@ -14,7 +14,7 @@ export function calculateModifier(score) {
  * @param {number} proficiencyBonus - The character's proficiency bonus
  * @returns {number} The calculated save bonus
  */
-export function calculateSaveBonus(abilityMod, isProficient, proficiencyBonus) {
+function calculateSaveBonus(abilityMod, isProficient, proficiencyBonus) {
   return abilityMod + (isProficient ? proficiencyBonus : 0);
 }
 
@@ -27,7 +27,7 @@ export function calculateSaveBonus(abilityMod, isProficient, proficiencyBonus) {
  * @param {number} proficiencyBonus - The character's proficiency bonus
  * @returns {number} The calculated skill bonus
  */
-export function calculateSkillBonus(
+function calculateSkillBonus(
   abilityMod,
   proficient,
   expertise,
@@ -45,7 +45,7 @@ export function calculateSkillBonus(
  * @param {boolean} half - Whether has half proficiency
  * @returns {number} The proficiency multiplier (0, 0.5, 1, or 2)
  */
-export function getProficiencyMultiplier(proficient, expertise, half) {
+function getProficiencyMultiplier(proficient, expertise, half) {
   if (expertise) {
     return 2;
   }
@@ -106,4 +106,14 @@ function getBoolValueFromField(fieldName) {
   }
   const v = f.value;
   return v !== "Off" && v !== 0 && v !== "" && v != null;
+}
+
+// Conditional exports for testing in Node.js (not executed in PDF environment)
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    calculateModifier,
+    calculateSaveBonus,
+    calculateSkillBonus,
+    getProficiencyMultiplier,
+  };
 }

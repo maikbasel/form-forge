@@ -194,7 +194,7 @@ impl SheetsPdf {
                 // Best-effort: skip on error, continue with others
 
                 if let Err(e) = Self::collect_fields(doc, kid, fields) {
-                    error!(error = ?e, "failed to collect child field; skipping");
+                    debug!(error = ?e, "failed to collect child field; skipping");
                 }
             }
             return Ok(());
@@ -204,7 +204,7 @@ impl SheetsPdf {
             .get(b"FT")
             .and_then(|obj| obj.as_name())
             .map_err(|e| {
-                error!(error = ?e, "failed to get field type");
+                debug!(error = ?e, "failed to get field type");
                 PdfError::ParseError(e.to_string())
             })?;
 
