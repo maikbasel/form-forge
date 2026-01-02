@@ -59,7 +59,33 @@ async function waitForDatabase(): Promise<void> {
 }
 
 async function startBackend(): Promise<void> {
-  backendProcess = spawn("cargo", ["run"], {
+  // Check if backend binary exists, build if not (for local testing)
+  // In CI, this will be pre-built by the workflow step
+  try {
+    execSync(
+      "cargo build --release --message-format=short 2>&1 | grep -q 'Finished'",
+      {
+        cwd: "./apps/api",
+        stdio: "ignore",
+        shell: "/bin/bash",
+      }
+    );
+    console.info("✅ Backend already built");
+  } catch {
+    console.info("🔨 Building backend (this may take a few minutes)...");
+    try {
+      execSync("cargo build --release", {
+        cwd: "./apps/api",
+        stdio: "inherit",
+      });
+      console.info("✅ Backend build complete!");
+    } catch (error) {
+      console.error("Failed to build backend:", error);
+      throw error;
+    }
+  }
+
+  backendProcess = spawn("cargo", ["run", "--release"], {
     cwd: "./apps/api",
     stdio: "inherit",
     detached: false,
@@ -69,8 +95,8 @@ async function startBackend(): Promise<void> {
     },
   });
 
-  // Wait for backend to be ready
-  const maxRetries = 60;
+  // Wait for backend to be ready (should be quick since it's pre-built)
+  const maxRetries = 60; // 1 minute for startup
   const retryDelay = 1000;
 
   for (let i = 0; i < maxRetries; i++) {
@@ -83,6 +109,10 @@ async function startBackend(): Promise<void> {
         throw new Error(
           `Backend failed to become ready after ${maxRetries} attempts`
         );
+      }
+      // Log progress every 10 seconds
+      if (i > 0 && i % 10 === 0) {
+        console.info(`⏳ Still waiting for backend... (${i}s elapsed)`);
       }
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }

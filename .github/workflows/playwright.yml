@@ -21,6 +21,9 @@ jobs:
       uses: Swatinem/rust-cache@v2
       with:
         workspaces: apps/api
+    - name: Build backend
+      run: cargo build --release
+      working-directory: ./apps/api
     - name: Install dependencies
       run: npm install -g pnpm && pnpm install
     - name: Install Playwright Browsers
