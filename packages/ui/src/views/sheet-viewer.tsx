@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -20,6 +20,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/card.tsx";
+import { FieldPreview } from "@repo/ui/components/field-preview.tsx";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@repo/ui/components/hover-card.tsx";
 import { ScrollArea } from "@repo/ui/components/scroll-area.tsx";
 import {
   Select,
@@ -30,6 +36,10 @@ import {
 } from "@repo/ui/components/select.tsx";
 import { Separator } from "@repo/ui/components/separator.tsx";
 import { useApiClient } from "@repo/ui/context/api-client-context.tsx";
+import {
+  type FieldPosition,
+  useFieldPreview,
+} from "@repo/ui/context/field-preview-context.tsx";
 import { useSheet } from "@repo/ui/context/sheet-context.tsx";
 import { cn } from "@repo/ui/lib/utils.ts";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
@@ -194,17 +204,24 @@ function DraggableField({ field }: Readonly<{ field: string }>) {
     : undefined;
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      className={`cursor-move rounded-md border-2 border-border bg-card px-3 py-2 font-mono text-sm shadow-sm transition-all hover:border-primary/50 hover:shadow-md ${
-        isDragging ? "opacity-50" : ""
-      }`}
-    >
-      {field}
-    </div>
+    <HoverCard openDelay={200}>
+      <HoverCardTrigger asChild>
+        <div
+          ref={setNodeRef}
+          style={style}
+          {...listeners}
+          {...attributes}
+          className={`cursor-move rounded-md border-2 border-border bg-card px-3 py-2 font-mono text-sm shadow-sm transition-all hover:border-primary/50 hover:shadow-md ${
+            isDragging ? "opacity-50" : ""
+          }`}
+        >
+          {field}
+        </div>
+      </HoverCardTrigger>
+      <HoverCardContent align="start" className="w-80" side="right">
+        <FieldPreview fieldName={field} />
+      </HoverCardContent>
+    </HoverCard>
   );
 }
 
@@ -615,33 +632,35 @@ interface SheetViewerProps {
   file?: string;
 }
 
-interface FieldBounds {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-  width: number;
-  height: number;
-}
-
-interface FieldPosition {
-  name: string;
-  page: number;
-  rect: number[]; // [x1, y1, x2, y2]
-  bounds: FieldBounds;
-}
-
 export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [fieldPositions, setFieldPositions] = useState<FieldPosition[]>([]);
+  const [pdfDocument, setPdfDocument] = useState<pdfjs.PDFDocumentProxy | null>(
+    null
+  );
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [showActionModal, setShowActionModal] = useState(false);
   const [attachedActions, setAttachedActions] = useState<AttachedAction[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const { sheetId } = useSheet();
   const apiClient = useApiClient();
+  const {
+    setFieldPositions: setContextFieldPositions,
+    setPdfDocument: setContextPdfDocument,
+  } = useFieldPreview();
+
+  // Update context when field positions or PDF document change
+  useEffect(() => {
+    setContextFieldPositions(fieldPositions);
+    setContextPdfDocument(pdfDocument);
+  }, [
+    fieldPositions,
+    pdfDocument,
+    setContextFieldPositions,
+    setContextPdfDocument,
+  ]);
 
   const nextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, numPages));
@@ -693,6 +712,7 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
 
   const onDocumentLoadSuccess = async (doc: pdfjs.PDFDocumentProxy) => {
     setNumPages(doc.numPages);
+    setPdfDocument(doc); // Store PDF document for preview rendering
 
     const allFields: FieldPosition[] = [];
     for (let i = 1; i <= doc.numPages; i++) {

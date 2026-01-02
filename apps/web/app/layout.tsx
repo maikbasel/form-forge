@@ -6,6 +6,7 @@ import type React from "react";
 import { Footer } from "@/app/components/footer.tsx";
 import { Header } from "@/app/components/header.tsx";
 import ApiClientProviderWrapper from "@/app/providers/api-client-provider-wrapper.tsx";
+import FieldPreviewProviderWrapper from "@/app/providers/field-preview-provider-wrapper.tsx";
 import SheetProviderWrapper from "@/app/providers/sheet-provider-wrapper.tsx";
 import { ThemeProvider } from "@/app/providers/theme-provider.tsx";
 
@@ -43,15 +44,17 @@ export default function RootLayout({
         >
           <ApiClientProviderWrapper>
             <SheetProviderWrapper>
-              <div className="flex min-h-screen flex-col">
-                <Header />
-                <main className="container mx-auto flex-1 px-4 py-8">
-                  {children}
-                </main>
-                <Footer />
-              </div>
+              <FieldPreviewProviderWrapper>
+                <div className="flex min-h-screen flex-col">
+                  <Header />
+                  <main className="container mx-auto flex-1 px-4 py-8">
+                    {children}
+                  </main>
+                  <Footer />
+                </div>
 
-              <Toaster />
+                <Toaster />
+              </FieldPreviewProviderWrapper>
             </SheetProviderWrapper>
           </ApiClientProviderWrapper>
         </ThemeProvider>
