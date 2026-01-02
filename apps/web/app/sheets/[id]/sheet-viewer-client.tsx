@@ -41,9 +41,9 @@ export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center gap-4">
         <Button asChild size="sm" variant="outline">
-          <Link href="/apps/web/public">
+          <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Upload New File
+            Upload New Sheet
           </Link>
         </Button>
       </div>
