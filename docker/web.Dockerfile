@@ -5,7 +5,7 @@ FROM node:25-alpine AS base
 # Install pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+RUN npm install -g pnpm@9
 
 # Builder stage
 FROM base AS builder
