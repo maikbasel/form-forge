@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -395,14 +395,28 @@ function ActionConfigModal({
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
   const [activeId, setActiveId] = useState<string | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const currentAction = ACTIONS.find((a) => a.id === selectedAction);
 
   const assignField = (roleKey: string, fieldName: string) => {
+    // Capture scroll position before state change
+    const viewport = scrollAreaRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement | null;
+    const scrollTop = viewport?.scrollTop ?? 0;
+
     setFieldMapping((prev) => ({
       ...prev,
       [roleKey]: fieldName,
     }));
+
+    // Restore scroll position after React re-renders
+    requestAnimationFrame(() => {
+      if (viewport) {
+        viewport.scrollTop = scrollTop;
+      }
+    });
   };
 
   const removeAssignment = (roleKey: string) => {
@@ -532,7 +546,7 @@ function ActionConfigModal({
           </div>
 
           {/* Mapping Area */}
-          <div className="flex-1">
+          <div className="flex-1" ref={scrollAreaRef}>
             <ScrollArea className="h-full p-6">
               {currentAction ? (
                 <DndContext
@@ -552,23 +566,36 @@ function ActionConfigModal({
                         Field Roles
                       </h3>
                       <div className="space-y-4">
-                        {currentAction.roles.map((role) => {
-                          const assignedField = fieldMapping[role.key];
+                        {[...currentAction.roles]
+                          .sort((a, b) => {
+                            const aHasField = !!fieldMapping[a.key];
+                            const bHasField = !!fieldMapping[b.key];
 
-                          return (
-                            <FieldRoleDropZone
-                              assignedField={assignedField}
-                              isDragging={!!activeId}
-                              key={role.key}
-                              onRemove={() => removeAssignment(role.key)}
-                              onSelectField={(field) =>
-                                assignField(role.key, field)
-                              }
-                              role={role}
-                              unassignedFields={getUnassignedFields()}
-                            />
-                          );
-                        })}
+                            // Unmapped roles first, mapped roles last
+                            if (aHasField !== bHasField) {
+                              return aHasField ? 1 : -1;
+                            }
+
+                            // Maintain original order within each group
+                            return 0;
+                          })
+                          .map((role) => {
+                            const assignedField = fieldMapping[role.key];
+
+                            return (
+                              <FieldRoleDropZone
+                                assignedField={assignedField}
+                                isDragging={!!activeId}
+                                key={role.key}
+                                onRemove={() => removeAssignment(role.key)}
+                                onSelectField={(field) =>
+                                  assignField(role.key, field)
+                                }
+                                role={role}
+                                unassignedFields={getUnassignedFields()}
+                              />
+                            );
+                          })}
                       </div>
                     </div>
                   </div>
