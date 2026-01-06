@@ -6,7 +6,7 @@ export function Header() {
       <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
         {/* Logo/Brand - Left side */}
         <div className="flex items-center gap-6">
-          <a className="flex items-center space-x-2" href="/apps/web/public">
+          <a className="flex items-center space-x-2" href="/">
             <span className="font-bold">Form Forge</span>
           </a>
           {/* Future navigation menu will go here */}
