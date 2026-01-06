@@ -40,7 +40,6 @@ import {
   type FieldPosition,
   useFieldSnippet,
 } from "@repo/ui/context/field-snippet-context.tsx";
-import { useSheet } from "@repo/ui/context/sheet-context.tsx";
 import { getSheetFieldsCacheKey } from "@repo/ui/lib/cache.ts";
 import { cn } from "@repo/ui/lib/utils.ts";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
@@ -658,9 +657,13 @@ function ActionConfigModal({
 
 interface SheetViewerProps {
   file?: string;
+  sheetId?: string;
 }
 
-export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
+export default function SheetViewer({
+  file,
+  sheetId,
+}: Readonly<SheetViewerProps>) {
   const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -672,7 +675,6 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
   const [showActionModal, setShowActionModal] = useState(false);
   const [attachedActions, setAttachedActions] = useState<AttachedAction[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
-  const { sheetId } = useSheet();
   const apiClient = useApiClient();
   const {
     setFieldPositions: setFieldSnippetPositions,

@@ -50,7 +50,7 @@ export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
 
       <Suspense fallback={<SheetViewerSkeleton />}>
         <div className="flex-1">
-          <SheetViewer file={fileUrl} />
+          <SheetViewer file={fileUrl} sheetId={sheetId} />
         </div>
       </Suspense>
     </div>
