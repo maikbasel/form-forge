@@ -251,7 +251,7 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 
 ## TO DO
 
-- [ ] When mapping selected fields to roles in the calc, move fields down when they were mapped. This way the user
+- [x] When mapping selected fields to roles in the calc, move fields down when they were mapped. This way the user
   doesn't need to scroll down.
 - [ ] Show tooltips on hover for form fields.
 - [ ] Use S3-compatible storage for PDF files and update API.
@@ -262,3 +262,4 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
   mapping.
 - [ ] Add product tour.
 - [ ] Implement native application.
+- [ ] Generate API client from OpenAPI specification.
