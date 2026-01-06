@@ -3,7 +3,8 @@ use actix_files::NamedFile;
 use actix_multipart::form::MultipartForm;
 use actix_multipart::form::tempfile::TempFile;
 use actix_web::http::header::{
-    Charset, ContentDisposition, DispositionParam, DispositionType, ExtendedValue, LOCATION,
+    CACHE_CONTROL, Charset, ContentDisposition, DispositionParam, DispositionType, ExtendedValue,
+    LOCATION,
 };
 use actix_web::{HttpResponse, get, mime, post, web};
 use common::error::ApiErrorResponse;
@@ -196,5 +197,7 @@ pub async fn get_sheet_form_fields(
     let fields = sheet_service.list_sheet_form_fields(sheet_id).await?;
     let response = ListSheetFieldsResponse::from(fields);
 
-    Ok(HttpResponse::Ok().json(response))
+    Ok(HttpResponse::Ok()
+        .insert_header((CACHE_CONTROL, "no-cache, no-store, must-revalidate"))
+        .json(response))
 }

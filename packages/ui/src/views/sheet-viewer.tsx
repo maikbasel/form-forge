@@ -41,6 +41,7 @@ import {
   useFieldSnippet,
 } from "@repo/ui/context/field-snippet-context.tsx";
 import { useSheet } from "@repo/ui/context/sheet-context.tsx";
+import { getSheetFieldsCacheKey } from "@repo/ui/lib/cache.ts";
 import { cn } from "@repo/ui/lib/utils.ts";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
 import { ApiClientError } from "@repo/ui/types/api.ts";
@@ -651,6 +652,18 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setPdfDocument: setFieldSnippetPdfDocument,
   } = useFieldSnippet();
 
+  // Fetch sheet fields data
+  const cacheKey = sheetId ? getSheetFieldsCacheKey(sheetId) : null;
+
+  const { data, error } = useSWR(
+    cacheKey,
+    () => (sheetId ? apiClient.getSheetFields(sheetId) : Promise.resolve([])),
+    {
+      revalidateOnMount: true,
+      dedupingInterval: 0,
+    }
+  );
+
   // Update context when field positions or PDF document change
   useEffect(() => {
     setFieldSnippetPositions(fieldPositions);
@@ -661,6 +674,49 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     setFieldSnippetPositions,
     setFieldSnippetPdfDocument,
   ]);
+
+  // Recalculate field positions when data changes
+  useEffect(() => {
+    if (!(pdfDocument && data)) {
+      return;
+    }
+
+    const extractFieldPositions = async () => {
+      const apiFields = new Set(data.map((f) => f.name));
+      const allFields: FieldPosition[] = [];
+
+      for (let i = 1; i <= pdfDocument.numPages; i++) {
+        const page = await pdfDocument.getPage(i);
+        const annotations = await page.getAnnotations();
+        const viewport = page.getViewport({ scale });
+
+        const fields = annotations
+          .filter((ann) => apiFields.has(ann.fieldName))
+          .map((ann) => {
+            const pdfRect = ann.rect;
+            return {
+              name: ann.fieldName,
+              page: i,
+              rect: pdfRect,
+              bounds: {
+                left: pdfRect[0] * scale,
+                top: viewport.height - pdfRect[3] * scale,
+                right: pdfRect[2] * scale,
+                bottom: viewport.height - pdfRect[1] * scale,
+                width: (pdfRect[2] - pdfRect[0]) * scale,
+                height: (pdfRect[3] - pdfRect[1]) * scale,
+              },
+            };
+          });
+
+        allFields.push(...fields);
+      }
+
+      setFieldPositions(allFields);
+    };
+
+    extractFieldPositions();
+  }, [data, pdfDocument]);
 
   const nextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, numPages));
@@ -687,11 +743,6 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     }
   };
 
-  const { data, error } = useSWR(
-    sheetId ? `sheet-fields-${sheetId}` : null,
-    () => (sheetId ? apiClient.getSheetFields(sheetId) : Promise.resolve([]))
-  );
-
   if (error) {
     // FIXME: Handle error better
     if (error.statusCode === 404) {
@@ -708,41 +759,9 @@ export default function SheetViewer({ file }: Readonly<SheetViewerProps>) {
     (f) => f.page === currentPage
   );
 
-  const apiFields = data?.map((f) => f.name) || [];
-
-  const onDocumentLoadSuccess = async (doc: pdfjs.PDFDocumentProxy) => {
+  const onDocumentLoadSuccess = (doc: pdfjs.PDFDocumentProxy) => {
     setNumPages(doc.numPages);
-    setPdfDocument(doc); // Store PDF document for preview rendering
-
-    const allFields: FieldPosition[] = [];
-    for (let i = 1; i <= doc.numPages; i++) {
-      const page = await doc.getPage(i);
-      const annotations = await page.getAnnotations();
-      const viewport = page.getViewport({ scale });
-
-      const fields = annotations
-        .filter((ann) => apiFields.includes(ann.fieldName))
-        .map((ann) => {
-          const pdfRect = ann.rect; // [x1, y1, x2, y2]
-          return {
-            name: ann.fieldName,
-            page: i,
-            rect: pdfRect,
-            bounds: {
-              left: pdfRect[0] * scale,
-              top: viewport.height - pdfRect[3] * scale,
-              right: pdfRect[2] * scale,
-              bottom: viewport.height - pdfRect[1] * scale,
-              width: (pdfRect[2] - pdfRect[0]) * scale,
-              height: (pdfRect[3] - pdfRect[1]) * scale,
-            },
-          };
-        });
-
-      allFields.push(...fields);
-    }
-
-    setFieldPositions(allFields);
+    setPdfDocument(doc); // Store PDF document - field extraction happens in useEffect
   };
 
   const handleAttachAction = async (config: AttachedAction) => {
