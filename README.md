@@ -32,12 +32,28 @@ necessary JavaScript and embeds it into the PDF AcroForm structure.
 ## Prerequisites
 
 - Rust (stable toolchain)
-- Node.js 23.10.0+
-- pnpm 9.15.5+
-- just (command runner)
 - Docker + Docker Compose
 
-Optional: asdf for version management (see `.tool-versions`)
+**Recommended: Install via asdf** (version manager)
+
+The following tools are managed via asdf (see `.tool-versions`):
+- Node.js 23.10.0
+- pnpm 9.15.5
+- just 1.43.1
+- Python 3.13.1 (required for pre-commit)
+- pre-commit 4.0.1
+
+```bash
+# Install asdf plugins and tools
+asdf plugin add nodejs
+asdf plugin add pnpm
+asdf plugin add just
+asdf plugin add python
+asdf plugin add pre-commit
+
+# Install all versions from .tool-versions
+asdf install
+```
 
 ## Setup
 
@@ -93,7 +109,18 @@ pnpm exec ultracite check   # Check for issues without fixing
 
 - **Rust**: Uses rustfmt and clippy (enforced via pre-commit hooks)
 - **TypeScript**: Uses Ultracite (Biome preset) for formatting and linting
-- Install pre-commit hooks: `pre-commit install`
+
+**Pre-commit Hooks Setup:**
+
+If you installed via asdf (recommended), pre-commit is already available. Just run:
+
+```bash
+pre-commit install
+```
+
+This installs git hooks that automatically run on every commit:
+- Backend: `cargo fmt --check`, `cargo clippy`, `cargo check`
+- Frontend: `pnpm exec ultracite fix`
 
 ## Project Structure
 
