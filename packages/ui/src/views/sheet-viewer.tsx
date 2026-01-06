@@ -205,7 +205,7 @@ function DraggableField({ field }: Readonly<{ field: string }>) {
     : undefined;
 
   return (
-    <HoverCard openDelay={200}>
+    <HoverCard open={!isDragging && undefined} openDelay={700}>
       <HoverCardTrigger asChild>
         <div
           ref={setNodeRef}
