@@ -675,6 +675,14 @@ export default function SheetViewer({
   const [showActionModal, setShowActionModal] = useState(false);
   const [attachedActions, setAttachedActions] = useState<AttachedAction[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  // State for hover tracking
+  const [hoveredFieldName, setHoveredFieldName] = useState<string | null>(null);
+  const [flashingFieldName, setFlashingFieldName] = useState<string | null>(
+    null
+  );
+
+  // Ref to manage flash timeout (prevents memory leaks)
+  const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const apiClient = useApiClient();
   const {
     setFieldPositions: setFieldSnippetPositions,
@@ -703,6 +711,15 @@ export default function SheetViewer({
     setFieldSnippetPositions,
     setFieldSnippetPdfDocument,
   ]);
+
+  // Cleanup effect to clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (flashTimeoutRef.current) {
+        clearTimeout(flashTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Recalculate field positions when data changes
   useEffect(() => {
@@ -770,6 +787,59 @@ export default function SheetViewer({
     if (field && field.page !== currentPage) {
       setCurrentPage(field.page);
     }
+  };
+
+  const handleBadgeClick = (fieldName: string) => {
+    // Find the field's page
+    const field = fieldPositions.find((f) => f.name === fieldName);
+    if (!field) {
+      return;
+    }
+
+    const scrollToField = () => {
+      // Find the field overlay element by its aria-label
+      const fieldElement = document.querySelector(
+        `button[aria-label="Select field ${fieldName}"]`
+      );
+
+      if (fieldElement) {
+        // Use scrollIntoView for smooth, browser-native scrolling
+        fieldElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
+      }
+    };
+
+    // Navigate to the field's page if not already there
+    const needsPageChange = field.page !== currentPage;
+    if (needsPageChange) {
+      setCurrentPage(field.page);
+    }
+
+    // Clear any existing flash timeout (prevents overlapping animations)
+    if (flashTimeoutRef.current) {
+      clearTimeout(flashTimeoutRef.current);
+    }
+
+    // Start flashing the field
+    setFlashingFieldName(fieldName);
+
+    // Scroll to field after a delay if page changed (to allow page to render)
+    // or immediately if on the same page
+    setTimeout(
+      () => {
+        scrollToField();
+      },
+      needsPageChange ? 100 : 0
+    );
+
+    // Stop flashing after 1.5s (3 pulses × 500ms)
+    flashTimeoutRef.current = setTimeout(() => {
+      setFlashingFieldName(null);
+      flashTimeoutRef.current = null;
+    }, 1500);
   };
 
   if (error) {
@@ -906,18 +976,45 @@ export default function SheetViewer({
             {/* Selected Fields */}
             {selectedFields.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {selectedFields.map((field) => (
-                  <Badge className="gap-1" key={field} variant="secondary">
-                    {field}
-                    <button
-                      className="ml-1 hover:text-destructive"
-                      onClick={() => handleFieldSelect(field)}
-                      type="button"
+                {selectedFields.map((field) => {
+                  const isHovered = hoveredFieldName === field;
+                  const isFlashing = flashingFieldName === field;
+
+                  return (
+                    <div
+                      className={cn(
+                        "inline-flex items-center rounded-md border",
+                        "border-transparent bg-secondary text-secondary-foreground",
+                        "transition-all duration-200",
+                        isHovered &&
+                          "scale-105 transform shadow-lg ring-2 ring-blue-500",
+                        isFlashing && "animate-flash"
+                      )}
+                      key={field}
                     >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
+                      <button
+                        aria-label={`Navigate to field ${field}`}
+                        className="cursor-pointer px-2.5 py-0.5"
+                        onClick={() => handleBadgeClick(field)}
+                        onMouseEnter={() => setHoveredFieldName(field)}
+                        onMouseLeave={() => setHoveredFieldName(null)}
+                        type="button"
+                      >
+                        <span className="font-semibold text-xs">{field}</span>
+                      </button>
+                      <button
+                        aria-label={`Remove ${field}`}
+                        className="px-1 py-0.5 hover:text-destructive"
+                        onClick={() => handleFieldSelect(field)}
+                        onMouseEnter={() => setHoveredFieldName(field)}
+                        onMouseLeave={() => setHoveredFieldName(null)}
+                        type="button"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardHeader>
@@ -937,17 +1034,29 @@ export default function SheetViewer({
               {/* Overlays for current page only */}
               {currentPageFields.map((field, index) => {
                 const isSelected = selectedFields.includes(field.name);
+                const isHovered = hoveredFieldName === field.name;
+                const isFlashing = flashingFieldName === field.name;
 
                 return (
                   <Toggle
                     aria-label={`Select field ${field.name}`}
                     className={cn(
                       "box-border transition-all duration-200",
+                      // Base selected state (z-20)
                       "data-[state=on]:z-20 data-[state=on]:border-2 data-[state=on]:border-blue-500 data-[state=on]:bg-blue-500/25 data-[state=on]:shadow-xl",
+                      // Base unselected state (z-10)
                       "data-[state=off]:z-10 data-[state=off]:border-2 data-[state=off]:border-yellow-400/50 data-[state=off]:bg-yellow-400/10",
-                      "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30"
+                      // Hover enhancement for unselected
+                      "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30",
+                      // Hovered state - blue emphasis (z-30, highest priority)
+                      isHovered &&
+                        "!border-blue-500 !bg-blue-500/30 z-30 shadow-xl ring-2 ring-blue-400",
+                      // Flashing state (z-30)
+                      isFlashing && "z-30 animate-flash"
                     )}
                     key={`${field.name}-${index}`}
+                    onMouseEnter={() => setHoveredFieldName(field.name)}
+                    onMouseLeave={() => setHoveredFieldName(null)}
                     onPressedChange={() => handleFieldSelect(field.name)}
                     pressed={isSelected}
                     style={{

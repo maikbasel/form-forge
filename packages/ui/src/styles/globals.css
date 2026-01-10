@@ -96,3 +96,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes flash {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgb(59 130 246 / 0.7);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.05);
+      box-shadow: 0 0 20px 5px rgb(59 130 246 / 0.4);
+    }
+  }
+
+  .animate-flash {
+    animation: flash 500ms ease-in-out 3;
+  }
+}
