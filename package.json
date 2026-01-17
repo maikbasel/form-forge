@@ -2,7 +2,7 @@
   "name": "form-forge",
   "private": true,
   "scripts": {
-    "postinstall": "pre-commit install",
+    "postinstall": "command -v pre-commit >/dev/null 2>&1 && pre-commit install || true",
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
