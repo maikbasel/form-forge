@@ -1,18 +1,18 @@
+import type { UploadSheetResponse } from "@repo/api-spec/model";
 import {
   type ApiClient,
   downloadSheetFilenameRegex,
+  type FormField,
   handleAxiosError,
   handleFetchError,
+  type UploadSheetResult,
 } from "@repo/ui/lib/api.ts";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
 import { ApiClientError } from "@repo/ui/types/api.ts";
 import type {
   DownloadSheetResult,
-  FormField,
   UploadOptions,
-  UploadSheetResult,
 } from "@repo/ui/types/sheet.ts";
-import { UploadSheetResponseSchema } from "@repo/ui/types/sheet.ts";
 import axios from "axios";
 import { getSheetFields as getSheetFieldsServer } from "./actions.ts";
 
@@ -39,7 +39,7 @@ export const apiClient: ApiClient = {
         signal: options?.signal,
       });
 
-      const parsed = UploadSheetResponseSchema.parse(response.data);
+      const data = response.data as UploadSheetResponse;
       const location = response.headers.location;
 
       if (!location) {
@@ -50,7 +50,7 @@ export const apiClient: ApiClient = {
       }
 
       return {
-        id: parsed.id,
+        id: data.id,
         location,
       };
     } catch (error) {

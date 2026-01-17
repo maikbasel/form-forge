@@ -36,6 +36,7 @@ tokio = { version = "1.47", features = ["rt", "macros"] }
 mockall = "0.14"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+serde_yaml = "0.9"
 lopdf = "0.38"
 utoipa = { version = "5", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "9.0", features = ["actix-web"] }
@@ -47,6 +48,11 @@ name = "form-forge-api"
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
+default-run = "form-forge-api"
+
+[[bin]]
+name = "generate-openapi"
+path = "src/bin/generate-openapi.rs"
 
 [dependencies]
 common = { path = "crates/common" }
@@ -69,6 +75,7 @@ utoipa.workspace = true
 utoipa-swagger-ui.workspace = true
 utoipa-actix-web.workspace = true
 serde.workspace = true
+serde_yaml.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

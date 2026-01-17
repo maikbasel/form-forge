@@ -12,7 +12,13 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["!**/*.test.ts", "!**/*.spec.ts", "!**/pdf.worker.min.mjs"]
+    "includes": [
+      "!**/*.test.ts",
+      "!**/*.spec.ts",
+      "!**/pdf.worker.min.mjs",
+      "!packages/api-spec/generated.ts",
+      "!packages/api-spec/model.ts"
+    ]
   },
   "overrides": [
     {
@@ -42,11 +48,25 @@
       }
     },
     {
-      "includes": ["**/postcss.config.mjs", "**/tailwind.config.ts"],
+      "includes": [
+        "**/postcss.config.mjs",
+        "**/tailwind.config.ts",
+        "packages/api-spec/client.ts"
+      ],
       "linter": {
         "rules": {
           "performance": {
             "noBarrelFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/api-spec/client.ts"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
           }
         }
       }

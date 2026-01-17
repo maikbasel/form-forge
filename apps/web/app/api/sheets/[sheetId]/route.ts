@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@repo/ui/lib/api.ts";
-import { ApiErrorSchema } from "@repo/ui/types/api.ts";
+import { parseApiError } from "@repo/ui/types/api.ts";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -17,18 +17,7 @@ export async function GET(
       const data = await response
         .json()
         .catch(() => ({ message: "Unknown error" }));
-      const parsedError = ApiErrorSchema.safeParse(data);
-      const apiError = parsedError.success
-        ? parsedError.data
-        : {
-            message:
-              typeof data === "object" &&
-              data !== null &&
-              "message" in data &&
-              typeof data.message === "string"
-                ? data.message
-                : "Unknown error",
-          };
+      const apiError = parseApiError(data);
 
       return NextResponse.json(apiError, { status: response.status });
     }

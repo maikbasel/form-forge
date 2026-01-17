@@ -68,7 +68,7 @@ export default function SheetUploader({
           },
         });
 
-        setSheetPath(result.location);
+        setSheetPath(result.location ?? null);
         setSheetId(result.id);
 
         // Make sure we end at 100% and mark success

@@ -10,6 +10,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@repo/api-spec": "workspace:*",
     "@repo/ui": "workspace:*",
     "axios": "^1.13.2",
     "lucide-react": "^0.562.0",

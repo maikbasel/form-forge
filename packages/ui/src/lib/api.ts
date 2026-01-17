@@ -1,12 +1,27 @@
+import type { SheetFieldDto, UploadSheetResponse } from "@repo/api-spec/model";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
-import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api.ts";
+import { ApiClientError, parseApiError } from "@repo/ui/types/api.ts";
 import type {
   DownloadSheetResult,
-  FormField,
   UploadOptions,
-  UploadSheetResult,
 } from "@repo/ui/types/sheet.ts";
 import axios from "axios";
+
+// Type aliases from generated OpenAPI spec
+export type FormField = SheetFieldDto;
+
+// Re-export types from generated OpenAPI spec
+export type {
+  ApiErrorResponse,
+  AttachAbilityModCalcScriptRequest,
+  AttachSavingThrowModifierCalculationScriptRequest,
+  AttachSkillModifierCalculationScriptRequest,
+  ListSheetFieldsResponse,
+  UploadSheetResponse,
+} from "@repo/api-spec/model";
+
+// Keep existing result type for uploadSheet (contains id + location)
+export type UploadSheetResult = UploadSheetResponse & { location?: string };
 
 export const API_BASE_URL = process.env.API_URL ?? "http://localhost:8081";
 
@@ -15,24 +30,6 @@ export interface ApiClient {
   getSheetFields(sheetId: string): Promise<FormField[]>;
   downloadSheet(sheetId: string): Promise<DownloadSheetResult>;
   attachAction(sheetId: string, action: AttachActionRequest): Promise<void>;
-}
-
-export function parseApiError(data: unknown): { message: string } {
-  const parsedError = ApiErrorSchema.safeParse(data);
-  if (parsedError.success) {
-    return parsedError.data;
-  }
-
-  if (
-    typeof data === "object" &&
-    data !== null &&
-    "message" in data &&
-    typeof data.message === "string"
-  ) {
-    return { message: data.message };
-  }
-
-  return { message: "Unknown error" };
 }
 
 export function handleFetchError(response: Response, data: unknown): never {

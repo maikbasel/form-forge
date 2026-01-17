@@ -1,44 +1,25 @@
 "use server";
 
-import { API_BASE_URL } from "@repo/ui/lib/api.ts";
-import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api.ts";
-import type { FormField } from "@repo/ui/types/sheet.ts";
-import { ListSheetFieldsResponseSchema } from "@repo/ui/types/sheet.ts";
+import { createApiClient } from "@repo/api-spec/client";
+import type { ListSheetFieldsResponse } from "@repo/api-spec/model";
+import { API_BASE_URL, type FormField } from "@repo/ui/lib/api.ts";
+import { ApiClientError, parseApiError } from "@repo/ui/types/api.ts";
 
-function handleFetchError(response: Response, data: unknown): never {
-  const parsedError = ApiErrorSchema.safeParse(data);
-  const apiError = parsedError.success
-    ? parsedError.data
-    : {
-        message:
-          typeof data === "object" &&
-          data !== null &&
-          "message" in data &&
-          typeof data.message === "string"
-            ? data.message
-            : "Unknown error",
-      };
-
-  throw new ApiClientError(response.status, apiError);
-}
+// Create client for direct backend calls (server-side)
+const client = createApiClient(API_BASE_URL);
 
 export async function getSheetFields(sheetId: string): Promise<FormField[]> {
-  const response = await fetch(`${API_BASE_URL}/sheets/${sheetId}/fields`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
+  const { data, error, response } = await client.GET<ListSheetFieldsResponse>(
+    "/sheets/{sheet_id}/fields",
+    {
+      params: { path: { sheet_id: sheetId } },
+    }
+  );
 
-  if (!response.ok) {
-    const data = await response
-      .json()
-      .catch(() => ({ message: "Unknown error" }));
-    handleFetchError(response, data);
+  if (error) {
+    const apiError = parseApiError(error);
+    throw new ApiClientError(response.status, apiError);
   }
 
-  const data = await response.json();
-  const parsed = ListSheetFieldsResponseSchema.parse(data);
-  return parsed.fields;
+  return data?.fields ?? [];
 }

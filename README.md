@@ -263,3 +263,5 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [ ] Add product tour.
 - [ ] Implement native application.
 - [ ] Generate API client from OpenAPI specification.
+- [ ] Implement release workflow
+- [ ] Setup demo
