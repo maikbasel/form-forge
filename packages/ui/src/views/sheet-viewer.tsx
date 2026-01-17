@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@repo/ui/components/select.tsx";
 import { Separator } from "@repo/ui/components/separator.tsx";
+import { Spinner } from "@repo/ui/components/spinner.tsx";
 import { useApiClient } from "@repo/ui/context/api-client-context.tsx";
 import {
   type FieldPosition,
@@ -383,7 +384,7 @@ function FieldRoleDropZone({
 interface ActionConfigModalProps {
   selectedFields: string[];
   onClose: () => void;
-  onAttach: (action: AttachedAction) => void;
+  onAttach: (action: AttachedAction) => Promise<void>;
 }
 
 function ActionConfigModal({
@@ -394,6 +395,7 @@ function ActionConfigModal({
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isAttaching, setIsAttaching] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const currentAction = ACTIONS.find((a) => a.id === selectedAction);
@@ -439,7 +441,7 @@ function ActionConfigModal({
     return requiredRoles.every((role) => fieldMapping[role.key]);
   };
 
-  const handleAttach = () => {
+  const handleAttach = async () => {
     if (!currentAction) {
       return;
     }
@@ -448,12 +450,17 @@ function ActionConfigModal({
       return;
     }
 
-    onAttach({
-      id: currentAction.id,
-      name: currentAction.name,
-      endpoint: currentAction.endpoint,
-      mapping: fieldMapping,
-    });
+    setIsAttaching(true);
+    try {
+      await onAttach({
+        id: currentAction.id,
+        name: currentAction.name,
+        endpoint: currentAction.endpoint,
+        mapping: fieldMapping,
+      });
+    } finally {
+      setIsAttaching(false);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -642,11 +649,12 @@ function ActionConfigModal({
               ))}
           </div>
           <div className="flex gap-2">
-            <Button onClick={onClose} variant="outline">
+            <Button disabled={isAttaching} onClick={onClose} variant="outline">
               Cancel
             </Button>
-            <Button disabled={!isValid()} onClick={handleAttach}>
-              Attach Calculation
+            <Button disabled={!isValid() || isAttaching} onClick={handleAttach}>
+              {isAttaching && <Spinner />}
+              {isAttaching ? "Attaching..." : "Attach Calculation"}
             </Button>
           </div>
         </div>
