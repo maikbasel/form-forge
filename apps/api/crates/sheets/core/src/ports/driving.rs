@@ -98,6 +98,25 @@ impl SheetService {
             .list_form_fields(&Sheet::new(file_path, None))
             .await
     }
+
+    /// Get sheet reference without downloading the file.
+    #[instrument(name = "sheets.find", skip(self), level = "info", fields(%sheet_id))]
+    pub async fn find_sheet(&self, sheet_id: Uuid) -> Result<SheetReference, SheetError> {
+        self.sheet_reference_port.find_by_id(&sheet_id).await
+    }
+
+    /// Generate a pre-signed download URL for a sheet.
+    #[instrument(name = "sheets.get_download_url", skip(self), level = "info")]
+    pub async fn get_download_url(
+        &self,
+        path: &Path,
+        filename: &str,
+        expires_in_secs: u64,
+    ) -> Result<String, SheetError> {
+        self.sheet_storage_port
+            .get_download_url(path, filename, expires_in_secs)
+            .await
+    }
 }
 
 #[cfg(test)]

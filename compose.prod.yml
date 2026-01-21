@@ -15,9 +15,40 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    # Only expose port if needed for external access
-    # ports:
-    #   - "5432:5432"
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    environment:
+      RUSTFS_ROOT_USER: ${S3_ACCESS_KEY:?S3_ACCESS_KEY is required}
+      RUSTFS_ROOT_PASSWORD: ${S3_SECRET_KEY:?S3_SECRET_KEY is required}
+      RUSTFS_VOLUMES: /data/rustfs0
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  createbuckets:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    restart: "no"
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET:-form-forge}
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        /usr/bin/mc alias set rustfs http://rustfs:9000 $$S3_ACCESS_KEY $$S3_SECRET_KEY
+        /usr/bin/mc mb --ignore-existing rustfs/$$S3_BUCKET
+        echo "Bucket '$$S3_BUCKET' initialized successfully"
 
   backend:
     build:
@@ -27,28 +58,29 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      rustfs:
+        condition: service_healthy
     environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-5432}
+      DB_HOST: db
+      DB_PORT: 5432
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB:-form-forge}
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-5}
-      BIND_ADDR: ${BACKEND_BIND_ADDR:-0.0.0.0:8081}
+      BIND_ADDR: 0.0.0.0:8081
       RUST_LOG: ${RUST_LOG:-info}
-    volumes:
-      # Persist uploaded files
-      - backend_data:/app/data
+      S3_ENDPOINT: http://rustfs:9000
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:?S3_PUBLIC_ENDPOINT is required}
+      S3_BUCKET: ${S3_BUCKET:-form-forge}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_REGION: ${S3_REGION:-us-east-1}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 5s
-    # Only expose port if needed for direct access
-    # For production, usually accessed via reverse proxy
-    # ports:
-    #   - "8081:8081"
 
   frontend:
     build:
@@ -63,10 +95,7 @@ services:
       NEXT_TELEMETRY_DISABLED: 1
       PORT: 3000
       HOSTNAME: 0.0.0.0
-      # Backend API URL for server-side requests
       API_URL: http://backend:8081
-    ports:
-      - "${WEB_PORT:-3000}:3000"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\" || exit 1"]
       interval: 30s
@@ -74,22 +103,18 @@ services:
       retries: 3
       start_period: 10s
 
-  # Optional: Add a reverse proxy like Nginx or Traefik here
-  # nginx:
-  #   image: nginx:alpine
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - frontend
-  #     - backend
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./ssl:/etc/nginx/ssl:ro
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+      - rustfs
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - ./docker/nginx.prod.conf:/etc/nginx/nginx.conf:ro
 
 volumes:
   db_data:
-    driver: local
-  backend_data:
-    driver: local
+  rustfs_data:

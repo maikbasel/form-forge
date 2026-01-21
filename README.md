@@ -254,11 +254,11 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [x] When mapping selected fields to roles in the calc, move fields down when they were mapped. This way the user
   doesn't need to scroll down.
 - [x] ~~Show tooltips on hover for form fields.~~ (Fields are highlighted on hover now)
-- [ ] Use S3-compatible storage for PDF files and update API.
+- [x] Use S3-compatible storage for PDF files and update API.
 - [x] Loading indicator when clicking "Attach Calculation" button.
 - [x] Add some way to make it easier for users to identify which selected field contains what character information.
-- [ ] BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role
-  mapping.
+- [x] ~~BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role
+  mapping.~~
 - [ ] Add product tour.
 - [ ] Implement native application.
 - [x] Generate API client from OpenAPI specification.

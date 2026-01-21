@@ -25,7 +25,9 @@ mod tests {
     use sheets_pdf::adapter::SheetsPdf;
     use sheets_storage::adapter::SheetFileStorage;
     use sheets_storage::config::StorageConfig;
-    use sheets_web::handler::{UploadSheetResponse, download_sheet, upload_sheet};
+    use sheets_web::handler::{
+        DownloadSheetResponse, UploadSheetResponse, download_sheet, upload_sheet,
+    };
     use std::sync::Arc;
     use tempfile::Builder;
 
@@ -96,23 +98,24 @@ mod tests {
         let download_req = test::TestRequest::get()
             .uri(&format!("/sheets/{}", sheet_id))
             .to_request();
-        let download_resp = test::call_service(&app, download_req).await;
-        let body_bytes = test::read_body(download_resp).await;
-        let temp_pdf = Builder::new()
-            .suffix(".pdf")
-            .tempfile()
-            .expect("create temp PDF file");
-        std::fs::write(temp_pdf.path(), &body_bytes).expect("write PDF to temp file");
+        let download_resp: DownloadSheetResponse =
+            test::call_and_read_body_json(&app, download_req).await;
+        // File storage returns file:// URLs, extract the path
+        let pdf_path = download_resp
+            .url
+            .strip_prefix("file://")
+            .expect("expected file:// URL");
+        let pdf_path = std::path::Path::new(pdf_path);
         //endregion
 
         //region Verify calc script attachment
-        let actual_doc_level_js = read_document_javascript(temp_pdf.path());
+        let actual_doc_level_js = read_document_javascript(pdf_path);
         assert_eq!(actual_doc_level_js.len(), 1);
         assert_eq!(actual_doc_level_js[0].0, "HelpersJS");
         assert_eq!(actual_doc_level_js[0].1, expected_js);
         //endregion
         //region Verify field calculation action
-        let actual_field_calc_js = read_field_calculation_js(temp_pdf.path(), "STRmod");
+        let actual_field_calc_js = read_field_calculation_js(pdf_path, "STRmod");
         assert_eq!(
             actual_field_calc_js,
             r#"calculateModifierFromScore("STR");"#
@@ -187,23 +190,24 @@ mod tests {
         let download_req = test::TestRequest::get()
             .uri(&format!("/sheets/{}", sheet_id))
             .to_request();
-        let download_resp = test::call_service(&app, download_req).await;
-        let body_bytes = test::read_body(download_resp).await;
-        let temp_pdf = Builder::new()
-            .suffix(".pdf")
-            .tempfile()
-            .expect("create temp PDF file");
-        std::fs::write(temp_pdf.path(), &body_bytes).expect("write PDF to temp file");
+        let download_resp: DownloadSheetResponse =
+            test::call_and_read_body_json(&app, download_req).await;
+        // File storage returns file:// URLs, extract the path
+        let pdf_path = download_resp
+            .url
+            .strip_prefix("file://")
+            .expect("expected file:// URL");
+        let pdf_path = std::path::Path::new(pdf_path);
         //endregion
 
         //region Verify calc script attachment
-        let actual_doc_level_js = read_document_javascript(temp_pdf.path());
+        let actual_doc_level_js = read_document_javascript(pdf_path);
         assert_eq!(actual_doc_level_js.len(), 1);
         assert_eq!(actual_doc_level_js[0].0, "HelpersJS");
         assert_eq!(actual_doc_level_js[0].1, expected_js);
         //endregion
         //region Verify field calculation action
-        let actual_field_calc_js = read_field_calculation_js(temp_pdf.path(), "ST Strength");
+        let actual_field_calc_js = read_field_calculation_js(pdf_path, "ST Strength");
         assert_eq!(
             actual_field_calc_js,
             r#"calculateSaveFromFields("STRmod", "Check Box 11", "ProfBonus");"#
@@ -281,23 +285,24 @@ mod tests {
         let download_req = test::TestRequest::get()
             .uri(&format!("/sheets/{}", sheet_id))
             .to_request();
-        let download_resp = test::call_service(&app, download_req).await;
-        let body_bytes = test::read_body(download_resp).await;
-        let temp_pdf = Builder::new()
-            .suffix(".pdf")
-            .tempfile()
-            .expect("create temp PDF file");
-        std::fs::write(temp_pdf.path(), &body_bytes).expect("write PDF to temp file");
+        let download_resp: DownloadSheetResponse =
+            test::call_and_read_body_json(&app, download_req).await;
+        // File storage returns file:// URLs, extract the path
+        let pdf_path = download_resp
+            .url
+            .strip_prefix("file://")
+            .expect("expected file:// URL");
+        let pdf_path = std::path::Path::new(pdf_path);
         //endregion
 
         //region Verify calc script attachment
-        let actual_doc_level_js = read_document_javascript(temp_pdf.path());
+        let actual_doc_level_js = read_document_javascript(pdf_path);
         assert_eq!(actual_doc_level_js.len(), 1);
         assert_eq!(actual_doc_level_js[0].0, "HelpersJS");
         assert_eq!(actual_doc_level_js[0].1, expected_js);
         //endregion
         //region Verify field calculation action
-        let actual_field_calc_js = read_field_calculation_js(temp_pdf.path(), "Athletics");
+        let actual_field_calc_js = read_field_calculation_js(pdf_path, "Athletics");
         assert_eq!(
             actual_field_calc_js,
             r#"calculateSkillFromFields("STRmod", "Check Box 26", undefined, undefined, "ProfBonus");"#

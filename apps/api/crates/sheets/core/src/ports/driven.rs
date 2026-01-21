@@ -3,7 +3,7 @@ use crate::sheet::{Sheet, SheetField, SheetReference};
 use async_trait::async_trait;
 #[cfg(test)]
 use mockall::automock;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 #[cfg_attr(test, automock)]
@@ -11,6 +11,14 @@ use uuid::Uuid;
 pub trait SheetStoragePort: Send + Sync {
     async fn create(&self, sheet_reference: SheetReference) -> Result<SheetReference, SheetError>;
     async fn read(&self, path: PathBuf) -> Result<PathBuf, SheetError>;
+
+    /// Generate a pre-signed download URL with response headers for content disposition and type.
+    async fn get_download_url(
+        &self,
+        path: &Path,
+        filename: &str,
+        expires_in_secs: u64,
+    ) -> Result<String, SheetError>;
 }
 
 #[cfg_attr(test, automock)]

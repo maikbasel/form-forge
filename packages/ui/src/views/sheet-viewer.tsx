@@ -683,6 +683,10 @@ export default function SheetViewer({
   const [showActionModal, setShowActionModal] = useState(false);
   const [attachedActions, setAttachedActions] = useState<AttachedAction[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  // State for pre-signed PDF URL
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isPdfUrlLoading, setIsPdfUrlLoading] = useState(false);
+  const [pdfUrlError, setPdfUrlError] = useState<string | null>(null);
   // State for hover tracking
   const [hoveredFieldName, setHoveredFieldName] = useState<string | null>(null);
   const [flashingFieldName, setFlashingFieldName] = useState<string | null>(
@@ -728,6 +732,41 @@ export default function SheetViewer({
       }
     };
   }, []);
+
+  // Fetch pre-signed URL for PDF
+  useEffect(() => {
+    if (!file) {
+      return;
+    }
+
+    const fetchPdfUrl = async () => {
+      setIsPdfUrlLoading(true);
+      setPdfUrlError(null);
+
+      try {
+        const response = await fetch(file);
+
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: "Unknown error" }));
+          throw new Error(errorData.message ?? "Failed to fetch PDF URL");
+        }
+
+        const data = await response.json();
+        setPdfUrl(data.url);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to load PDF";
+        setPdfUrlError(message);
+        toast.error(message);
+      } finally {
+        setIsPdfUrlLoading(false);
+      }
+    };
+
+    fetchPdfUrl();
+  }, [file]);
 
   // Recalculate field positions when data changes
   useEffect(() => {
@@ -1031,13 +1070,26 @@ export default function SheetViewer({
 
           <CardContent className="flex flex-1 flex-col items-center overflow-auto p-6">
             <div className="relative inline-block">
-              <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page
-                  className="shadow-lg"
-                  pageNumber={currentPage}
-                  scale={scale}
-                />
-              </Document>
+              {isPdfUrlLoading && (
+                <div className="flex h-[600px] w-[450px] items-center justify-center">
+                  <Spinner className="h-8 w-8" />
+                </div>
+              )}
+              {pdfUrlError && (
+                <div className="flex h-[600px] w-[450px] flex-col items-center justify-center gap-2 text-destructive">
+                  <AlertCircle className="h-8 w-8" />
+                  <p>{pdfUrlError}</p>
+                </div>
+              )}
+              {pdfUrl && !isPdfUrlLoading && !pdfUrlError && (
+                <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess}>
+                  <Page
+                    className="shadow-lg"
+                    pageNumber={currentPage}
+                    scale={scale}
+                  />
+                </Document>
+              )}
 
               {/* Overlays for current page only */}
               {currentPageFields.map((field, index) => {

@@ -1,17 +1,12 @@
 use crate::error::ApiError;
-use actix_files::NamedFile;
 use actix_multipart::form::MultipartForm;
 use actix_multipart::form::tempfile::TempFile;
-use actix_web::http::header::{
-    CACHE_CONTROL, Charset, ContentDisposition, DispositionParam, DispositionType, ExtendedValue,
-    LOCATION,
-};
-use actix_web::{HttpResponse, get, mime, post, web};
+use actix_web::http::header::{CACHE_CONTROL, LOCATION};
+use actix_web::{HttpResponse, get, post, web};
 use common::error::ApiErrorResponse;
 use serde::{Deserialize, Serialize};
-use sheets_core::error::SheetError;
 use sheets_core::ports::driving::SheetService;
-use sheets_core::sheet::{Sheet, SheetField};
+use sheets_core::sheet::{Sheet, SheetField, SheetReference};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -74,6 +69,27 @@ impl From<Vec<SheetField>> for ListSheetFieldsResponse {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct DownloadSheetResponse {
+    /// Pre-signed URL for direct S3 download (valid for 5 minutes).
+    pub url: String,
+    /// Original filename of the PDF.
+    pub filename: String,
+}
+
+impl DownloadSheetResponse {
+    pub fn new(url: String, filename: String) -> Self {
+        Self { url, filename }
+    }
+}
+
+fn build_filename(sheet_reference: &SheetReference) -> String {
+    match &sheet_reference.extension {
+        Some(ext) => format!("{}.{}", sheet_reference.original_name, ext),
+        None => sheet_reference.original_name.clone(),
+    }
+}
+
 #[utoipa::path(
     post,
     path = "/sheets",
@@ -126,13 +142,13 @@ pub async fn upload_sheet(
     path = "/sheets/{sheet_id}",
     tag = "Sheets",
     operation_id = "downloadSheet",
-    summary = "Download enhanced PDF sheet",
-    description = "Downloads a previously uploaded PDF sheet by its unique identifier. The sheet may have been enhanced with calculation scripts attached to its AcroForm fields, making it dynamic and self-calculating.",
+    summary = "Get download URL for PDF sheet",
+    description = "Returns a pre-signed URL for downloading a previously uploaded PDF sheet. The sheet may have been enhanced with calculation scripts attached to its AcroForm fields, making it dynamic and self-calculating. The URL is valid for 5 minutes and includes response headers for content disposition and type.",
     params(
         ("sheet_id" = String, Path, description = "ID of the sheet to download", example = "123e4567-e89b-12d3-a456-426614174000")
     ),
     responses(
-        (status = OK, description = "PDF file returned", content_type = "application/pdf"),
+        (status = OK, description = "Download URL returned", body = DownloadSheetResponse, content_type = "application/json"),
         (status = NOT_FOUND, description = "Sheet not found", body = ApiErrorResponse, content_type = "application/json",
             examples(
                 ("sheet_not_found" = (summary = "Sheet does not exist", value = json!({"message": "sheet not found: 123e4567-e89b-12d3-a456-426614174000"})))
@@ -144,28 +160,19 @@ pub async fn upload_sheet(
 pub async fn download_sheet(
     sheet_service: web::Data<SheetService>,
     sheet_id: web::Path<Uuid>,
-) -> Result<NamedFile, ApiError> {
+) -> Result<HttpResponse, ApiError> {
     let sheet_id = sheet_id.into_inner();
-    let sheet = sheet_service.export_sheet(sheet_id).await?;
+    let sheet_reference = sheet_service.find_sheet(sheet_id).await?;
 
-    let file = NamedFile::open(&sheet.path).map_err(SheetError::StorageError)?;
+    let filename = build_filename(&sheet_reference);
 
-    let sheet_name = sheet
-        .name
-        .ok_or_else(|| SheetError::NotFound(sheet_id.to_string()))?;
+    // Generate pre-signed URL with response headers (valid for 5 minutes)
+    const URL_EXPIRY_SECS: u64 = 300;
+    let download_url = sheet_service
+        .get_download_url(&sheet_reference.path, &filename, URL_EXPIRY_SECS)
+        .await?;
 
-    let cd = ContentDisposition {
-        disposition: DispositionType::Attachment,
-        parameters: vec![DispositionParam::FilenameExt(ExtendedValue {
-            charset: Charset::Ext("UTF-8".into()),
-            language_tag: None,
-            value: sheet_name.into_bytes(),
-        })],
-    };
-
-    Ok(file
-        .set_content_disposition(cd)
-        .set_content_type(mime::APPLICATION_PDF))
+    Ok(HttpResponse::Ok().json(DownloadSheetResponse::new(download_url, filename)))
 }
 
 #[utoipa::path(

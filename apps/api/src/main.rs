@@ -14,8 +14,8 @@ use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStorageP
 use sheets_core::ports::driving::SheetService;
 use sheets_db::adapter::SheetReferenceDb;
 use sheets_pdf::adapter::SheetsPdf;
-use sheets_storage::adapter::SheetFileStorage;
-use sheets_storage::config::StorageConfig;
+use sheets_s3::adapter::SheetS3Storage;
+use sheets_s3::config::S3Config;
 use sheets_web::handler::{download_sheet, get_sheet_form_fields, upload_sheet};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
@@ -60,17 +60,18 @@ async fn main() -> Result<()> {
     sqlx::migrate!("./migrations").run(&pool).await?;
 
     let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
-    let sheet_storage_cfg = StorageConfig::initialize()
+    let s3_cfg = S3Config::initialize().context("failed to initialize S3 config")?;
+    let sheet_s3_storage = SheetS3Storage::new(s3_cfg.clone())
         .await
-        .context("failed to initialize storage config")?;
-    let sheet_storage_port: Arc<dyn SheetStoragePort> =
-        Arc::new(SheetFileStorage::new(sheet_storage_cfg.clone()));
+        .context("failed to initialize S3 storage")?;
+    let sheet_s3_storage = Arc::new(sheet_s3_storage);
+    let sheet_storage_port: Arc<dyn SheetStoragePort> = sheet_s3_storage.clone();
     let sheet_reference_port: Arc<dyn SheetReferencePort> =
         Arc::new(SheetReferenceDb::new(pool.clone()));
     let sheet_service = SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
 
     let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
-        Arc::new(SheetFileStorage::new(sheet_storage_cfg.clone()));
+        sheet_s3_storage;
     let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
         Arc::new(SheetReferenceDb::new(pool));
     let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =

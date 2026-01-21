@@ -4,7 +4,7 @@ use sheets_core::error::SheetError;
 use sheets_core::ports::driven::SheetStoragePort;
 use sheets_core::sheet::SheetReference;
 use std::fs::{copy, create_dir_all};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tracing::{debug, instrument};
 
 pub struct SheetFileStorage {
@@ -66,6 +66,29 @@ impl SheetStoragePort for SheetFileStorage {
         // the file would be downloaded here and the local file path returned.
         if path.exists() {
             Ok(path.clone())
+        } else {
+            Err(SheetError::NotFound("file not found".to_string()))
+        }
+    }
+
+    #[instrument(
+        name = "storage.get_download_url",
+        skip(self),
+        level = "info",
+        fields(path = %path.display(), filename = %filename)
+    )]
+    async fn get_download_url(
+        &self,
+        path: &Path,
+        filename: &str,
+        _expires_in_secs: u64,
+    ) -> Result<String, SheetError> {
+        // For file storage, return a file:// URL for local development compatibility.
+        // In production, S3 storage would be used instead.
+        if path.exists() {
+            let url = format!("file://{}", path.display());
+            debug!(%url, %filename, "generated file URL for local storage");
+            Ok(url)
         } else {
             Err(SheetError::NotFound("file not found".to_string()))
         }

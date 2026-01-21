@@ -1,0 +1,16 @@
+[package]
+name = "sheets_s3"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+sheets_core = { path = "../../core" }
+actions_core = { path = "../../../actions/core" }
+async-trait.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tokio = { workspace = true, features = ["fs", "io-util"] }
+aws-config = { workspace = true }
+aws-sdk-s3 = { workspace = true }
+tempfile.workspace = true

@@ -17,8 +17,8 @@ mod tests {
     use sheets_storage::adapter::SheetFileStorage;
     use sheets_storage::config::StorageConfig;
     use sheets_web::handler::{
-        ListSheetFieldsResponse, UploadSheetResponse, download_sheet, get_sheet_form_fields,
-        upload_sheet,
+        DownloadSheetResponse, ListSheetFieldsResponse, UploadSheetResponse, download_sheet,
+        get_sheet_form_fields, upload_sheet,
     };
     use std::sync::Arc;
     use tempfile::Builder;
@@ -104,12 +104,18 @@ mod tests {
         let location = location.to_str().expect("location header is valid");
         let req = test::TestRequest::get().uri(location).to_request();
 
-        let resp = test::call_service(&app, req).await;
+        let resp: DownloadSheetResponse = test::call_and_read_body_json(&app, req).await;
 
-        assert_eq!(resp.status(), StatusCode::OK);
-        let body_bytes = test::read_body(resp).await;
-        assert!(!body_bytes.is_empty());
-        assert!(body_bytes.starts_with(b"%PDF-"));
+        // File storage returns file:// URLs
+        assert!(resp.url.starts_with("file://"));
+        assert_eq!(resp.filename, "DnD_5E_CharacterSheet_FormFillable.pdf");
+        // Verify the file exists at the URL path
+        let pdf_path = resp
+            .url
+            .strip_prefix("file://")
+            .expect("expected file:// URL");
+        let pdf_bytes = std::fs::read(pdf_path).expect("read PDF file");
+        assert!(pdf_bytes.starts_with(b"%PDF-"));
     }
 
     #[rstest]
