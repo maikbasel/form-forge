@@ -14,14 +14,11 @@ mod tests {
     use sheets_core::ports::driving::SheetService;
     use sheets_db::adapter::SheetReferenceDb;
     use sheets_pdf::adapter::SheetsPdf;
-    use sheets_storage::adapter::SheetFileStorage;
-    use sheets_storage::config::StorageConfig;
     use sheets_web::handler::{
         DownloadSheetResponse, ListSheetFieldsResponse, UploadSheetResponse, download_sheet,
         get_sheet_form_fields, upload_sheet,
     };
     use std::sync::Arc;
-    use tempfile::Builder;
     use uuid::Uuid;
 
     #[fixture]
@@ -36,15 +33,7 @@ mod tests {
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
         let sheet_reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
-        let tmp_dir = Builder::new()
-            .prefix("tests")
-            .tempdir()
-            .expect("create temp dir");
-        let storage_cfg = StorageConfig {
-            data_dir: tmp_dir.path().to_path_buf(),
-        };
-        let sheet_storage_port: Arc<dyn SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let sheet_storage_port: Arc<dyn SheetStoragePort> = async_ctx.s3_storage;
         let sheet_service =
             SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");
@@ -76,16 +65,8 @@ mod tests {
         let async_ctx = async_ctx.await;
         let reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
-        let tmp_dir = Builder::new()
-            .prefix("tests")
-            .tempdir()
-            .expect("create temp dir");
-        let storage_cfg = StorageConfig {
-            data_dir: tmp_dir.path().to_path_buf(),
-        };
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
-        let storage_port: Arc<dyn SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let storage_port: Arc<dyn SheetStoragePort> = async_ctx.s3_storage;
         let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
         telemetry::initialize().expect("initialize telemetry");
         let app =
@@ -106,16 +87,9 @@ mod tests {
 
         let resp: DownloadSheetResponse = test::call_and_read_body_json(&app, req).await;
 
-        // File storage returns file:// URLs
-        assert!(resp.url.starts_with("file://"));
+        // S3 storage returns presigned HTTP URLs
+        assert!(resp.url.starts_with("http://"));
         assert_eq!(resp.filename, "DnD_5E_CharacterSheet_FormFillable.pdf");
-        // Verify the file exists at the URL path
-        let pdf_path = resp
-            .url
-            .strip_prefix("file://")
-            .expect("expected file:// URL");
-        let pdf_bytes = std::fs::read(pdf_path).expect("read PDF file");
-        assert!(pdf_bytes.starts_with(b"%PDF-"));
     }
 
     #[rstest]
@@ -124,16 +98,8 @@ mod tests {
         let async_ctx = async_ctx.await;
         let sheet_reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
-        let tmp_dir = Builder::new()
-            .prefix("tests")
-            .tempdir()
-            .expect("create temp dir");
-        let storage_cfg = StorageConfig {
-            data_dir: tmp_dir.path().to_path_buf(),
-        };
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
-        let sheet_storage_port: Arc<dyn SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let sheet_storage_port: Arc<dyn SheetStoragePort> = async_ctx.s3_storage;
         let sheet_service =
             SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");
@@ -158,16 +124,8 @@ mod tests {
         let async_ctx = async_ctx.await;
         let sheet_reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
-        let tmp_dir = Builder::new()
-            .prefix("tests")
-            .tempdir()
-            .expect("create temp dir");
-        let storage_cfg = StorageConfig {
-            data_dir: tmp_dir.path().to_path_buf(),
-        };
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
-        let sheet_storage_port: Arc<dyn SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+        let sheet_storage_port: Arc<dyn SheetStoragePort> = async_ctx.s3_storage;
         let sheet_service =
             SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
         telemetry::initialize().expect("initialize telemetry");

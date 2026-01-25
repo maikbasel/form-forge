@@ -1781,6 +1781,8 @@ dependencies = [
  "actix-cors",
  "actix-web",
  "anyhow",
+ "aws-config",
+ "aws-sdk-s3",
  "common",
  "dotenvy",
  "lopdf",
@@ -1792,10 +1794,8 @@ dependencies = [
  "sheets_db",
  "sheets_pdf",
  "sheets_s3",
- "sheets_storage",
  "sheets_web",
  "sqlx",
- "tempfile",
  "testcontainers",
  "testcontainers-modules",
  "tracing-actix-web",
@@ -4034,17 +4034,6 @@ dependencies = [
  "sheets_core",
  "tempfile",
  "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sheets_storage"
-version = "0.1.0"
-dependencies = [
- "actions_core",
- "anyhow",
- "async-trait",
- "sheets_core",
  "tracing",
 ]
 

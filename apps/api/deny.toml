@@ -49,11 +49,6 @@ expression = "MIT OR Apache-2.0"
 license-files = []
 
 [[licenses.clarify]]
-name = "sheets_storage"
-expression = "MIT OR Apache-2.0"
-license-files = []
-
-[[licenses.clarify]]
 name = "sheets_db"
 expression = "MIT OR Apache-2.0"
 license-files = []

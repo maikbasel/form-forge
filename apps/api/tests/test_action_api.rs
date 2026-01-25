@@ -23,13 +23,11 @@ mod tests {
     use sheets_core::ports::driving::SheetService;
     use sheets_db::adapter::SheetReferenceDb;
     use sheets_pdf::adapter::SheetsPdf;
-    use sheets_storage::adapter::SheetFileStorage;
-    use sheets_storage::config::StorageConfig;
+    use sheets_s3::adapter::SheetS3Storage;
     use sheets_web::handler::{
         DownloadSheetResponse, UploadSheetResponse, download_sheet, upload_sheet,
     };
     use std::sync::Arc;
-    use tempfile::Builder;
 
     #[fixture]
     async fn async_ctx() -> AsyncTestContext {
@@ -45,19 +43,12 @@ mod tests {
         let async_ctx = async_ctx.await;
         let reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool.clone()));
-        let tmp_dir = Builder::new()
-            .prefix("tests")
-            .tempdir()
-            .expect("create temp dir");
-        let storage_cfg = StorageConfig {
-            data_dir: tmp_dir.path().to_path_buf(),
-        };
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
-        let storage_port: Arc<dyn SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
-        let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
+        let s3_storage: Arc<SheetS3Storage> = async_ctx.s3_storage;
+        let storage_port: Arc<dyn SheetStoragePort> = s3_storage.clone();
+        let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port.clone());
         let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+            s3_storage.clone();
         let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
         let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
@@ -100,22 +91,27 @@ mod tests {
             .to_request();
         let download_resp: DownloadSheetResponse =
             test::call_and_read_body_json(&app, download_req).await;
-        // File storage returns file:// URLs, extract the path
-        let pdf_path = download_resp
-            .url
-            .strip_prefix("file://")
-            .expect("expected file:// URL");
-        let pdf_path = std::path::Path::new(pdf_path);
+        // S3 storage returns presigned HTTP URLs
+        assert!(download_resp.url.starts_with("http://"));
+
+        // Fetch PDF from storage to verify content
+        let sheet_ref = reference_port
+            .find_by_id(&sheet_id)
+            .await
+            .expect("get sheet reference");
+        let pdf_path = <SheetS3Storage as SheetStoragePort>::read(&s3_storage, sheet_ref.path)
+            .await
+            .expect("read PDF from S3");
         //endregion
 
         //region Verify calc script attachment
-        let actual_doc_level_js = read_document_javascript(pdf_path);
+        let actual_doc_level_js = read_document_javascript(&pdf_path);
         assert_eq!(actual_doc_level_js.len(), 1);
         assert_eq!(actual_doc_level_js[0].0, "HelpersJS");
         assert_eq!(actual_doc_level_js[0].1, expected_js);
         //endregion
         //region Verify field calculation action
-        let actual_field_calc_js = read_field_calculation_js(pdf_path, "STRmod");
+        let actual_field_calc_js = read_field_calculation_js(&pdf_path, "STRmod");
         assert_eq!(
             actual_field_calc_js,
             r#"calculateModifierFromScore("STR");"#
@@ -132,19 +128,12 @@ mod tests {
         let async_ctx = async_ctx.await;
         let reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool.clone()));
-        let tmp_dir = Builder::new()
-            .prefix("tests")
-            .tempdir()
-            .expect("create temp dir");
-        let storage_cfg = StorageConfig {
-            data_dir: tmp_dir.path().to_path_buf(),
-        };
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
-        let storage_port: Arc<dyn SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
-        let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
+        let s3_storage: Arc<SheetS3Storage> = async_ctx.s3_storage;
+        let storage_port: Arc<dyn SheetStoragePort> = s3_storage.clone();
+        let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port.clone());
         let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+            s3_storage.clone();
         let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
         let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
@@ -192,22 +181,27 @@ mod tests {
             .to_request();
         let download_resp: DownloadSheetResponse =
             test::call_and_read_body_json(&app, download_req).await;
-        // File storage returns file:// URLs, extract the path
-        let pdf_path = download_resp
-            .url
-            .strip_prefix("file://")
-            .expect("expected file:// URL");
-        let pdf_path = std::path::Path::new(pdf_path);
+        // S3 storage returns presigned HTTP URLs
+        assert!(download_resp.url.starts_with("http://"));
+
+        // Fetch PDF from storage to verify content
+        let sheet_ref = reference_port
+            .find_by_id(&sheet_id)
+            .await
+            .expect("get sheet reference");
+        let pdf_path = <SheetS3Storage as SheetStoragePort>::read(&s3_storage, sheet_ref.path)
+            .await
+            .expect("read PDF from S3");
         //endregion
 
         //region Verify calc script attachment
-        let actual_doc_level_js = read_document_javascript(pdf_path);
+        let actual_doc_level_js = read_document_javascript(&pdf_path);
         assert_eq!(actual_doc_level_js.len(), 1);
         assert_eq!(actual_doc_level_js[0].0, "HelpersJS");
         assert_eq!(actual_doc_level_js[0].1, expected_js);
         //endregion
         //region Verify field calculation action
-        let actual_field_calc_js = read_field_calculation_js(pdf_path, "ST Strength");
+        let actual_field_calc_js = read_field_calculation_js(&pdf_path, "ST Strength");
         assert_eq!(
             actual_field_calc_js,
             r#"calculateSaveFromFields("STRmod", "Check Box 11", "ProfBonus");"#
@@ -224,19 +218,12 @@ mod tests {
         let async_ctx = async_ctx.await;
         let reference_port: Arc<dyn SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool.clone()));
-        let tmp_dir = Builder::new()
-            .prefix("tests")
-            .tempdir()
-            .expect("create temp dir");
-        let storage_cfg = StorageConfig {
-            data_dir: tmp_dir.path().to_path_buf(),
-        };
         let sheet_pdf_port: Arc<dyn SheetPdfPort> = Arc::new(SheetsPdf);
-        let storage_port: Arc<dyn SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
-        let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port);
+        let s3_storage: Arc<SheetS3Storage> = async_ctx.s3_storage;
+        let storage_port: Arc<dyn SheetStoragePort> = s3_storage.clone();
+        let sheet_service = SheetService::new(sheet_pdf_port, storage_port, reference_port.clone());
         let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
-            Arc::new(SheetFileStorage::new(storage_cfg.clone()));
+            s3_storage.clone();
         let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
             Arc::new(SheetReferenceDb::new(async_ctx.pool));
         let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
@@ -287,22 +274,27 @@ mod tests {
             .to_request();
         let download_resp: DownloadSheetResponse =
             test::call_and_read_body_json(&app, download_req).await;
-        // File storage returns file:// URLs, extract the path
-        let pdf_path = download_resp
-            .url
-            .strip_prefix("file://")
-            .expect("expected file:// URL");
-        let pdf_path = std::path::Path::new(pdf_path);
+        // S3 storage returns presigned HTTP URLs
+        assert!(download_resp.url.starts_with("http://"));
+
+        // Fetch PDF from storage to verify content
+        let sheet_ref = reference_port
+            .find_by_id(&sheet_id)
+            .await
+            .expect("get sheet reference");
+        let pdf_path = <SheetS3Storage as SheetStoragePort>::read(&s3_storage, sheet_ref.path)
+            .await
+            .expect("read PDF from S3");
         //endregion
 
         //region Verify calc script attachment
-        let actual_doc_level_js = read_document_javascript(pdf_path);
+        let actual_doc_level_js = read_document_javascript(&pdf_path);
         assert_eq!(actual_doc_level_js.len(), 1);
         assert_eq!(actual_doc_level_js[0].0, "HelpersJS");
         assert_eq!(actual_doc_level_js[0].1, expected_js);
         //endregion
         //region Verify field calculation action
-        let actual_field_calc_js = read_field_calculation_js(pdf_path, "Athletics");
+        let actual_field_calc_js = read_field_calculation_js(&pdf_path, "Athletics");
         assert_eq!(
             actual_field_calc_js,
             r#"calculateSkillFromFields("STRmod", "Check Box 26", undefined, undefined, "ProfBonus");"#

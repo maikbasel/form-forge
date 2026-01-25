@@ -4,7 +4,6 @@ members = [
     "crates/common",
     "crates/sheets/core",
     "crates/sheets/adapters/web",
-    "crates/sheets/adapters/storage",
     "crates/sheets/adapters/s3",
     "crates/sheets/adapters/db",
     "crates/sheets/adapters/pdf",
@@ -28,7 +27,7 @@ async-trait = "0.1"
 sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid", "macros"] }
 tempfile = "3.21"
 testcontainers = "0.26"
-testcontainers-modules = { version = "0.14", features = ["postgres", "blocking"] }
+testcontainers-modules = { version = "0.14", features = ["postgres", "minio", "blocking"] }
 rstest = "0.26"
 pretty_assertions = "1.4"
 dotenvy = "0.15"
@@ -60,7 +59,6 @@ path = "src/bin/generate-openapi.rs"
 common = { path = "crates/common" }
 sheets_core = { path = "crates/sheets/core" }
 sheets_web = { path = "crates/sheets/adapters/web" }
-sheets_storage = { path = "crates/sheets/adapters/storage" }
 sheets_s3 = { path = "crates/sheets/adapters/s3" }
 sheets_db = { path = "crates/sheets/adapters/db" }
 sheets_pdf = { path = "crates/sheets/adapters/pdf" }
@@ -81,12 +79,13 @@ serde.workspace = true
 serde_yaml.workspace = true
 
 [dev-dependencies]
-tempfile.workspace = true
 testcontainers.workspace = true
 testcontainers-modules.workspace = true
 rstest.workspace = true
 pretty_assertions.workspace = true
 lopdf.workspace = true
+aws-config.workspace = true
+aws-sdk-s3.workspace = true
 
 [features]
 default = ["pretty-logs"]

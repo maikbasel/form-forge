@@ -200,4 +200,37 @@ impl actions_core::ports::driven::SheetStoragePort for SheetS3Storage {
             .await
             .map_err(|_| actions_core::error::ActionError::FileNotFound)
     }
+
+    #[instrument(name = "s3.write.action_port", skip(self), level = "info", err, fields(local_path = %local_path.display(), storage_path = %storage_path.display()))]
+    async fn write(
+        &self,
+        local_path: PathBuf,
+        storage_path: PathBuf,
+    ) -> Result<(), actions_core::error::ActionError> {
+        let object_key = storage_path.to_string_lossy().to_string();
+
+        debug!(%object_key, "uploading modified sheet to S3");
+
+        let body = ByteStream::from_path(&local_path).await.map_err(|e| {
+            actions_core::error::ActionError::InvalidAction(format!(
+                "failed to read file for upload: {e}"
+            ))
+        })?;
+
+        self.client
+            .put_object()
+            .bucket(&self.bucket)
+            .key(&object_key)
+            .content_type("application/pdf")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| {
+                actions_core::error::ActionError::InvalidAction(format!("S3 upload failed: {e}"))
+            })?;
+
+        info!(%object_key, "uploaded modified sheet to S3");
+
+        Ok(())
+    }
 }
