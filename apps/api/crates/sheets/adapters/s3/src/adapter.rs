@@ -190,6 +190,38 @@ impl SheetStoragePort for SheetS3Storage {
 
         Ok(public_url)
     }
+
+    #[instrument(name = "s3.exists", skip(self), level = "info", fields(path = %path.display()))]
+    async fn exists(&self, path: &Path) -> Result<bool, SheetError> {
+        let object_key = path.to_string_lossy().to_string();
+
+        match self
+            .client
+            .head_object()
+            .bucket(&self.bucket)
+            .key(&object_key)
+            .send()
+            .await
+        {
+            Ok(_) => {
+                debug!(%object_key, "S3 object exists");
+                Ok(true)
+            }
+            Err(sdk_err) => {
+                // Check if it's a 404 Not Found error
+                if let Some(service_err) = sdk_err.as_service_error()
+                    && service_err.is_not_found()
+                {
+                    debug!(%object_key, "S3 object not found");
+                    return Ok(false);
+                }
+                // Other errors are propagated
+                Err(SheetError::StorageError(std::io::Error::other(format!(
+                    "failed to check S3 object existence: {sdk_err}"
+                ))))
+            }
+        }
+    }
 }
 
 #[async_trait]
