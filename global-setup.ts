@@ -15,6 +15,9 @@ export default async function globalSetup() {
   console.info("⏳ Waiting for database to be ready...");
   await waitForDatabase();
 
+  console.info("⏳ Waiting for S3 storage to be ready...");
+  await waitForS3();
+
   console.info("🚀 Starting backend server...");
   await startBackend();
 
@@ -51,6 +54,32 @@ async function waitForDatabase(): Promise<void> {
       if (i === maxRetries - 1) {
         throw new Error(
           `Database failed to become ready after ${maxRetries} attempts`
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+  }
+}
+
+async function waitForS3(): Promise<void> {
+  const maxRetries = 30;
+  const retryDelay = 1000;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      // Check if RustFS S3 API is ready (nc to port 9000)
+      execSync("nc -z localhost 9000", {
+        stdio: "ignore",
+      });
+
+      console.info("✅ S3 storage is ready!");
+      // Give time for bucket creation to complete
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return;
+    } catch {
+      if (i === maxRetries - 1) {
+        throw new Error(
+          `S3 storage failed to become ready after ${maxRetries} attempts`
         );
       }
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
