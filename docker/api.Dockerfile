@@ -17,7 +17,6 @@ COPY Cargo.toml Cargo.lock ./
 COPY crates/common/Cargo.toml ./crates/common/
 COPY crates/sheets/core/Cargo.toml ./crates/sheets/core/
 COPY crates/sheets/adapters/web/Cargo.toml ./crates/sheets/adapters/web/
-COPY crates/sheets/adapters/storage/Cargo.toml ./crates/sheets/adapters/storage/
 COPY crates/sheets/adapters/s3/Cargo.toml ./crates/sheets/adapters/s3/
 COPY crates/sheets/adapters/db/Cargo.toml ./crates/sheets/adapters/db/
 COPY crates/sheets/adapters/pdf/Cargo.toml ./crates/sheets/adapters/pdf/
@@ -30,13 +29,12 @@ RUN mkdir -p src/bin && \
     echo "fn main() {}" > src/main.rs && \
     echo "fn main() {}" > src/bin/generate-openapi.rs && \
     mkdir -p crates/common/src crates/sheets/core/src crates/sheets/adapters/web/src \
-             crates/sheets/adapters/storage/src crates/sheets/adapters/s3/src crates/sheets/adapters/db/src \
+             crates/sheets/adapters/s3/src crates/sheets/adapters/db/src \
              crates/sheets/adapters/pdf/src crates/actions/core/src \
              crates/actions/adapters/web/src crates/actions/adapters/pdf/src && \
     echo "// dummy" > crates/common/src/lib.rs && \
     echo "// dummy" > crates/sheets/core/src/lib.rs && \
     echo "// dummy" > crates/sheets/adapters/web/src/lib.rs && \
-    echo "// dummy" > crates/sheets/adapters/storage/src/lib.rs && \
     echo "// dummy" > crates/sheets/adapters/s3/src/lib.rs && \
     echo "// dummy" > crates/sheets/adapters/db/src/lib.rs && \
     echo "// dummy" > crates/sheets/adapters/pdf/src/lib.rs && \
