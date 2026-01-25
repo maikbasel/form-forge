@@ -283,3 +283,4 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [ ] Implement release workflow
 - [ ] Setup demo
 - [x] implement ttl for uploaded files
+- [ ] implement application/problem+json
