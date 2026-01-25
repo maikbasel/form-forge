@@ -67,6 +67,7 @@ actions_web = { path = "crates/actions/adapters/web" }
 actions_pdf = { path = "crates/actions/adapters/pdf" }
 actix-web.workspace = true
 actix-cors.workspace = true
+tracing.workspace = true
 tracing-actix-web.workspace = true
 anyhow.workspace = true
 uuid.workspace = true
@@ -77,6 +78,7 @@ utoipa-swagger-ui.workspace = true
 utoipa-actix-web.workspace = true
 serde.workspace = true
 serde_yaml.workspace = true
+tokio = { workspace = true, features = ["rt", "time"] }
 
 [dev-dependencies]
 testcontainers.workspace = true

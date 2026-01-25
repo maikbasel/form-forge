@@ -5,8 +5,10 @@ use actix_web::http::header::{CACHE_CONTROL, LOCATION};
 use actix_web::{HttpResponse, get, post, web};
 use common::error::ApiErrorResponse;
 use serde::{Deserialize, Serialize};
-use sheets_core::ports::driving::SheetService;
+use sheets_core::ports::driving::{SheetCleanupPort, SheetService};
 use sheets_core::sheet::{Sheet, SheetField, SheetReference};
+use std::sync::Arc;
+use tracing::{error, info, warn};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
@@ -207,4 +209,130 @@ pub async fn get_sheet_form_fields(
     Ok(HttpResponse::Ok()
         .insert_header((CACHE_CONTROL, "no-cache, no-store, must-revalidate"))
         .json(response))
+}
+
+// --- S3 Event Notification Types ---
+
+/// S3-compatible event notification payload from RustFS.
+#[derive(Debug, Deserialize)]
+pub struct S3EventNotification {
+    #[serde(rename = "Records", default)]
+    pub records: Vec<S3EventRecord>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct S3EventRecord {
+    #[serde(rename = "eventName")]
+    pub event_name: String,
+    pub s3: S3EventData,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct S3EventData {
+    pub bucket: S3Bucket,
+    pub object: S3Object,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct S3Bucket {
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct S3Object {
+    /// Object key, e.g., "sheets/{uuid}/{name}.pdf"
+    pub key: String,
+}
+
+/// Extract sheet ID from S3 object key.
+/// Key format: "sheets/{uuid}/{name}.pdf"
+fn extract_sheet_id(key: &str) -> Option<Uuid> {
+    key.strip_prefix("sheets/")
+        .and_then(|s| s.split('/').next())
+        .and_then(|id| Uuid::parse_str(id).ok())
+}
+
+/// Maximum retry attempts for database deletion.
+const MAX_RETRY_ATTEMPTS: u32 = 3;
+/// Base delay for exponential backoff (milliseconds).
+const RETRY_BASE_DELAY_MS: u64 = 100;
+
+/// Internal webhook endpoint for RustFS S3 event notifications.
+/// Processes object deletion events and cleans up database references.
+#[post("/internal/s3-events")]
+pub async fn handle_s3_event(
+    cleanup_service: web::Data<Arc<dyn SheetCleanupPort>>,
+    payload: web::Json<S3EventNotification>,
+) -> HttpResponse {
+    for record in &payload.records {
+        // Only process object removal events
+        if !record.event_name.starts_with("s3:ObjectRemoved:") {
+            continue;
+        }
+
+        let Some(sheet_id) = extract_sheet_id(&record.s3.object.key) else {
+            warn!(
+                key = %record.s3.object.key,
+                "could not extract sheet ID from S3 object key"
+            );
+            continue;
+        };
+
+        info!(
+            %sheet_id,
+            key = %record.s3.object.key,
+            event = %record.event_name,
+            "processing S3 deletion event"
+        );
+
+        // Retry with exponential backoff
+        let mut last_error = None;
+        for attempt in 0..MAX_RETRY_ATTEMPTS {
+            if attempt > 0 {
+                let delay_ms = RETRY_BASE_DELAY_MS * 2u64.pow(attempt - 1);
+                tokio::time::sleep(tokio::time::Duration::from_millis(delay_ms)).await;
+            }
+
+            match cleanup_service.delete_reference(&sheet_id).await {
+                Ok(()) => {
+                    info!(%sheet_id, "successfully deleted sheet reference");
+                    last_error = None;
+                    break;
+                }
+                Err(e) => {
+                    warn!(
+                        %sheet_id,
+                        attempt = attempt + 1,
+                        max_attempts = MAX_RETRY_ATTEMPTS,
+                        error = %e,
+                        "failed to delete sheet reference, retrying"
+                    );
+                    last_error = Some(e);
+                }
+            }
+        }
+
+        // If all retries failed, record in dead letter table
+        if let Some(e) = last_error {
+            error!(
+                %sheet_id,
+                key = %record.s3.object.key,
+                error = %e,
+                "all retry attempts exhausted, recording failed deletion"
+            );
+            if let Err(record_err) = cleanup_service
+                .record_failed_deletion(&sheet_id, &record.s3.object.key, &e.to_string())
+                .await
+            {
+                error!(
+                    %sheet_id,
+                    error = %record_err,
+                    "failed to record deletion failure"
+                );
+            }
+        }
+    }
+
+    // Always return 200 to prevent RustFS retry storms
+    HttpResponse::Ok().finish()
 }

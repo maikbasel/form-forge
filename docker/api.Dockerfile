@@ -57,8 +57,8 @@ COPY . .
 ENV SQLX_OFFLINE=true
 RUN cargo build --release --no-default-features --features json-logs
 
-# Runtime stage
-FROM debian:bookworm-slim
+# Runtime stage - use trixie (Debian 13) to match GLIBC 2.38 from rust:nightly
+FROM debian:trixie-slim
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \

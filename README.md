@@ -152,39 +152,56 @@ See [Development Guide](.claude/CLAUDE.md) for detailed architecture documentati
 
 ### Docker Compose
 
-The repository includes Docker Compose configuration for local development. For production deployment:
+The repository includes two Docker Compose configurations:
+
+- `compose.dev.yml` - Development (used by `just up`)
+- `compose.prod.yml` - Production (full stack with nginx reverse proxy)
+
+**Development** (infrastructure only):
 
 ```bash
-# Start all services (PostgreSQL + API + Web)
-docker-compose up -d
+just up    # Start PostgreSQL + RustFS + Adminer
+just down  # Stop infrastructure
+```
+
+**Production** (full stack):
+
+```bash
+# Configure environment (see .env.example)
+cp .env.example .env
+# Edit .env with production values
+
+# Build and start all services
+docker compose -f compose.prod.yml up --build -d
 
 # View logs
-docker-compose logs -f
+docker compose -f compose.prod.yml logs -f
 
 # Stop services
-docker-compose down
+docker compose -f compose.prod.yml down
 ```
 
-**Environment variables** for production (create `.env` in project root):
+**Required environment variables** for production:
 
 ```bash
-# Database Configuration
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
-POSTGRES_DB=form-forge
-DB_HOST=db
-DB_PORT=5432
+# Database (required)
+POSTGRES_PASSWORD=your-secure-password
 
-# Backend Configuration
-BIND_ADDR=0.0.0.0:8081
-RUST_LOG=info
+# S3 Storage (required)
+S3_ACCESS_KEY=your-access-key
+S3_SECRET_KEY=your-secret-key
+S3_PUBLIC_ENDPOINT=https://yourdomain.com/s3  # Public URL for downloads
 
-# Frontend Configuration
-API_URL=http://localhost:8081
+# Optional
+POSTGRES_USER=postgres        # default: postgres
+POSTGRES_DB=form-forge        # default: form-forge
+S3_BUCKET=form-forge          # default: form-forge
+HTTP_PORT=80                  # default: 80
+RUST_LOG=info                 # default: info
+S3_LIFECYCLE_EXPIRATION_DAYS=7  # default: 7
 ```
 
-**Volumes**: PDF files are stored in `./data/storage` (configure via backend environment). Ensure this directory is
-persisted in production.
+**Document TTL**: Uploaded PDFs are automatically deleted after 1 day (configurable via `config/lifecycle.json`). Database records are cleaned up via S3 webhook notifications and hourly reconciliation.
 
 ## Database
 
@@ -265,3 +282,4 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [ ] Generate docker images in ci.
 - [ ] Implement release workflow
 - [ ] Setup demo
+- [x] implement ttl for uploaded files

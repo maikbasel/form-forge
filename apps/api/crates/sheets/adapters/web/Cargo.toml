@@ -12,3 +12,5 @@ actix-multipart.workspace = true
 uuid.workspace = true
 utoipa.workspace = true
 serde.workspace = true
+tracing.workspace = true
+tokio = { workspace = true, features = ["time"] }
