@@ -31,6 +31,12 @@ export const AttachSkillModifierCalculationScriptRequest = z.object({
   skillModifierFieldName: z.string(),
 });
 
+export type DownloadSheetResponse = z.infer<typeof DownloadSheetResponse>;
+export const DownloadSheetResponse = z.object({
+  filename: z.string(),
+  url: z.string(),
+});
+
 export type HealthResponse = z.infer<typeof HealthResponse>;
 export const HealthResponse = z.object({
   status: z.string(),
@@ -123,7 +129,7 @@ export const get_DownloadSheet = {
       sheet_id: z.string(),
     }),
   }),
-  response: z.unknown(),
+  response: DownloadSheetResponse,
 };
 
 export type get_GetSheetFormFields = typeof get_GetSheetFormFields;

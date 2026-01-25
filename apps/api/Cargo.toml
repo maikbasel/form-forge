@@ -4,7 +4,7 @@ members = [
     "crates/common",
     "crates/sheets/core",
     "crates/sheets/adapters/web",
-    "crates/sheets/adapters/storage",
+    "crates/sheets/adapters/s3",
     "crates/sheets/adapters/db",
     "crates/sheets/adapters/pdf",
     "crates/actions/core",
@@ -16,7 +16,6 @@ resolver = "2"
 [workspace.dependencies]
 actix-web = "4"
 actix-multipart = "0.7"
-actix-files = "0.6.7"
 actix-cors = "0.7.1"
 tracing = "0.1"
 tracing-actix-web = "0.7"
@@ -28,7 +27,7 @@ async-trait = "0.1"
 sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid", "macros"] }
 tempfile = "3.21"
 testcontainers = "0.26"
-testcontainers-modules = { version = "0.14", features = ["postgres", "blocking"] }
+testcontainers-modules = { version = "0.14", features = ["postgres", "minio", "blocking"] }
 rstest = "0.26"
 pretty_assertions = "1.4"
 dotenvy = "0.15"
@@ -42,6 +41,8 @@ utoipa = { version = "5", features = ["actix_extras"] }
 utoipa-swagger-ui = { version = "9.0", features = ["actix-web"] }
 utoipa-actix-web = "0.1"
 validator = { version = "0.20", features = ["derive"] }
+aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.120.0"
 
 [package]
 name = "form-forge-api"
@@ -58,7 +59,7 @@ path = "src/bin/generate-openapi.rs"
 common = { path = "crates/common" }
 sheets_core = { path = "crates/sheets/core" }
 sheets_web = { path = "crates/sheets/adapters/web" }
-sheets_storage = { path = "crates/sheets/adapters/storage" }
+sheets_s3 = { path = "crates/sheets/adapters/s3" }
 sheets_db = { path = "crates/sheets/adapters/db" }
 sheets_pdf = { path = "crates/sheets/adapters/pdf" }
 actions_core = { path = "crates/actions/core" }
@@ -66,6 +67,7 @@ actions_web = { path = "crates/actions/adapters/web" }
 actions_pdf = { path = "crates/actions/adapters/pdf" }
 actix-web.workspace = true
 actix-cors.workspace = true
+tracing.workspace = true
 tracing-actix-web.workspace = true
 anyhow.workspace = true
 uuid.workspace = true
@@ -76,14 +78,16 @@ utoipa-swagger-ui.workspace = true
 utoipa-actix-web.workspace = true
 serde.workspace = true
 serde_yaml.workspace = true
+tokio = { workspace = true, features = ["rt", "time"] }
 
 [dev-dependencies]
-tempfile.workspace = true
 testcontainers.workspace = true
 testcontainers-modules.workspace = true
 rstest.workspace = true
 pretty_assertions.workspace = true
 lopdf.workspace = true
+aws-config.workspace = true
+aws-sdk-s3.workspace = true
 
 [features]
 default = ["pretty-logs"]

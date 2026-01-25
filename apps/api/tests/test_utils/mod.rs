@@ -3,7 +3,10 @@
 use common::multipart_form::MultipartFormDataBuilder;
 use common::pdf::find_form_field_by_name;
 use lopdf::{Document, Object};
+use sheets_s3::adapter::SheetS3Storage;
+use sheets_s3::config::S3Config;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub fn dnd5e_sheet_multipart_form_data() -> MultipartFormDataBuilder {
     let here = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -57,21 +60,33 @@ macro_rules! app {
 }
 
 // --- Test utilities for database setup ---
+use aws_config::BehaviorVersion;
+use aws_sdk_s3::Client;
+use aws_sdk_s3::config::{Credentials, Region};
 use common::db::DatabaseConfig;
 use sqlx::PgPool;
 use testcontainers::ImageExt;
+use testcontainers_modules::minio::MinIO;
 use testcontainers_modules::postgres::Postgres;
+use testcontainers_modules::testcontainers::ContainerAsync;
 use testcontainers_modules::testcontainers::runners::AsyncRunner;
+
+const TEST_BUCKET: &str = "form-forge";
+const MINIO_ACCESS_KEY: &str = "minioadmin";
+const MINIO_SECRET_KEY: &str = "minioadmin";
 
 pub struct AsyncTestContext {
     pub pool: PgPool,
-    // Keep the container alive for the duration of the test by holding the handle.
-    _container: testcontainers_modules::testcontainers::ContainerAsync<Postgres>,
+    pub s3_storage: Arc<SheetS3Storage>,
+    // Keep containers alive for the duration of the test by holding the handles.
+    _pg_container: ContainerAsync<Postgres>,
+    _minio_container: ContainerAsync<MinIO>,
 }
 
 impl AsyncTestContext {
     pub async fn setup() -> Self {
-        let container = Postgres::default()
+        // Start Postgres container
+        let pg_container = Postgres::default()
             .with_user("postgres")
             .with_password("postgres")
             .with_db_name("form-forge")
@@ -85,8 +100,11 @@ impl AsyncTestContext {
             "postgres://{}:{}@{}:{}/{}",
             db_cfg.user,
             db_cfg.password,
-            container.get_host().await.expect("get host"),
-            container.get_host_port_ipv4(5432).await.expect("get port"),
+            pg_container.get_host().await.expect("get host"),
+            pg_container
+                .get_host_port_ipv4(5432)
+                .await
+                .expect("get port"),
             db_cfg.database
         );
 
@@ -96,10 +114,61 @@ impl AsyncTestContext {
             .await
             .expect("run migrations");
 
+        // Start MinIO container
+        let minio_container = MinIO::default().start().await.expect("start minio");
+
+        let minio_host = minio_container.get_host().await.expect("get minio host");
+        let minio_port = minio_container
+            .get_host_port_ipv4(9000)
+            .await
+            .expect("get minio port");
+        let minio_endpoint = format!("http://{}:{}", minio_host, minio_port);
+
+        // Create test bucket before initializing storage
+        Self::create_bucket(&minio_endpoint).await;
+
+        // Create S3 config for MinIO
+        let s3_cfg = S3Config {
+            endpoint: minio_endpoint.clone(),
+            public_endpoint: minio_endpoint,
+            bucket: TEST_BUCKET.to_string(),
+            access_key: MINIO_ACCESS_KEY.to_string(),
+            secret_key: MINIO_SECRET_KEY.to_string(),
+            region: "us-east-1".to_string(),
+        };
+
+        // Initialize S3 storage
+        let s3_storage = SheetS3Storage::new(s3_cfg)
+            .await
+            .expect("create S3 storage");
+
         Self {
             pool,
-            _container: container,
+            s3_storage: Arc::new(s3_storage),
+            _pg_container: pg_container,
+            _minio_container: minio_container,
         }
+    }
+
+    async fn create_bucket(endpoint: &str) {
+        let credentials = Credentials::new(MINIO_ACCESS_KEY, MINIO_SECRET_KEY, None, None, "test");
+
+        let s3_config = aws_sdk_s3::Config::builder()
+            .behavior_version(BehaviorVersion::latest())
+            .region(Region::new("us-east-1"))
+            .endpoint_url(endpoint)
+            .credentials_provider(credentials)
+            .force_path_style(true)
+            .build();
+
+        let client = Client::from_conf(s3_config);
+
+        client
+            .create_bucket()
+            .bucket(TEST_BUCKET)
+            .send()
+            .await
+            .expect("create test bucket");
     }
 }
 
