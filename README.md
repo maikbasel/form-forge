@@ -199,7 +199,30 @@ S3_BUCKET=form-forge          # default: form-forge
 HTTP_PORT=80                  # default: 80
 RUST_LOG=info                 # default: info
 S3_LIFECYCLE_EXPIRATION_DAYS=7  # default: 7
+
+# OpenTelemetry (optional)
+OTEL_EXPORTER_OTLP_ENDPOINT=http://your-signoz:4318
+OTEL_SERVICE_NAME=form-forge-api  # default: form-forge-api
 ```
+
+### OpenTelemetry / Observability
+
+The backend supports exporting traces and metrics via OpenTelemetry. This is **disabled by default** and can be enabled at runtime.
+
+**To enable:** Set `OTEL_EXPORTER_OTLP_ENDPOINT` in your `.env` file:
+
+```bash
+# For SigNoz
+OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4318
+
+# For Jaeger
+OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+
+# Optionally customize service name (default: form-forge-api)
+OTEL_SERVICE_NAME=my-form-forge-instance
+```
+
+**To disable:** Leave `OTEL_EXPORTER_OTLP_ENDPOINT` unset or empty. No traces or metrics will be exported.
 
 **Document TTL**: Uploaded PDFs are automatically deleted after 1 day (configurable via `config/lifecycle.json`). Database records are cleaned up via S3 webhook notifications and hourly reconciliation.
 
@@ -284,3 +307,4 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [ ] Setup demo
 - [x] implement ttl for uploaded files
 - [ ] implement application/problem+json
+

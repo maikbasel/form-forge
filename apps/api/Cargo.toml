@@ -93,3 +93,4 @@ aws-sdk-s3.workspace = true
 default = ["pretty-logs"]
 pretty-logs = ["common/pretty-logs"]
 json-logs = ["common/json-logs"]
+otel = ["common/otel"]

@@ -13,6 +13,12 @@ serde.workspace = true
 utoipa.workspace = true
 lopdf.workspace = true
 
+# OpenTelemetry dependencies (optional, for production tracing)
+opentelemetry = { version = "0.27", features = ["metrics"], optional = true }
+opentelemetry_sdk = { version = "0.27", features = ["rt-tokio", "metrics"], optional = true }
+opentelemetry-otlp = { version = "0.27", features = ["http-proto", "reqwest-client", "metrics"], optional = true }
+tracing-opentelemetry = { version = "0.28", optional = true }
+
 [dev-dependencies]
 pretty_assertions.workspace = true
 
@@ -20,3 +26,4 @@ pretty_assertions.workspace = true
 default = ["pretty-logs"]   # dev default
 pretty-logs = []
 json-logs = []
+otel = ["dep:opentelemetry", "dep:opentelemetry_sdk", "dep:opentelemetry-otlp", "dep:tracing-opentelemetry"]
