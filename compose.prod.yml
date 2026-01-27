@@ -22,6 +22,8 @@ services:
     environment:
       RUSTFS_ROOT_USER: ${S3_ACCESS_KEY:?S3_ACCESS_KEY is required}
       RUSTFS_ROOT_PASSWORD: ${S3_SECRET_KEY:?S3_SECRET_KEY is required}
+      RUSTFS_CONSOLE_ENABLE: ${S3_CONSOLE_ENABLE:-false}
+      RUSTFS_SERVER_DOMAINS: ${S3_SERVER_DOMAINS:?S3_SERVER_DOMAINS is required}
       RUSTFS_VOLUMES: /data/rustfs0
       # Webhook notification for object deletions (lifecycle expiration)
       # Uses MinIO-compatible environment variable naming
@@ -43,8 +45,10 @@ services:
         condition: service_healthy
     restart: "no"
     environment:
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY is required}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY is required}
+      RUSTFS_ROOT_USER: ${S3_ACCESS_KEY:?S3_ACCESS_KEY is required}
+      RUSTFS_ROOT_PASSWORD: ${S3_SECRET_KEY:?S3_SECRET_KEY is required}
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY is required}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY is required}
       S3_BUCKET: ${S3_BUCKET:-form-forge}
     volumes:
       - ./config/lifecycle.json:/lifecycle.json:ro
