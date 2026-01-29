@@ -25,9 +25,10 @@ services:
       RUSTFS_CONSOLE_ENABLE: ${S3_CONSOLE_ENABLE:-false}
       RUSTFS_VOLUMES: /data/rustfs0
       # Webhook notification for object deletions (lifecycle expiration)
-      # Uses MinIO-compatible environment variable naming
-      MINIO_NOTIFY_WEBHOOK_ENABLE_primary: "on"
-      MINIO_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://backend:8081/internal/s3-events"
+      RUSTFS_NOTIFY_WEBHOOK_ENABLE_primary: "on"
+      RUSTFS_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://backend:8081/internal/s3-events"
+      RUSTFS_NOTIFY_WEBHOOK_QUEUE_DIR_primary: "/data/rustfs0/.events"
+      RUST_BACKTRACE: 1
     volumes:
       - rustfs_data:/data
     healthcheck:
@@ -55,6 +56,7 @@ services:
         /usr/bin/mc alias set rustfs http://rustfs:9000 "$${S3_ACCESS_KEY}" "$${S3_SECRET_KEY}"
         /usr/bin/mc mb --ignore-existing rustfs/$${S3_BUCKET}
         echo '{"Rules":[{"ID":"expire-sheets-1-days","Status":"Enabled","Filter":{"Prefix":"sheets/"},"Expiration":{"Days":1}}]}' | /usr/bin/mc ilm import rustfs/$${S3_BUCKET}
+        /usr/bin/mc event remove rustfs/$${S3_BUCKET} --force || true
         /usr/bin/mc event add rustfs/$${S3_BUCKET} arn:rustfs:sqs:"$${S3_REGION}":primary:webhook --event delete || true
         echo "Bucket '$${S3_BUCKET}' initialized with lifecycle rules and webhook events"
 
@@ -83,7 +85,7 @@ services:
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       S3_REGION: ${S3_REGION:-eu-central}
-      # OpenTelemetry configuration (optional - set OTEL_EXPORTER_OTLP_ENDPOINT to enable)
+      # OpenTelemetry (optional - set OTEL_EXPORTER_OTLP_ENDPOINT to enable)
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-form-forge-api}
     healthcheck:
@@ -92,9 +94,6 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
-    networks:
-      - default
-      - monitoring
 
   frontend:
     build:
@@ -128,11 +127,6 @@ services:
       - rustfs
     expose:
       - "80"
-
-networks:
-  monitoring:
-    external: true
-    name: monitoring
 
 volumes:
   db_data:

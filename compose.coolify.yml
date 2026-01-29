@@ -1,0 +1,32 @@
+# Coolify-specific overrides
+# Usage: docker compose -f compose.prod.yml -f compose.coolify.yml up -d
+# Requires: `docker network create monitoring` (or managed by Coolify)
+
+services:
+  otel-collector:
+    build:
+      context: ./docker
+      dockerfile: otel-collector.Dockerfile
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    environment:
+      # Mapped: host OTEL_COLLECTOR_ENDPOINT → container OTEL_EXPORTER_OTLP_ENDPOINT
+      # The collector config reads ${OTEL_EXPORTER_OTLP_ENDPOINT} for its export destination
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_COLLECTOR_ENDPOINT}
+    networks:
+      - default
+      - monitoring
+
+  backend:
+    depends_on:
+      otel-collector:
+        condition: service_started
+    networks:
+      - default
+      - monitoring
+
+networks:
+  monitoring:
+    external: true
+    name: monitoring
