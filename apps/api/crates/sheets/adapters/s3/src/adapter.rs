@@ -17,9 +17,11 @@ use tracing::{debug, info, instrument};
 
 pub struct SheetS3Storage {
     client: Client,
+    /// Separate client configured with the public endpoint, used only for
+    /// presigned URL generation so the signature matches the host the browser
+    /// will actually connect to.
+    presign_client: Client,
     bucket: String,
-    endpoint: String,
-    public_endpoint: String,
 }
 
 impl SheetS3Storage {
@@ -34,13 +36,26 @@ impl SheetS3Storage {
 
         let s3_config = aws_sdk_s3::Config::builder()
             .behavior_version(BehaviorVersion::latest())
-            .region(Region::new(cfg.region))
+            .region(Region::new(cfg.region.clone()))
             .endpoint_url(&cfg.endpoint)
-            .credentials_provider(credentials)
+            .credentials_provider(credentials.clone())
             .force_path_style(true)
             .build();
 
         let client = Client::from_conf(s3_config);
+
+        // Build a second client whose endpoint matches the public URL so that
+        // presigned-URL signatures are computed against the host the browser
+        // will actually connect to (avoids SignatureDoesNotMatch).
+        let presign_config = aws_sdk_s3::Config::builder()
+            .behavior_version(BehaviorVersion::latest())
+            .region(Region::new(cfg.region))
+            .endpoint_url(&cfg.public_endpoint)
+            .credentials_provider(credentials)
+            .force_path_style(true)
+            .build();
+
+        let presign_client = Client::from_conf(presign_config);
 
         info!(
             bucket = %cfg.bucket,
@@ -51,9 +66,8 @@ impl SheetS3Storage {
 
         Ok(Self {
             client,
+            presign_client,
             bucket: cfg.bucket,
-            endpoint: cfg.endpoint,
-            public_endpoint: cfg.public_endpoint,
         })
     }
 
@@ -164,7 +178,7 @@ impl SheetStoragePort for SheetS3Storage {
         let content_disposition = format!("attachment; filename=\"{}\"", filename);
 
         let presigned_request = self
-            .client
+            .presign_client
             .get_object()
             .bucket(&self.bucket)
             .key(&object_key)
@@ -178,17 +192,11 @@ impl SheetStoragePort for SheetS3Storage {
                 )))
             })?;
 
-        // Rewrite URL to use public endpoint for browser access
-        let internal_url = presigned_request.uri().to_string();
-        let public_url = internal_url.replace(&self.endpoint, &self.public_endpoint);
+        let url = presigned_request.uri().to_string();
 
-        info!(
-            internal_url = %internal_url,
-            public_url = %public_url,
-            "generated presigned download URL"
-        );
+        info!(%url, "generated presigned download URL");
 
-        Ok(public_url)
+        Ok(url)
     }
 
     #[instrument(name = "s3.exists", skip(self), level = "info", fields(path = %path.display()))]
