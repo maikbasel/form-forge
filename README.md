@@ -181,6 +181,13 @@ docker compose -f compose.prod.yml logs -f
 docker compose -f compose.prod.yml down
 ```
 
+**Production access points** (behind nginx reverse proxy):
+
+- Web UI: `https://<domain>/`
+- API: `https://<domain>/sheets`, `https://<domain>/dnd5e`
+- Swagger UI: `https://<domain>/swagger-ui/`
+- S3 Console: `https://<domain>/s3-console` (redirects to RustFS admin UI, login with `S3_ACCESS_KEY` / `S3_SECRET_KEY`)
+
 **Required environment variables** for production:
 
 ```bash
@@ -303,8 +310,9 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [ ] Implement native application.
 - [x] Generate API client from OpenAPI specification.
 - [ ] Generate docker images in ci.
-- [ ] Implement release workflow
+- [x] Implement release workflow
 - [ ] Setup demo
 - [x] implement ttl for uploaded files
 - [ ] implement application/problem+json
-
+- [ ] dockerize playwright tests
+- [ ] add translation
