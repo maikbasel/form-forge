@@ -14,6 +14,7 @@ use tempfile::NamedTempFile;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tracing::{debug, info, instrument};
+use url::Url;
 
 pub struct SheetS3Storage {
     client: Client,
@@ -22,6 +23,10 @@ pub struct SheetS3Storage {
     /// will actually connect to.
     presign_client: Client,
     bucket: String,
+    /// Path prefix extracted from `S3_PUBLIC_ENDPOINT` (e.g. `/s3`). Re-inserted
+    /// into presigned URLs after signing so the browser routes through the
+    /// reverse proxy while the signature covers the path the storage backend sees.
+    public_path_prefix: String,
 }
 
 impl SheetS3Storage {
@@ -61,6 +66,7 @@ impl SheetS3Storage {
             bucket = %cfg.bucket,
             endpoint = %cfg.endpoint,
             public_endpoint = %cfg.public_endpoint,
+            public_path_prefix = %cfg.public_path_prefix,
             "S3 storage adapter initialized"
         );
 
@@ -68,6 +74,7 @@ impl SheetS3Storage {
             client,
             presign_client,
             bucket: cfg.bucket,
+            public_path_prefix: cfg.public_path_prefix,
         })
     }
 
@@ -77,6 +84,22 @@ impl SheetS3Storage {
             None => sheet_reference.name.clone(),
         };
         format!("sheets/{}/{}", sheet_reference.id, file_name)
+    }
+
+    /// Prepend `self.public_path_prefix` to the path component of a presigned
+    /// URL. This is necessary when the public endpoint sits behind a reverse
+    /// proxy that strips a path prefix before forwarding to the storage backend.
+    /// The SDK signs the URL without the prefix (matching what the backend
+    /// sees), and we re-insert it so the browser routes through the proxy.
+    fn insert_path_prefix(&self, presigned_url: &str) -> Result<String, SheetError> {
+        let mut parsed = Url::parse(presigned_url).map_err(|e| {
+            SheetError::StorageError(std::io::Error::other(format!(
+                "failed to parse presigned URL: {e}"
+            )))
+        })?;
+        let new_path = format!("{}{}", self.public_path_prefix, parsed.path());
+        parsed.set_path(&new_path);
+        Ok(parsed.to_string())
     }
 }
 
@@ -192,7 +215,11 @@ impl SheetStoragePort for SheetS3Storage {
                 )))
             })?;
 
-        let url = presigned_request.uri().to_string();
+        let mut url = presigned_request.uri().to_string();
+
+        if !self.public_path_prefix.is_empty() {
+            url = self.insert_path_prefix(&url)?;
+        }
 
         info!(%url, "generated presigned download URL");
 

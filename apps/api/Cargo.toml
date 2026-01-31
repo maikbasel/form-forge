@@ -48,6 +48,7 @@ utoipa-actix-web = "0.1"
 validator = { version = "0.20", features = ["derive"] }
 aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
 aws-sdk-s3 = "1.120.0"
+url = "2"
 
 [package]
 name = "form-forge-api"
