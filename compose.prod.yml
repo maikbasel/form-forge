@@ -28,6 +28,7 @@ services:
       RUSTFS_NOTIFY_WEBHOOK_ENABLE_primary: "on"
       RUSTFS_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://backend:8081/internal/s3-events"
       RUSTFS_NOTIFY_WEBHOOK_QUEUE_DIR_primary: "/data/rustfs0/.events"
+      RUST_LOG: ${RUST_LOG:-info}
       RUST_BACKTRACE: 1
     volumes:
       - rustfs_data:/data
@@ -79,6 +80,7 @@ services:
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-5}
       BIND_ADDR: 0.0.0.0:8081
       RUST_LOG: ${RUST_LOG:-info}
+      RUST_BACKTRACE: 1
       S3_ENDPOINT: http://rustfs:9000
       S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT}
       S3_BUCKET: ${S3_BUCKET:-form-forge}
