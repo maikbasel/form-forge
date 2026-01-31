@@ -1,6 +1,6 @@
 {
   "name": "form-forge-pdf-helpers",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JavaScript helpers for PDF form calculations",
   "type": "module",
   "scripts": {
