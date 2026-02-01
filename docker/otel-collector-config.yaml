@@ -5,6 +5,23 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+  # Host-level metrics (CPU, memory, disk, filesystem, load, network)
+  hostmetrics:
+    root_path: /hostfs
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      memory:
+      disk:
+      filesystem:
+      load:
+      network:
+
+  # Per-container resource usage (CPU, memory, network, block I/O)
+  docker_stats:
+    endpoint: unix:///var/run/docker.sock
+    collection_interval: 30s
+
   # Tails Docker container log files for infrastructure services
   filelog/containers:
     include:
@@ -53,7 +70,7 @@ service:
       processors: [batch]
       exporters: [otlphttp]
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, hostmetrics, docker_stats]
       processors: [batch]
       exporters: [otlphttp]
     logs/otlp:

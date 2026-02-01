@@ -10,6 +10,8 @@ services:
     restart: unless-stopped
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
     environment:
       # Mapped: host OTEL_COLLECTOR_ENDPOINT → container OTEL_EXPORTER_OTLP_ENDPOINT
       # The collector config reads ${OTEL_EXPORTER_OTLP_ENDPOINT} for its export destination
