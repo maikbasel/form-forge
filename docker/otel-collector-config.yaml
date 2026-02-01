@@ -53,6 +53,15 @@ processors:
     timeout: 5s
     send_batch_size: 1000
 
+  # Attaches host.name, os.type, and container metadata so SigNoz can
+  # populate the Infrastructure Monitoring tab.
+  resourcedetection:
+    detectors: [env, system, docker]
+    system:
+      hostname_sources: ["os"]
+    timeout: 2s
+    override: false
+
   resource/docker:
     attributes:
       - key: source
@@ -71,7 +80,7 @@ service:
       exporters: [otlphttp]
     metrics:
       receivers: [otlp, hostmetrics, docker_stats]
-      processors: [batch]
+      processors: [resourcedetection, batch]
       exporters: [otlphttp]
     logs/otlp:
       receivers: [otlp]
