@@ -1,0 +1,92 @@
+receivers:
+  # Receives OTLP from the backend (traces, metrics, logs)
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Host-level metrics (CPU, memory, disk, filesystem, load, network)
+  hostmetrics:
+    root_path: /hostfs
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      memory:
+      disk:
+      filesystem:
+      load:
+      network:
+
+  # Per-container resource usage (CPU, memory, network, block I/O)
+  docker_stats:
+    endpoint: unix:///var/run/docker.sock
+    collection_interval: 30s
+
+  # Tails Docker container log files for infrastructure services
+  filelog/containers:
+    include:
+      - /var/lib/docker/containers/*/*.log
+    start_at: end
+    include_file_path: true
+    include_file_name: false
+    operators:
+      # Parse Docker JSON log format: {"log":"...","stream":"stdout","time":"2024-..."}
+      - type: json_parser
+        id: docker_json
+        timestamp:
+          parse_from: attributes.time
+          layout: "%Y-%m-%dT%H:%M:%S.%LZ"
+      # Move the actual log line into the body
+      - type: move
+        from: attributes.log
+        to: body
+      # Tag with the output stream
+      - type: move
+        from: attributes.stream
+        to: attributes["log.iostream"]
+      # Remove the parsed time attribute (already used for timestamp)
+      - type: remove
+        field: attributes.time
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1000
+
+  # Attaches host.name, os.type, and container metadata so SigNoz can
+  # populate the Infrastructure Monitoring tab.
+  resourcedetection:
+    detectors: [env, system, docker]
+    system:
+      hostname_sources: ["os"]
+    timeout: 2s
+    override: false
+
+  resource/docker:
+    attributes:
+      - key: source
+        value: docker
+        action: upsert
+
+exporters:
+  otlphttp:
+    endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp]
+    metrics:
+      receivers: [otlp, hostmetrics, docker_stats]
+      processors: [resourcedetection, batch]
+      exporters: [otlphttp]
+    logs/otlp:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp]
+    logs/docker:
+      receivers: [filelog/containers]
+      processors: [resource/docker, batch]
+      exporters: [otlphttp]

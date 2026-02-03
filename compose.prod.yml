@@ -7,7 +7,7 @@ services:
     shm_size: 128mb
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-form-forge}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-form-forge}"]
@@ -20,13 +20,16 @@ services:
     image: rustfs/rustfs:latest
     restart: unless-stopped
     environment:
-      RUSTFS_ROOT_USER: ${S3_ACCESS_KEY:?S3_ACCESS_KEY is required}
-      RUSTFS_ROOT_PASSWORD: ${S3_SECRET_KEY:?S3_SECRET_KEY is required}
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY}
+      RUSTFS_CONSOLE_ENABLE: ${S3_CONSOLE_ENABLE:-false}
       RUSTFS_VOLUMES: /data/rustfs0
       # Webhook notification for object deletions (lifecycle expiration)
-      # Uses MinIO-compatible environment variable naming
-      MINIO_NOTIFY_WEBHOOK_ENABLE_primary: "on"
-      MINIO_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://backend:8081/internal/s3-events"
+      RUSTFS_NOTIFY_WEBHOOK_ENABLE_primary: "on"
+      RUSTFS_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://backend:8081/internal/s3-events"
+      RUSTFS_NOTIFY_WEBHOOK_QUEUE_DIR_primary: "/data/rustfs0/.events"
+      RUST_LOG: ${RUST_LOG:-info}
+      RUST_BACKTRACE: 1
     volumes:
       - rustfs_data:/data
     healthcheck:
@@ -43,19 +46,19 @@ services:
         condition: service_healthy
     restart: "no"
     environment:
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY is required}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY is required}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_REGION: ${S3_REGION:-eu-central}
       S3_BUCKET: ${S3_BUCKET:-form-forge}
-    volumes:
-      - ./config/lifecycle.json:/lifecycle.json:ro
     entrypoint: /bin/sh
     command:
       - -c
       - |
         /usr/bin/mc alias set rustfs http://rustfs:9000 "$${S3_ACCESS_KEY}" "$${S3_SECRET_KEY}"
         /usr/bin/mc mb --ignore-existing rustfs/$${S3_BUCKET}
-        /usr/bin/mc ilm import rustfs/$${S3_BUCKET} < /lifecycle.json
-        /usr/bin/mc event add rustfs/$${S3_BUCKET} arn:minio:sqs::primary:webhook --event delete || true
+        echo '{"Rules":[{"ID":"expire-sheets-1-days","Status":"Enabled","Filter":{"Prefix":"sheets/"},"Expiration":{"Days":1}}]}' | /usr/bin/mc ilm import rustfs/$${S3_BUCKET}
+        /usr/bin/mc event remove rustfs/$${S3_BUCKET} --force || true
+        /usr/bin/mc event add rustfs/$${S3_BUCKET} arn:rustfs:sqs:"$${S3_REGION}":primary:webhook --event delete || true
         echo "Bucket '$${S3_BUCKET}' initialized with lifecycle rules and webhook events"
 
   backend:
@@ -77,12 +80,16 @@ services:
       DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS:-5}
       BIND_ADDR: 0.0.0.0:8081
       RUST_LOG: ${RUST_LOG:-info}
+      RUST_BACKTRACE: 1
       S3_ENDPOINT: http://rustfs:9000
-      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:?S3_PUBLIC_ENDPOINT is required}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT}
       S3_BUCKET: ${S3_BUCKET:-form-forge}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
-      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_REGION: ${S3_REGION:-eu-central}
+      # OpenTelemetry (optional - set OTEL_EXPORTER_OTLP_ENDPOINT to enable)
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-form-forge-api}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 30s

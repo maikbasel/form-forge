@@ -13,6 +13,11 @@ members = [
 ]
 resolver = "2"
 
+[workspace.package]
+version = "0.1.0" # x-release-please-version
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
 [workspace.dependencies]
 actix-web = "4"
 actix-multipart = "0.7"
@@ -43,12 +48,13 @@ utoipa-actix-web = "0.1"
 validator = { version = "0.20", features = ["derive"] }
 aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
 aws-sdk-s3 = "1.120.0"
+url = "2"
 
 [package]
 name = "form-forge-api"
-version = "0.1.0"
-edition = "2024"
-license = "MIT OR Apache-2.0"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 default-run = "form-forge-api"
 
 [[bin]]
@@ -93,3 +99,4 @@ aws-sdk-s3.workspace = true
 default = ["pretty-logs"]
 pretty-logs = ["common/pretty-logs"]
 json-logs = ["common/json-logs"]
+otel = ["common/otel"]

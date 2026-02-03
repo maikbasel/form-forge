@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Tauri v2 Next.js Monorepo",
+  "productName": "Form Forge",
   "version": "0.1.0",
-  "identifier": "com.my-tauri-nextjs-monorepo.app",
+  "identifier": "com.form-forge.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Tauri v2 Next.js Monorepo",
+        "title": "Form Forge",
         "width": 800,
         "height": 600
       }
