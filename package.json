@@ -1,5 +1,6 @@
 {
   "name": "form-forge",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "postinstall": "command -v pre-commit >/dev/null 2>&1 && pre-commit install || true",

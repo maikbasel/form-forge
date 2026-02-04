@@ -131,6 +131,7 @@ impl AsyncTestContext {
         let s3_cfg = S3Config {
             endpoint: minio_endpoint.clone(),
             public_endpoint: minio_endpoint,
+            public_path_prefix: String::new(),
             bucket: TEST_BUCKET.to_string(),
             access_key: MINIO_ACCESS_KEY.to_string(),
             secret_key: MINIO_SECRET_KEY.to_string(),

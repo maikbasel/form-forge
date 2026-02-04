@@ -166,5 +166,8 @@ async fn main() -> Result<()> {
     .await
     .context("HTTP server encountered an error")?;
 
+    // Flush pending telemetry data before exit
+    telemetry::shutdown();
+
     Ok(())
 }

@@ -43,7 +43,7 @@ RUN mkdir -p src/bin && \
     echo "// dummy" > crates/actions/adapters/pdf/src/lib.rs
 
 # Build dependencies (cached layer)
-RUN cargo build --release --no-default-features --features json-logs
+RUN cargo build --release --no-default-features --features json-logs,otel
 
 # Remove dummy sources and build artifacts
 RUN rm -rf src crates/common/src crates/sheets crates/actions target/release/.fingerprint/form-forge-api-* \
@@ -53,9 +53,9 @@ RUN rm -rf src crates/common/src crates/sheets crates/actions target/release/.fi
 # Copy actual source code (context is apps/api/)
 COPY . .
 
-# Build the application with SQLx offline mode (production logs)
+# Build the application with SQLx offline mode (production logs + OpenTelemetry)
 ENV SQLX_OFFLINE=true
-RUN cargo build --release --no-default-features --features json-logs
+RUN cargo build --release --no-default-features --features json-logs,otel
 
 # Runtime stage - use trixie (Debian 13) to match GLIBC 2.38 from rust:nightly
 FROM debian:trixie-slim

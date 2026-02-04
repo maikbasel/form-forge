@@ -34,9 +34,9 @@ services:
       RUSTFS_ROOT_PASSWORD: rustfsadmin
       RUSTFS_VOLUMES: /data/rustfs0
       # Webhook notification for object deletions (lifecycle expiration)
-      # Uses MinIO-compatible environment variable naming
-      MINIO_NOTIFY_WEBHOOK_ENABLE_primary: "on"
-      MINIO_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://host.docker.internal:8081/internal/s3-events"
+      RUSTFS_NOTIFY_WEBHOOK_ENABLE_primary: "on"
+      RUSTFS_NOTIFY_WEBHOOK_ENDPOINT_primary: "http://host.docker.internal:8081/internal/s3-events"
+      RUSTFS_NOTIFY_WEBHOOK_QUEUE_DIR_primary: "/data/rustfs0/.events"
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Web Console
@@ -67,7 +67,8 @@ services:
         /usr/bin/mc alias set rustfs http://rustfs:9000 rustfsadmin rustfsadmin
         /usr/bin/mc mb --ignore-existing rustfs/form-forge
         /usr/bin/mc ilm import rustfs/form-forge < /lifecycle.json
-        /usr/bin/mc event add rustfs/form-forge arn:minio:sqs::primary:webhook --event delete || true
+        /usr/bin/mc event remove rustfs/form-forge --force || true
+        /usr/bin/mc event add rustfs/form-forge arn:rustfs:sqs::primary:webhook --event delete || true
         echo "Bucket 'form-forge' initialized with lifecycle rules and webhook events"
 
 volumes:
