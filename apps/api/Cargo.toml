@@ -36,7 +36,7 @@ testcontainers-modules = { version = "0.14", features = ["postgres", "minio", "b
 rstest = "0.26"
 pretty_assertions = "1.4"
 dotenvy = "0.15"
-tokio = { version = "1.47", features = ["rt", "macros"] }
+tokio = { version = "1.49", features = ["rt", "macros"] }
 mockall = "0.14"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
