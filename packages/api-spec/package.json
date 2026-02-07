@@ -1,0 +1,23 @@
+{
+  "name": "@repo/api-spec",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./openapi.yaml": "./openapi.yaml",
+    "./generated": "./generated.ts",
+    "./model": "./model.ts",
+    "./client": "./client.ts"
+  },
+  "scripts": {
+    "generate": "pnpm exec typed-openapi ./openapi.yaml -r zod -o ./generated.ts"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typed-openapi": "^0.5.0",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "zod": "^3.24.0"
+  }
+}

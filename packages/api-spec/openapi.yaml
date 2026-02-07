@@ -1,0 +1,388 @@
+openapi: 3.1.0
+info:
+  title: Form Forge API
+  description: A REST API for uploading D&D 5e character sheet PDFs, discovering form fields, and attaching predefined calculation actions. Users map fields to actions (e.g. ability mods, skills, proficiency) to generate dynamic, self-calculating PDFs. No custom JavaScript is required—only safe, declarative actions from a curated catalog.
+  license:
+    name: MIT
+    url: https://opensource.org/license/MIT
+  version: 0.1.0
+servers:
+- url: https://api.formforge.maikbasel.com
+  description: Production
+- url: https://dev.api.formforge.maikbasel.com
+  description: Staging
+- url: http://127.0.0.1:8081
+  description: Local
+paths:
+  /dnd5e/{sheet_id}/ability-modifier:
+    put:
+      tags:
+      - DnD 5e
+      summary: Attach an Ability Score Modifier calculation script
+      description: |-
+        Attaches a JavaScript calculation script to a ability modifier target PDF AcroForm field in a DnD 5e character sheet.
+
+        The field will automatically calculate and display ability modifiers using the formula `floor((score - 10) / 2)` whenever the corresponding ability score changes.
+
+        The script is embedded directly in the PDF's AcroForm structure for real-time updates.
+
+        Note: Sending a request to attach a calculation script targeting the same ability modifier field will replace the existing script on that field.
+      operationId: attachAbilityModifierCalculationScript
+      parameters:
+      - name: sheet_id
+        in: path
+        description: ID of the uploaded
+        required: true
+        schema:
+          type: string
+        example: 123e4567-e89b-12d3-a456-426614174000
+      requestBody:
+        description: JSON object containing the names of the ability score and ability modifier fields to link together.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachAbilityModCalcScriptRequest'
+        required: true
+      responses:
+        '204':
+          description: Calculation script successfully attached to the ability modifier field.
+  /dnd5e/{sheet_id}/saving-throw-modifier:
+    put:
+      tags:
+      - DnD 5e
+      summary: Attach a Saving Throw Modifier calculation script
+      description: |-
+        Attaches a JavaScript calculation script to a saving throw modifier target PDF AcroForm field in a DnD 5e character sheet.
+
+        The field will automatically calculate and display the saving throw modifier using the formula `modifier + (proficient ? proficiency_bonus : 0)` whenever any of the source fields change.
+
+        The script is embedded directly in the PDF's AcroForm structure for real-time updates.
+
+        Note: Sending a request to attach a calculation script targeting the same saving throw modifier field will replace the existing script on that field.
+      operationId: attachSavingThrowModifierCalculationScript
+      parameters:
+      - name: sheet_id
+        in: path
+        description: ID of the uploaded sheet
+        required: true
+        schema:
+          type: string
+        example: 123e4567-e89b-12d3-a456-426614174000
+      requestBody:
+        description: JSON object containing the names of the ability modifier, proficiency choice, and proficiency bonus fields to link together for calculating the saving throw modifier.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachSavingThrowModifierCalculationScriptRequest'
+        required: true
+      responses:
+        '204':
+          description: Calculation script successfully attached to the saving throw modifier field.
+  /dnd5e/{sheet_id}/skill-modifier:
+    put:
+      tags:
+      - DnD 5e
+      summary: Attach a Skill Modifier calculation script
+      description: |-
+        Attaches a JavaScript calculation script to a skill modifier target PDF AcroForm field in a DnD 5e character sheet.
+
+        The field will automatically calculate and display the skill modifier using the formula `floor(modifier + (proficiency_multiplier * proficiency_bonus))` whenever any of the source fields change. The `proficiency_multiplier` equals 1 for proficiency in the skill, 2 for expertise, and 0.5 for half-proficiency.
+
+        The script is embedded directly in the PDF's AcroForm structure for real-time updates.
+
+        Note: Sending a request to attach a calculation script targeting the same skill modifier field will replace the existing script on that field.
+      operationId: attachSkillModifierCalculationScript
+      parameters:
+      - name: sheet_id
+        in: path
+        description: ID of the uploaded sheet
+        required: true
+        schema:
+          type: string
+        example: 123e4567-e89b-12d3-a456-426614174000
+      requestBody:
+        description: JSON object containing the names of the ability modifier, proficiency choice, and proficiency bonus fields to link together for calculating the saving throw modifier.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachSkillModifierCalculationScriptRequest'
+        required: true
+      responses:
+        '204':
+          description: Calculation script successfully attached to the skill modifier field.
+  /health:
+    get:
+      tags:
+      - Health
+      operationId: health_check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /sheets:
+    post:
+      tags:
+      - Sheets
+      summary: Upload a form-fillable PDF
+      description: "Uploads a form-fillable PDF file. The PDF must satisfy these compatibility rules: \n\n- It must NOT be encrypted.\n- It must contain a Catalog dictionary.\n- It must contain an AcroForm dictionary.\n- It must NOT be an XFA form.\n- The AcroForm must provide a Fields array (interactive form fields).\n- It must NOT be locked via DocMDP permissions.\n\nIf validation passes, returns 201 Created with a Location header pointing to the download URL."
+      operationId: uploadSheet
+      requestBody:
+        description: Multipart form with a single 'sheet' field containing the PDF file.
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadSheetRequest'
+        required: true
+      responses:
+        '201':
+          description: Sheet uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadSheetResponse'
+        '400':
+          description: Invalid PDF or request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                file_too_large:
+                  summary: File size exceeded
+                  value:
+                    message: file size exceeds 5MB limit
+                invalid_filename:
+                  summary: Invalid filename
+                  value:
+                    message: invalid sheet name
+                invalid_pdf_header:
+                  summary: Invalid PDF file
+                  value:
+                    message: invalid PDF header - file is not a PDF
+                not_supported:
+                  summary: PDF sheet is not supported
+                  value:
+                    message: PDF sheet is encrypted
+        '500':
+          description: Unexpected server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                database_error:
+                  summary: Database failure
+                  value:
+                    message: failed to save sheet reference
+                storage_error:
+                  summary: Storage failure
+                  value:
+                    message: failed to save sheet
+  /sheets/{sheet_id}:
+    get:
+      tags:
+      - Sheets
+      summary: Get download URL for PDF sheet
+      description: Returns a pre-signed URL for downloading a previously uploaded PDF sheet. The sheet may have been enhanced with calculation scripts attached to its AcroForm fields, making it dynamic and self-calculating. The URL is valid for 5 minutes and includes response headers for content disposition and type.
+      operationId: downloadSheet
+      parameters:
+      - name: sheet_id
+        in: path
+        description: ID of the sheet to download
+        required: true
+        schema:
+          type: string
+        example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Download URL returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadSheetResponse'
+        '404':
+          description: Sheet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                sheet_not_found:
+                  summary: Sheet does not exist
+                  value:
+                    message: 'sheet not found: 123e4567-e89b-12d3-a456-426614174000'
+  /sheets/{sheet_id}/fields:
+    get:
+      tags:
+      - Sheets
+      summary: Lists sheet form fields
+      description: Lists interactive PDF AcroForm fields that support calculation actions. Only text (`/Tx`), choice (`/Ch`) fields with widget annotations are returned.
+      operationId: getSheetFormFields
+      parameters:
+      - name: sheet_id
+        in: path
+        description: ID of the uploaded sheet
+        required: true
+        schema:
+          type: string
+        example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: List of interactive PDF AcroForm fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSheetFieldsResponse'
+        '404':
+          description: Sheet not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                sheet_not_found:
+                  summary: Sheet does not exist
+                  value:
+                    message: 'sheet not found: 123e4567-e89b-12d3-a456-426614174000'
+components:
+  schemas:
+    ApiErrorResponse:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+          description: Human-readable error message describing what went wrong.
+    AttachAbilityModCalcScriptRequest:
+      type: object
+      required:
+      - abilityScoreFieldName
+      - abilityModifierFieldName
+      properties:
+        abilityModifierFieldName:
+          type: string
+          description: Name of the PDF AcroForm text field containing the target ability modifier.
+        abilityScoreFieldName:
+          type: string
+          description: Name of the PDF AcroForm text field containing the ability score.
+    AttachSavingThrowModifierCalculationScriptRequest:
+      type: object
+      required:
+      - abilityModifierFieldName
+      - proficiencyFieldName
+      - proficiencyBonusFieldName
+      - savingThrowModifierFieldName
+      properties:
+        abilityModifierFieldName:
+          type: string
+          description: Name of the PDF AcroForm text field containing the relevant ability modifier to calculate the saving throw modifier from.
+        proficiencyBonusFieldName:
+          type: string
+          description: Name of the PDF AcroForm text field containing the actual proficiency bonus value to be added to the saving throw modifier.
+        proficiencyFieldName:
+          type: string
+          description: Name of the PDF AcroForm choice field that determines proficiency for this saving throw (used to decide whether to add proficiency bonus to the saving throw modifier or not).
+        savingThrowModifierFieldName:
+          type: string
+          description: Name of the PDF AcroForm text field containing the target saving throw modifier.
+    AttachSkillModifierCalculationScriptRequest:
+      type: object
+      required:
+      - abilityModifierFieldName
+      - proficiencyFieldName
+      - proficiencyBonusFieldName
+      - skillModifierFieldName
+      properties:
+        abilityModifierFieldName:
+          type: string
+          description: Name of the PDF AcroForm text field containing the relevant ability modifier to calculate the skill modifier from.
+        expertiseFieldName:
+          type:
+          - string
+          - 'null'
+          description: Name of the PDF AcroForm choice field that determines expertise for this skill (used to decide whether to add double the proficiency bonus to the skill modifier or not).
+        halfProfFieldName:
+          type:
+          - string
+          - 'null'
+          description: Name of the PDF AcroForm choice field that determines half-proficiency for this skill (used to decide whether to add half the proficiency bonus to the skill modifier or not).
+        proficiencyBonusFieldName:
+          type: string
+          description: Name of the PDF AcroForm text field containing the actual proficiency bonus value to be added to the skill modifier.
+        proficiencyFieldName:
+          type: string
+          description: Name of the PDF AcroForm choice field that determines proficiency for this skill (used to decide whether to add proficiency bonus to the skill modifier or not).
+        skillModifierFieldName:
+          type: string
+          description: Name of the PDF AcroForm text field containing the target skill modifier.
+    DownloadSheetResponse:
+      type: object
+      required:
+      - url
+      - filename
+      properties:
+        filename:
+          type: string
+          description: Original filename of the PDF.
+        url:
+          type: string
+          description: Pre-signed URL for direct S3 download (valid for 5 minutes).
+    HealthResponse:
+      type: object
+      description: Health check response
+      required:
+      - status
+      - version
+      properties:
+        status:
+          type: string
+        version:
+          type: string
+    ListSheetFieldsResponse:
+      type: object
+      required:
+      - fields
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/SheetFieldDto'
+          description: List of interactive PDF AcroForm fields.
+    SheetFieldDto:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: Name of the AcroForm field.
+    UploadSheetRequest:
+      type: object
+      required:
+      - sheet
+      properties:
+        sheet:
+          type: string
+          format: binary
+          description: 'The PDF file to upload. Max size: 5MB.'
+          contentMediaType: application/pdf
+    UploadSheetResponse:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+tags:
+- name: Health
+  description: Health check endpoint
+- name: Sheets
+  description: Operations related to form-fillable PDF sheets
+- name: DnD 5e
+  description: Operations related to attaching calculation scripts to D&D 5e character sheet's AcroForm fields

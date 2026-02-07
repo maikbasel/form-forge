@@ -36,10 +36,42 @@ native:
     @echo "📱 Starting native frontend..."
     cd {{native_dir}} && pnpm --filter native tauri dev
 
+# Generate OpenAPI spec from Rust API
+gen-openapi:
+    @echo "📄 Generating OpenAPI spec..."
+    cd {{backend_dir}} && cargo run --bin generate-openapi
+    @echo "✅ OpenAPI spec generated at packages/api-spec/openapi.yaml"
+
+# Generate TypeScript types from OpenAPI spec
+gen-types:
+    @echo "🔧 Generating TypeScript types..."
+    cd packages/api-spec && pnpm generate
+    @echo "✅ TypeScript types generated at packages/api-spec/types.ts"
+
+# Generate both OpenAPI spec and TypeScript types
+gen-api: gen-openapi gen-types
+
+# Check if OpenAPI spec and types are in sync
+check-api:
+    @echo "🔍 Checking if API spec and types are up to date..."
+    just gen-api
+    @if git diff --quiet packages/api-spec/; then \
+        echo "✅ API spec and types are in sync"; \
+    else \
+        echo "❌ API spec and types are out of sync!"; \
+        echo "Changes detected:"; \
+        git diff packages/api-spec/; \
+        exit 1; \
+    fi
+
 # Start all services (Docker + backend + web)
 dev:
     #!/usr/bin/env bash
     set -e
+
+    # Always regenerate OpenAPI spec and types to ensure they're in sync
+    echo "🔄 Regenerating OpenAPI spec and TypeScript types..."
+    just gen-api
 
     # Cleanup function
     cleanup() {

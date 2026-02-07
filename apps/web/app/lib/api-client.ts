@@ -1,18 +1,17 @@
+import type { UploadSheetResponse } from "@repo/api-spec/model";
 import {
   type ApiClient,
-  downloadSheetFilenameRegex,
+  type FormField,
   handleAxiosError,
   handleFetchError,
+  type UploadSheetResult,
 } from "@repo/ui/lib/api.ts";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
 import { ApiClientError } from "@repo/ui/types/api.ts";
 import type {
   DownloadSheetResult,
-  FormField,
   UploadOptions,
-  UploadSheetResult,
 } from "@repo/ui/types/sheet.ts";
-import { UploadSheetResponseSchema } from "@repo/ui/types/sheet.ts";
 import axios from "axios";
 import { getSheetFields as getSheetFieldsServer } from "./actions.ts";
 
@@ -39,7 +38,7 @@ export const apiClient: ApiClient = {
         signal: options?.signal,
       });
 
-      const parsed = UploadSheetResponseSchema.parse(response.data);
+      const data = response.data as UploadSheetResponse;
       const location = response.headers.location;
 
       if (!location) {
@@ -50,7 +49,7 @@ export const apiClient: ApiClient = {
       }
 
       return {
-        id: parsed.id,
+        id: data.id,
         location,
       };
     } catch (error) {
@@ -63,6 +62,7 @@ export const apiClient: ApiClient = {
   },
 
   async downloadSheet(sheetId: string): Promise<DownloadSheetResult> {
+    // Step 1: Get pre-signed URL from backend
     const response = await fetch(`/api/sheets/${sheetId}`, {
       method: "GET",
     });
@@ -74,14 +74,19 @@ export const apiClient: ApiClient = {
       handleFetchError(response, data);
     }
 
-    // Extract filename from Content-Disposition header
-    const contentDisposition = response.headers.get("Content-Disposition");
-    const filenameMatch = contentDisposition?.match(downloadSheetFilenameRegex);
-    const filename = filenameMatch?.[1]
-      ? decodeURIComponent(filenameMatch[1])
-      : `sheet-${sheetId}.pdf`;
+    const { url, filename } =
+      (await response.json()) as import("@repo/api-spec/model").DownloadSheetResponse;
 
-    const blob = await response.blob();
+    // Step 2: Download directly from S3 using pre-signed URL
+    const downloadResponse = await fetch(url);
+
+    if (!downloadResponse.ok) {
+      throw new ApiClientError(downloadResponse.status, {
+        message: `Failed to download from storage: ${downloadResponse.statusText}`,
+      });
+    }
+
+    const blob = await downloadResponse.blob();
     return { blob, filename };
   },
 

@@ -1,10 +1,4 @@
-import { z } from "zod";
-
-export const UploadSheetResponseSchema = z.object({
-  id: z.string().uuid(),
-});
-
-export type UploadSheetResponse = z.infer<typeof UploadSheetResponseSchema>;
+// Custom types not generated from OpenAPI spec
 
 export interface UploadSheetResult {
   id: string;
@@ -22,17 +16,3 @@ export interface UploadOptions {
   signal?: AbortSignal;
   onProgress?: UploadProgressCallback;
 }
-
-export const FormFieldSchema = z.object({
-  name: z.string(),
-});
-
-export type FormField = z.infer<typeof FormFieldSchema>;
-
-export const ListSheetFieldsResponseSchema = z.object({
-  fields: z.array(FormFieldSchema),
-});
-
-export type ListSheetFieldsResponse = z.infer<
-  typeof ListSheetFieldsResponseSchema
->;

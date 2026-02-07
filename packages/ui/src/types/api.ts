@@ -1,21 +1,24 @@
-import { z } from "zod";
+import {
+  type ApiErrorResponse,
+  ApiErrorResponseSchema,
+} from "@repo/api-spec/model";
 
-export const ApiErrorSchema = z.object({
-  message: z.string(),
-  code: z.string().optional(),
-  details: z.unknown().optional(),
-});
-
-export type ApiError = z.infer<typeof ApiErrorSchema>;
+/**
+ * Parse unknown data as ApiErrorResponse with Zod validation
+ */
+export function parseApiError(data: unknown): ApiErrorResponse {
+  const result = ApiErrorResponseSchema.safeParse(data);
+  return result.success ? result.data : { message: "Unknown error" };
+}
 
 /**
  * Custom error class for API failures
  */
 export class ApiClientError extends Error {
   statusCode: number;
-  apiError: ApiError;
+  apiError: ApiErrorResponse;
 
-  constructor(statusCode: number, apiError: ApiError) {
+  constructor(statusCode: number, apiError: ApiErrorResponse) {
     super(apiError.message);
     this.name = "ApiClientError";
     this.statusCode = statusCode;

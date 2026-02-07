@@ -1,8 +1,8 @@
 [package]
 name = "sheets_web"
-version = "0.1.0"
-edition = "2024"
-license = "MIT OR Apache-2.0"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
 sheets_core = { path = "../../core" }
@@ -10,6 +10,7 @@ common = { path = "../../../common" }
 actix-web.workspace = true
 actix-multipart.workspace = true
 uuid.workspace = true
-actix-files.workspace = true
 utoipa.workspace = true
 serde.workspace = true
+tracing.workspace = true
+tokio = { workspace = true, features = ["time"] }

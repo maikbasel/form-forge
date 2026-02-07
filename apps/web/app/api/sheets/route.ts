@@ -1,6 +1,6 @@
+import type { UploadSheetResponse } from "@repo/api-spec/model";
 import { API_BASE_URL } from "@repo/ui/lib/api.ts";
-import { ApiClientError, ApiErrorSchema } from "@repo/ui/types/api.ts";
-import { UploadSheetResponseSchema } from "@repo/ui/types/sheet.ts";
+import { ApiClientError, parseApiError } from "@repo/ui/types/api.ts";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -17,24 +17,12 @@ export async function POST(request: Request) {
       const data = await response
         .json()
         .catch(() => ({ message: "Unknown error" }));
-      const parsedError = ApiErrorSchema.safeParse(data);
-      const apiError = parsedError.success
-        ? parsedError.data
-        : {
-            message:
-              typeof data === "object" &&
-              data !== null &&
-              "message" in data &&
-              typeof data.message === "string"
-                ? data.message
-                : "Unknown error",
-          };
+      const apiError = parseApiError(data);
 
       return NextResponse.json(apiError, { status: response.status });
     }
 
-    const data = await response.json();
-    const parsed = UploadSheetResponseSchema.parse(data);
+    const data = (await response.json()) as UploadSheetResponse;
     const location = response.headers.get("location");
 
     if (!location) {
@@ -44,7 +32,7 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(parsed, {
+    return NextResponse.json(data, {
       status: response.status,
       headers: {
         Location: location,
