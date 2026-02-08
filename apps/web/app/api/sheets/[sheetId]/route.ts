@@ -22,20 +22,10 @@ export async function GET(
       return NextResponse.json(apiError, { status: response.status });
     }
 
-    // Get the blob data from the backend
-    const blob = await response.blob();
+    // Backend now returns JSON with pre-signed URL
+    const data = await response.json();
 
-    // Forward the response with the same content type
-    return new NextResponse(blob, {
-      status: response.status,
-      headers: {
-        "Content-Type":
-          response.headers.get("Content-Type") || "application/pdf",
-        "Content-Disposition":
-          response.headers.get("Content-Disposition") ||
-          `attachment; filename="${sheetId}.pdf"`,
-      },
-    });
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Unknown error" },

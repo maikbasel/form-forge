@@ -185,8 +185,8 @@ paths:
     get:
       tags:
       - Sheets
-      summary: Download enhanced PDF sheet
-      description: Downloads a previously uploaded PDF sheet by its unique identifier. The sheet may have been enhanced with calculation scripts attached to its AcroForm fields, making it dynamic and self-calculating.
+      summary: Get download URL for PDF sheet
+      description: Returns a pre-signed URL for downloading a previously uploaded PDF sheet. The sheet may have been enhanced with calculation scripts attached to its AcroForm fields, making it dynamic and self-calculating. The URL is valid for 5 minutes and includes response headers for content disposition and type.
       operationId: downloadSheet
       parameters:
       - name: sheet_id
@@ -198,9 +198,11 @@ paths:
         example: 123e4567-e89b-12d3-a456-426614174000
       responses:
         '200':
-          description: PDF file returned
+          description: Download URL returned
           content:
-            application/pdf: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadSheetResponse'
         '404':
           description: Sheet not found
           content:
@@ -317,6 +319,18 @@ components:
         skillModifierFieldName:
           type: string
           description: Name of the PDF AcroForm text field containing the target skill modifier.
+    DownloadSheetResponse:
+      type: object
+      required:
+      - url
+      - filename
+      properties:
+        filename:
+          type: string
+          description: Original filename of the PDF.
+        url:
+          type: string
+          description: Pre-signed URL for direct S3 download (valid for 5 minutes).
     HealthResponse:
       type: object
       description: Health check response

@@ -4,7 +4,8 @@ use actions_web::handler::{
 };
 use common::error::ApiErrorResponse;
 use sheets_web::handler::{
-    ListSheetFieldsResponse, SheetFieldDto, UploadSheetRequest, UploadSheetResponse,
+    DownloadSheetResponse, ListSheetFieldsResponse, SheetFieldDto, UploadSheetRequest,
+    UploadSheetResponse,
 };
 use utoipa::OpenApi;
 
@@ -25,6 +26,7 @@ use crate::health::HealthResponse;
         HealthResponse,
         UploadSheetRequest,
         UploadSheetResponse,
+        DownloadSheetResponse,
         ListSheetFieldsResponse,
         SheetFieldDto,
         ApiErrorResponse,

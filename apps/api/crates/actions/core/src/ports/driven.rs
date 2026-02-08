@@ -39,5 +39,9 @@ pub trait SheetReferencePort: Send + Sync {
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait SheetStoragePort: Send + Sync {
+    /// Downloads the sheet from storage and returns a local path to the file.
     async fn read(&self, path: PathBuf) -> Result<PathBuf, ActionError>;
+
+    /// Uploads the modified local file back to the storage path.
+    async fn write(&self, local_path: PathBuf, storage_path: PathBuf) -> Result<(), ActionError>;
 }

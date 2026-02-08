@@ -36,14 +36,15 @@ impl ActionService {
         let sheet_reference = self.sheet_reference_port.find_by_id(sheet_id).await?;
         debug!("sheet reference located");
 
-        let sheet_path = self.sheet_storage_port.read(sheet_reference.path).await?;
+        let storage_path = sheet_reference.path.clone();
+        let local_path = self.sheet_storage_port.read(sheet_reference.path).await?;
 
-        debug!(path = %sheet_path.display(), "sheet path resolved and readable");
+        debug!(path = %local_path.display(), "sheet path resolved and readable");
 
         let dnd_helpers_js =
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/js/dnd-helpers.js"));
         self.action_pdf_port
-            .add_doc_level_js(dnd_helpers_js, &sheet_path)?;
+            .add_doc_level_js(dnd_helpers_js, &local_path)?;
 
         info!("document-level helper JS attached");
 
@@ -121,9 +122,16 @@ impl ActionService {
         span.record("target_field", tracing::field::display(&target_field));
 
         self.action_pdf_port
-            .attach_calculation_js(&action_js, &sheet_path, &target_field)?;
+            .attach_calculation_js(&action_js, &local_path, &target_field)?;
 
         info!(target_field = %target_field, "calculation JS attached to target field");
+
+        // Upload the modified PDF back to storage
+        self.sheet_storage_port
+            .write(local_path, storage_path)
+            .await?;
+
+        info!("modified PDF uploaded back to storage");
 
         info!("attach_calculation_script completed successfully");
 
@@ -161,12 +169,18 @@ mod tests {
             .times(1)
             .returning(move |_| Ok(sheet_reference.clone()));
 
+        let storage_path = sheet_path.clone();
         let mut sheet_storage_port = MockSheetStoragePort::new();
         sheet_storage_port
             .expect_read()
             .withf(move |path| *path == sheet_path)
             .times(1)
             .returning(Ok);
+        sheet_storage_port
+            .expect_write()
+            .withf(move |local, storage| *local == storage_path && *storage == storage_path)
+            .times(1)
+            .returning(|_, _| Ok(()));
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port
@@ -211,6 +225,10 @@ mod tests {
 
         let mut sheet_storage_port = MockSheetStoragePort::new();
         sheet_storage_port.expect_read().times(1).returning(Ok);
+        sheet_storage_port
+            .expect_write()
+            .times(1)
+            .returning(|_, _| Ok(()));
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port
@@ -260,6 +278,10 @@ mod tests {
 
         let mut sheet_storage_port = MockSheetStoragePort::new();
         sheet_storage_port.expect_read().times(1).returning(Ok);
+        sheet_storage_port
+            .expect_write()
+            .times(1)
+            .returning(|_, _| Ok(()));
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port
@@ -313,6 +335,10 @@ mod tests {
 
         let mut sheet_storage_port = MockSheetStoragePort::new();
         sheet_storage_port.expect_read().times(1).returning(Ok);
+        sheet_storage_port
+            .expect_write()
+            .times(1)
+            .returning(|_, _| Ok(()));
 
         let mut action_pdf_port = MockActionPdfPort::new();
         action_pdf_port

@@ -1,12 +1,13 @@
 [package]
 name = "sheets_db"
-version = "0.1.0"
-edition = "2024"
-license = "MIT OR Apache-2.0"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
 sheets_core = { path = "../../core" }
 actions_core = { path = "../../../actions/core" }
 async-trait.workspace = true
-sqlx.workspace = true
+sqlx = { workspace = true, features = ["chrono"] }
 tracing.workspace = true
+chrono = { version = "0.4", features = ["serde"] }

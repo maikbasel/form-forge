@@ -152,39 +152,86 @@ See [Development Guide](.claude/CLAUDE.md) for detailed architecture documentati
 
 ### Docker Compose
 
-The repository includes Docker Compose configuration for local development. For production deployment:
+The repository includes two Docker Compose configurations:
+
+- `compose.dev.yml` - Development (used by `just up`)
+- `compose.prod.yml` - Production (full stack with nginx reverse proxy)
+
+**Development** (infrastructure only):
 
 ```bash
-# Start all services (PostgreSQL + API + Web)
-docker-compose up -d
+just up    # Start PostgreSQL + RustFS + Adminer
+just down  # Stop infrastructure
+```
+
+**Production** (full stack):
+
+```bash
+# Configure environment (see .env.example)
+cp .env.example .env
+# Edit .env with production values
+
+# Build and start all services
+docker compose -f compose.prod.yml up --build -d
 
 # View logs
-docker-compose logs -f
+docker compose -f compose.prod.yml logs -f
 
 # Stop services
-docker-compose down
+docker compose -f compose.prod.yml down
 ```
 
-**Environment variables** for production (create `.env` in project root):
+**Production access points** (behind nginx reverse proxy):
+
+- Web UI: `https://<domain>/`
+- API: `https://<domain>/sheets`, `https://<domain>/dnd5e`
+- Swagger UI: `https://<domain>/swagger-ui/`
+- S3 Console: `https://<domain>/s3-console` (redirects to RustFS admin UI, login with `S3_ACCESS_KEY` / `S3_SECRET_KEY`)
+
+**Required environment variables** for production:
 
 ```bash
-# Database Configuration
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
-POSTGRES_DB=form-forge
-DB_HOST=db
-DB_PORT=5432
+# Database (required)
+POSTGRES_PASSWORD=your-secure-password
 
-# Backend Configuration
-BIND_ADDR=0.0.0.0:8081
-RUST_LOG=info
+# S3 Storage (required)
+S3_ACCESS_KEY=your-access-key
+S3_SECRET_KEY=your-secret-key
+S3_PUBLIC_ENDPOINT=https://yourdomain.com/s3  # Public URL for downloads
 
-# Frontend Configuration
-API_URL=http://localhost:8081
+# Optional
+POSTGRES_USER=postgres        # default: postgres
+POSTGRES_DB=form-forge        # default: form-forge
+S3_BUCKET=form-forge          # default: form-forge
+HTTP_PORT=80                  # default: 80
+RUST_LOG=info                 # default: info
+S3_LIFECYCLE_EXPIRATION_DAYS=7  # default: 7
+
+# OpenTelemetry (optional)
+OTEL_EXPORTER_OTLP_ENDPOINT=http://your-signoz:4318
+OTEL_SERVICE_NAME=form-forge-api  # default: form-forge-api
 ```
 
-**Volumes**: PDF files are stored in `./data/storage` (configure via backend environment). Ensure this directory is
-persisted in production.
+### OpenTelemetry / Observability
+
+The backend supports exporting traces and metrics via OpenTelemetry. This is **disabled by default** and can be enabled at runtime.
+
+**To enable:** Set `OTEL_EXPORTER_OTLP_ENDPOINT` in your `.env` file:
+
+```bash
+# For SigNoz
+OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4318
+
+# For Jaeger
+OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+
+# Optionally customize service name (default: form-forge-api)
+OTEL_SERVICE_NAME=my-form-forge-instance
+```
+
+**To disable:** Leave `OTEL_EXPORTER_OTLP_ENDPOINT` unset or empty. No traces or metrics will be exported.
+
+**Document TTL**: Uploaded PDFs are automatically deleted after 1 day (configurable via `config/lifecycle.json`). Database records are cleaned up via S3 webhook notifications and hourly reconciliation.
 
 ## Database
 
@@ -253,15 +300,19 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 
 - [x] When mapping selected fields to roles in the calc, move fields down when they were mapped. This way the user
   doesn't need to scroll down.
-- [ ] Show tooltips on hover for form fields.
-- [ ] Use S3-compatible storage for PDF files and update API.
-- [ ] Implement native application.
-- [ ] Loading indicator when clicking "Attach Calculation" button.
+- [x] ~~Show tooltips on hover for form fields.~~ (Fields are highlighted on hover now)
+- [x] Use S3-compatible storage for PDF files and update API.
+- [x] Loading indicator when clicking "Attach Calculation" button.
 - [x] Add some way to make it easier for users to identify which selected field contains what character information.
-- [ ] BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role
-  mapping.
+- [x] ~~BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role
+  mapping.~~
 - [ ] Add product tour.
 - [ ] Implement native application.
-- [ ] Generate API client from OpenAPI specification.
-- [ ] Implement release workflow
+- [x] Generate API client from OpenAPI specification.
+- [ ] Generate docker images in ci.
+- [x] Implement release workflow
 - [ ] Setup demo
+- [x] implement ttl for uploaded files
+- [ ] implement application/problem+json
+- [ ] dockerize playwright tests
+- [ ] add translation
