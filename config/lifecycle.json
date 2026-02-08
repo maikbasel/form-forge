@@ -1,0 +1,10 @@
+{
+  "Rules": [
+    {
+      "ID": "expire-sheets-1-days",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "sheets/" },
+      "Expiration": { "Days": 1 }
+    }
+  ]
+}

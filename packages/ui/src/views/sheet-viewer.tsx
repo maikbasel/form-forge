@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@repo/ui/components/select.tsx";
 import { Separator } from "@repo/ui/components/separator.tsx";
+import { Spinner } from "@repo/ui/components/spinner.tsx";
 import { useApiClient } from "@repo/ui/context/api-client-context.tsx";
 import {
   type FieldPosition,
@@ -383,7 +384,7 @@ function FieldRoleDropZone({
 interface ActionConfigModalProps {
   selectedFields: string[];
   onClose: () => void;
-  onAttach: (action: AttachedAction) => void;
+  onAttach: (action: AttachedAction) => Promise<void>;
 }
 
 function ActionConfigModal({
@@ -394,6 +395,7 @@ function ActionConfigModal({
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isAttaching, setIsAttaching] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const currentAction = ACTIONS.find((a) => a.id === selectedAction);
@@ -439,7 +441,7 @@ function ActionConfigModal({
     return requiredRoles.every((role) => fieldMapping[role.key]);
   };
 
-  const handleAttach = () => {
+  const handleAttach = async () => {
     if (!currentAction) {
       return;
     }
@@ -448,12 +450,17 @@ function ActionConfigModal({
       return;
     }
 
-    onAttach({
-      id: currentAction.id,
-      name: currentAction.name,
-      endpoint: currentAction.endpoint,
-      mapping: fieldMapping,
-    });
+    setIsAttaching(true);
+    try {
+      await onAttach({
+        id: currentAction.id,
+        name: currentAction.name,
+        endpoint: currentAction.endpoint,
+        mapping: fieldMapping,
+      });
+    } finally {
+      setIsAttaching(false);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -642,11 +649,12 @@ function ActionConfigModal({
               ))}
           </div>
           <div className="flex gap-2">
-            <Button onClick={onClose} variant="outline">
+            <Button disabled={isAttaching} onClick={onClose} variant="outline">
               Cancel
             </Button>
-            <Button disabled={!isValid()} onClick={handleAttach}>
-              Attach Calculation
+            <Button disabled={!isValid() || isAttaching} onClick={handleAttach}>
+              {isAttaching && <Spinner />}
+              {isAttaching ? "Attaching..." : "Attach Calculation"}
             </Button>
           </div>
         </div>
@@ -675,6 +683,10 @@ export default function SheetViewer({
   const [showActionModal, setShowActionModal] = useState(false);
   const [attachedActions, setAttachedActions] = useState<AttachedAction[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  // State for pre-signed PDF URL
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isPdfUrlLoading, setIsPdfUrlLoading] = useState(false);
+  const [pdfUrlError, setPdfUrlError] = useState<string | null>(null);
   // State for hover tracking
   const [hoveredFieldName, setHoveredFieldName] = useState<string | null>(null);
   const [flashingFieldName, setFlashingFieldName] = useState<string | null>(
@@ -720,6 +732,41 @@ export default function SheetViewer({
       }
     };
   }, []);
+
+  // Fetch pre-signed URL for PDF
+  useEffect(() => {
+    if (!file) {
+      return;
+    }
+
+    const fetchPdfUrl = async () => {
+      setIsPdfUrlLoading(true);
+      setPdfUrlError(null);
+
+      try {
+        const response = await fetch(file);
+
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ message: "Unknown error" }));
+          throw new Error(errorData.message ?? "Failed to fetch PDF URL");
+        }
+
+        const data = await response.json();
+        setPdfUrl(data.url);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to load PDF";
+        setPdfUrlError(message);
+        toast.error(message);
+      } finally {
+        setIsPdfUrlLoading(false);
+      }
+    };
+
+    fetchPdfUrl();
+  }, [file]);
 
   // Recalculate field positions when data changes
   useEffect(() => {
@@ -1023,13 +1070,26 @@ export default function SheetViewer({
 
           <CardContent className="flex flex-1 flex-col items-center overflow-auto p-6">
             <div className="relative inline-block">
-              <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page
-                  className="shadow-lg"
-                  pageNumber={currentPage}
-                  scale={scale}
-                />
-              </Document>
+              {isPdfUrlLoading && (
+                <div className="flex h-[600px] w-[450px] items-center justify-center">
+                  <Spinner className="h-8 w-8" />
+                </div>
+              )}
+              {pdfUrlError && (
+                <div className="flex h-[600px] w-[450px] flex-col items-center justify-center gap-2 text-destructive">
+                  <AlertCircle className="h-8 w-8" />
+                  <p>{pdfUrlError}</p>
+                </div>
+              )}
+              {pdfUrl && !isPdfUrlLoading && !pdfUrlError && (
+                <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess}>
+                  <Page
+                    className="shadow-lg"
+                    pageNumber={currentPage}
+                    scale={scale}
+                  />
+                </Document>
+              )}
 
               {/* Overlays for current page only */}
               {currentPageFields.map((field, index) => {

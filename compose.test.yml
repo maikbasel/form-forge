@@ -17,3 +17,39 @@ services:
       interval: "5s"
       timeout: "5s"
       retries: 5
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    restart: no
+    environment:
+      RUSTFS_ROOT_USER: rustfsadmin
+      RUSTFS_ROOT_PASSWORD: rustfsadmin
+      RUSTFS_VOLUMES: /data/rustfs0
+    ports:
+      - "9000:9000"
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # Initialize bucket on startup (runs once, then exits)
+  createbuckets:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        /usr/bin/mc alias set rustfs http://rustfs:9000 rustfsadmin rustfsadmin
+        /usr/bin/mc mb --ignore-existing rustfs/form-forge
+        echo "Bucket 'form-forge' initialized successfully"
+
+volumes:
+  rustfs_data:

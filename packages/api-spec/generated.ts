@@ -5,9 +5,7 @@ export const ApiErrorResponse = z.object({
   message: z.string(),
 });
 
-export type AttachAbilityModCalcScriptRequest = z.infer<
-  typeof AttachAbilityModCalcScriptRequest
->;
+export type AttachAbilityModCalcScriptRequest = z.infer<typeof AttachAbilityModCalcScriptRequest>;
 export const AttachAbilityModCalcScriptRequest = z.object({
   abilityModifierFieldName: z.string(),
   abilityScoreFieldName: z.string(),
@@ -23,9 +21,7 @@ export const AttachSavingThrowModifierCalculationScriptRequest = z.object({
   savingThrowModifierFieldName: z.string(),
 });
 
-export type AttachSkillModifierCalculationScriptRequest = z.infer<
-  typeof AttachSkillModifierCalculationScriptRequest
->;
+export type AttachSkillModifierCalculationScriptRequest = z.infer<typeof AttachSkillModifierCalculationScriptRequest>;
 export const AttachSkillModifierCalculationScriptRequest = z.object({
   abilityModifierFieldName: z.string(),
   expertiseFieldName: z.union([z.string(), z.null(), z.undefined()]).optional(),
@@ -33,6 +29,12 @@ export const AttachSkillModifierCalculationScriptRequest = z.object({
   proficiencyBonusFieldName: z.string(),
   proficiencyFieldName: z.string(),
   skillModifierFieldName: z.string(),
+});
+
+export type DownloadSheetResponse = z.infer<typeof DownloadSheetResponse>;
+export const DownloadSheetResponse = z.object({
+  filename: z.string(),
+  url: z.string(),
 });
 
 export type HealthResponse = z.infer<typeof HealthResponse>;
@@ -61,8 +63,7 @@ export const UploadSheetResponse = z.object({
   id: z.string(),
 });
 
-export type put_AttachAbilityModifierCalculationScript =
-  typeof put_AttachAbilityModifierCalculationScript;
+export type put_AttachAbilityModifierCalculationScript = typeof put_AttachAbilityModifierCalculationScript;
 export const put_AttachAbilityModifierCalculationScript = {
   method: z.literal("PUT"),
   path: z.literal("/dnd5e/{sheet_id}/ability-modifier"),
@@ -75,8 +76,7 @@ export const put_AttachAbilityModifierCalculationScript = {
   response: z.unknown(),
 };
 
-export type put_AttachSavingThrowModifierCalculationScript =
-  typeof put_AttachSavingThrowModifierCalculationScript;
+export type put_AttachSavingThrowModifierCalculationScript = typeof put_AttachSavingThrowModifierCalculationScript;
 export const put_AttachSavingThrowModifierCalculationScript = {
   method: z.literal("PUT"),
   path: z.literal("/dnd5e/{sheet_id}/saving-throw-modifier"),
@@ -89,8 +89,7 @@ export const put_AttachSavingThrowModifierCalculationScript = {
   response: z.unknown(),
 };
 
-export type put_AttachSkillModifierCalculationScript =
-  typeof put_AttachSkillModifierCalculationScript;
+export type put_AttachSkillModifierCalculationScript = typeof put_AttachSkillModifierCalculationScript;
 export const put_AttachSkillModifierCalculationScript = {
   method: z.literal("PUT"),
   path: z.literal("/dnd5e/{sheet_id}/skill-modifier"),
@@ -130,7 +129,7 @@ export const get_DownloadSheet = {
       sheet_id: z.string(),
     }),
   }),
-  response: z.unknown(),
+  response: DownloadSheetResponse,
 };
 
 export type get_GetSheetFormFields = typeof get_GetSheetFormFields;
@@ -148,12 +147,9 @@ export const get_GetSheetFormFields = {
 // <EndpointByMethod>
 export const EndpointByMethod = {
   put: {
-    "/dnd5e/{sheet_id}/ability-modifier":
-      put_AttachAbilityModifierCalculationScript,
-    "/dnd5e/{sheet_id}/saving-throw-modifier":
-      put_AttachSavingThrowModifierCalculationScript,
-    "/dnd5e/{sheet_id}/skill-modifier":
-      put_AttachSkillModifierCalculationScript,
+    "/dnd5e/{sheet_id}/ability-modifier": put_AttachAbilityModifierCalculationScript,
+    "/dnd5e/{sheet_id}/saving-throw-modifier": put_AttachSavingThrowModifierCalculationScript,
+    "/dnd5e/{sheet_id}/skill-modifier": put_AttachSkillModifierCalculationScript,
   },
   get: {
     "/health": get_Health_check,
@@ -206,21 +202,20 @@ export type Endpoint<TConfig extends DefaultEndpoint = DefaultEndpoint> = {
 type Fetcher = (
   method: Method,
   url: string,
-  parameters?: EndpointParameters | undefined
+  parameters?: EndpointParameters | undefined,
 ) => Promise<Endpoint["response"]>;
 
 type RequiredKeys<T> = {
   [P in keyof T]-?: undefined extends T[P] ? never : P;
 }[keyof T];
 
-type MaybeOptionalArg<T> =
-  RequiredKeys<T> extends never ? [config?: T] : [config: T];
+type MaybeOptionalArg<T> = RequiredKeys<T> extends never ? [config?: T] : [config: T];
 
 // </ApiClientTypes>
 
 // <ApiClient>
 export class ApiClient {
-  baseUrl = "";
+  baseUrl: string = "";
 
   constructor(public fetcher: Fetcher) {}
 
@@ -234,9 +229,7 @@ export class ApiClient {
     path: Path,
     ...params: MaybeOptionalArg<z.infer<TEndpoint["parameters"]>>
   ): Promise<z.infer<TEndpoint["response"]>> {
-    return this.fetcher("put", this.baseUrl + path, params[0]) as Promise<
-      z.infer<TEndpoint["response"]>
-    >;
+    return this.fetcher("put", this.baseUrl + path, params[0]) as Promise<z.infer<TEndpoint["response"]>>;
   }
   // </ApiClient.put>
 
@@ -245,9 +238,7 @@ export class ApiClient {
     path: Path,
     ...params: MaybeOptionalArg<z.infer<TEndpoint["parameters"]>>
   ): Promise<z.infer<TEndpoint["response"]>> {
-    return this.fetcher("get", this.baseUrl + path, params[0]) as Promise<
-      z.infer<TEndpoint["response"]>
-    >;
+    return this.fetcher("get", this.baseUrl + path, params[0]) as Promise<z.infer<TEndpoint["response"]>>;
   }
   // </ApiClient.get>
 
@@ -256,9 +247,7 @@ export class ApiClient {
     path: Path,
     ...params: MaybeOptionalArg<z.infer<TEndpoint["parameters"]>>
   ): Promise<z.infer<TEndpoint["response"]>> {
-    return this.fetcher("post", this.baseUrl + path, params[0]) as Promise<
-      z.infer<TEndpoint["response"]>
-    >;
+    return this.fetcher("post", this.baseUrl + path, params[0]) as Promise<z.infer<TEndpoint["response"]>>;
   }
   // </ApiClient.post>
 }
