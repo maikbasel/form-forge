@@ -9,6 +9,6 @@
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.18"
   }
 }
