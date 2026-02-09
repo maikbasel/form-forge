@@ -18,7 +18,7 @@ opentelemetry = { version = "0.27", features = ["metrics", "logs"], optional = t
 opentelemetry_sdk = { version = "0.27", features = ["rt-tokio", "metrics", "logs"], optional = true }
 opentelemetry-otlp = { version = "0.27", features = ["http-proto", "reqwest-client", "metrics", "logs"], optional = true }
 opentelemetry-appender-tracing = { version = "0.27", optional = true }
-tracing-opentelemetry = { version = "0.28", optional = true }
+tracing-opentelemetry = { version = "0.32", optional = true }
 
 [dev-dependencies]
 pretty_assertions.workspace = true
