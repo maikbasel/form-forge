@@ -1,18 +1,18 @@
 [package]
-name = "sheets_pdf"
+name = "sheets_core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-common = { path = "../../../common" }
-sheets_core = { path = "../../core" }
 async-trait.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+uuid.workspace = true
 tracing.workspace = true
-lopdf.workspace = true
+chrono.workspace = true
 
 [dev-dependencies]
-tempfile.workspace = true
+mockall.workspace = true
 tokio.workspace = true
-rstest.workspace = true
 pretty_assertions.workspace = true

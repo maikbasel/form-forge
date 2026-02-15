@@ -6,10 +6,7 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "http:default",
-    "http:allow-fetch",
-    "http:allow-fetch-cancel",
-    "http:allow-fetch-read-body",
-    "http:allow-fetch-send"
+    "dialog:default",
+    "window-state:default"
   ]
 }

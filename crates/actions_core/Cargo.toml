@@ -1,5 +1,5 @@
 [package]
-name = "sheets_core"
+name = "actions_core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -7,12 +7,12 @@ license.workspace = true
 [dependencies]
 async-trait.workspace = true
 thiserror.workspace = true
-anyhow.workspace = true
 uuid.workspace = true
 tracing.workspace = true
-chrono = { version = "0.4", features = ["serde"] }
+serde.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 mockall.workspace = true
-tokio.workspace = true
 pretty_assertions.workspace = true
+tokio.workspace = true

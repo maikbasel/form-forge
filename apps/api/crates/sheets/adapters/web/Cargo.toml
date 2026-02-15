@@ -5,8 +5,8 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-sheets_core = { path = "../../core" }
-common = { path = "../../../common" }
+sheets_core.workspace = true
+common.workspace = true
 actix-web.workspace = true
 actix-multipart.workspace = true
 uuid.workspace = true

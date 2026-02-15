@@ -1,17 +1,18 @@
 [package]
-name = "actions_core"
+name = "sheets_pdf"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
+sheets_core.workspace = true
 async-trait.workspace = true
-thiserror.workspace = true
-uuid.workspace = true
 tracing.workspace = true
-serde_json.workspace = true
+lopdf.workspace = true
 
 [dev-dependencies]
-mockall.workspace = true
-pretty_assertions.workspace = true
+common_telemetry.workspace = true
+tempfile.workspace = true
 tokio.workspace = true
+rstest.workspace = true
+pretty_assertions.workspace = true

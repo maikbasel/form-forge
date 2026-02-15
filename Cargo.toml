@@ -1,0 +1,110 @@
+[workspace]
+members = [
+    "apps/api",
+    "apps/api/crates/common",
+    "apps/api/crates/sheets/adapters/web",
+    "apps/api/crates/sheets/adapters/s3",
+    "apps/api/crates/sheets/adapters/db",
+    "apps/api/crates/actions/adapters/web",
+    "apps/native/src-tauri",
+    "crates/common_telemetry",
+    "crates/common_pdf",
+    "crates/sheets_core",
+    "crates/actions_core",
+    "crates/sheets_pdf",
+    "crates/actions_pdf",
+    "apps/native/src-tauri/crates/sheets_fs",
+    "apps/native/src-tauri/crates/sheets_libsql",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0" # x-release-please-version
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+# Shared crates (internal)
+common = { path = "apps/api/crates/common" }
+common_telemetry = { path = "crates/common_telemetry" }
+common_pdf = { path = "crates/common_pdf" }
+sheets_core = { path = "crates/sheets_core" }
+sheets_web = { path = "apps/api/crates/sheets/adapters/web" }
+sheets_s3 = { path = "apps/api/crates/sheets/adapters/s3" }
+sheets_db = { path = "apps/api/crates/sheets/adapters/db" }
+sheets_pdf = { path = "crates/sheets_pdf" }
+actions_core = { path = "crates/actions_core" }
+actions_web = { path = "apps/api/crates/actions/adapters/web" }
+actions_pdf = { path = "crates/actions_pdf" }
+sheets_fs = { path = "apps/native/src-tauri/crates/sheets_fs" }
+sheets_libsql = { path = "apps/native/src-tauri/crates/sheets_libsql" }
+
+# Web framework
+actix-web = "4"
+actix-multipart = "0.7"
+actix-cors = "0.7.1"
+
+# Tracing / telemetry
+tracing = "0.1"
+tracing-actix-web = "0.7"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json", "time"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "2.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Identifiers
+uuid = { version = "1.18.1", features = ["v4", "serde"] }
+
+# Async
+async-trait = "0.1"
+tokio = { version = "1.49", features = ["rt", "macros"] }
+
+# Database (PostgreSQL)
+sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid", "macros"] }
+
+# PDF
+lopdf = "0.39"
+
+# OpenAPI
+utoipa = { version = "5", features = ["actix_extras"] }
+utoipa-swagger-ui = { version = "9.0", features = ["actix-web"] }
+utoipa-actix-web = "0.1"
+
+# Validation
+validator = { version = "0.20", features = ["derive"] }
+
+# S3
+aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.120.0"
+url = "2"
+
+# Testing
+tempfile = "3.21"
+testcontainers = "0.26"
+testcontainers-modules = { version = "0.14", features = ["postgres", "minio", "blocking"] }
+rstest = "0.26"
+pretty_assertions = "1.4"
+mockall = "0.14"
+
+# Environment
+dotenvy = "0.15"
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Tauri
+tauri = { version = "2", features = [] }
+tauri-build = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-window-state = "2"
+
+# Embedded database
+libsql = "0.6"

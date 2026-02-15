@@ -1,0 +1,8 @@
+[package]
+name = "common_pdf"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+lopdf.workspace = true

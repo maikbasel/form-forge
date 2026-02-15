@@ -5,8 +5,8 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-actions_core = { path = "../../core" }
-common = { path = "../../../common" }
+actions_core.workspace = true
+common_pdf.workspace = true
 async-trait.workspace = true
 tracing.workspace = true
 lopdf.workspace = true

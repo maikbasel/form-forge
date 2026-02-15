@@ -7,24 +7,17 @@ license.workspace = true
 [dependencies]
 uuid.workspace = true
 anyhow.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true
 serde.workspace = true
 utoipa.workspace = true
-lopdf.workspace = true
 
-# OpenTelemetry dependencies (optional, for production tracing)
-opentelemetry = { version = "0.27", features = ["metrics", "logs"], optional = true }
-opentelemetry_sdk = { version = "0.27", features = ["rt-tokio", "metrics", "logs"], optional = true }
-opentelemetry-otlp = { version = "0.27", features = ["http-proto", "reqwest-client", "metrics", "logs"], optional = true }
-opentelemetry-appender-tracing = { version = "0.27", optional = true }
-tracing-opentelemetry = { version = "0.28", optional = true }
+# Feature forwarding to common_telemetry
+common_telemetry.workspace = true
 
 [dev-dependencies]
 pretty_assertions.workspace = true
 
 [features]
-default = ["pretty-logs"]   # dev default
-pretty-logs = []
-json-logs = []
-otel = ["dep:opentelemetry", "dep:opentelemetry_sdk", "dep:opentelemetry-otlp", "dep:opentelemetry-appender-tracing", "dep:tracing-opentelemetry"]
+default = ["pretty-logs"]
+pretty-logs = ["common_telemetry/pretty-logs"]
+json-logs = ["common_telemetry/json-logs"]
+otel = ["common_telemetry/otel"]

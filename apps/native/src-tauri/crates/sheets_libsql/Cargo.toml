@@ -1,5 +1,5 @@
 [package]
-name = "sheets_s3"
+name = "sheets_libsql"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,13 +8,14 @@ license.workspace = true
 sheets_core.workspace = true
 actions_core.workspace = true
 async-trait.workspace = true
+libsql.workspace = true
+uuid.workspace = true
+chrono.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
-tokio = { workspace = true, features = ["fs", "io-util"] }
-aws-config = { workspace = true }
-aws-sdk-s3 = { workspace = true }
-tempfile.workspace = true
-url.workspace = true
+tokio = { workspace = true, features = ["fs"] }
 
 [dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["rt", "macros"] }
 pretty_assertions.workspace = true

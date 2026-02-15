@@ -1,4 +1,4 @@
-use common::telemetry;
+use common_telemetry as telemetry;
 
 pub struct TestContext;
 

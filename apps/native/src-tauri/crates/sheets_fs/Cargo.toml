@@ -1,5 +1,5 @@
 [package]
-name = "sheets_s3"
+name = "sheets_fs"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,13 +8,12 @@ license.workspace = true
 sheets_core.workspace = true
 actions_core.workspace = true
 async-trait.workspace = true
+tokio = { workspace = true, features = ["fs"] }
+uuid.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
-tokio = { workspace = true, features = ["fs", "io-util"] }
-aws-config = { workspace = true }
-aws-sdk-s3 = { workspace = true }
-tempfile.workspace = true
-url.workspace = true
 
 [dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["rt", "macros", "fs"] }
 pretty_assertions.workspace = true

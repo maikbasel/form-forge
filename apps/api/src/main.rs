@@ -8,7 +8,7 @@ use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
 use common::db::DatabaseConfig;
-use common::telemetry;
+use common_telemetry as telemetry;
 use dotenvy::from_path;
 use sheets_core::ports::driven::{
     FailedSheetDeletionPort, SheetPdfPort, SheetReferencePort, SheetStoragePort,

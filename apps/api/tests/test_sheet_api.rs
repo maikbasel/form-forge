@@ -7,7 +7,7 @@ mod tests {
     use crate::test_utils::AsyncTestContext;
     use actix_web::http::{StatusCode, header};
     use actix_web::test;
-    use common::telemetry;
+    use common_telemetry as telemetry;
     use pretty_assertions::assert_eq;
     use rstest::*;
     use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};

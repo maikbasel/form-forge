@@ -16,7 +16,7 @@ mod tests {
     };
     use actix_web::http::StatusCode;
     use actix_web::test;
-    use common::telemetry;
+    use common_telemetry as telemetry;
     use pretty_assertions::assert_eq;
     use rstest::*;
     use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
@@ -59,7 +59,7 @@ mod tests {
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_ability_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/crates/actions/core/js/dnd-helpers.js"
+            "/../../crates/actions_core/js/dnd-helpers.js"
         ));
         //endregion
 
@@ -144,7 +144,7 @@ mod tests {
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_saving_throw_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/crates/actions/core/js/dnd-helpers.js"
+            "/../../crates/actions_core/js/dnd-helpers.js"
         ));
         //endregion
 
@@ -234,7 +234,7 @@ mod tests {
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_skill_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/crates/actions/core/js/dnd-helpers.js"
+            "/../../crates/actions_core/js/dnd-helpers.js"
         ));
         //endregion
 

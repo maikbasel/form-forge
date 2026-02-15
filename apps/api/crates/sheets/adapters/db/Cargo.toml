@@ -5,9 +5,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-sheets_core = { path = "../../core" }
-actions_core = { path = "../../../actions/core" }
+sheets_core.workspace = true
+actions_core.workspace = true
 async-trait.workspace = true
 sqlx = { workspace = true, features = ["chrono"] }
 tracing.workspace = true
-chrono = { version = "0.4", features = ["serde"] }
+chrono.workspace = true
