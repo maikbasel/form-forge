@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { exportSheet } from "./tauri-api-client";
 
 export const tauriPdfLoader: PdfLoadStrategy = {
-  loadPdfUrl(filePath: string): string {
-    return convertFileSrc(filePath);
+  loadPdfUrl(filePath: string): Promise<string> {
+    return Promise.resolve(convertFileSrc(filePath));
   },
 };
 

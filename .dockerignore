@@ -7,6 +7,9 @@
 # Backend (exclude from frontend builds)
 # ===========================
 apps/api/
+# Re-include paths needed by playwright.Dockerfile
+!apps/api/crates/actions/core/js/package.json
+!apps/api/crates/sheets/adapters/pdf/tests/fixtures/
 
 # ===========================
 # Node/Frontend
@@ -35,6 +38,8 @@ coverage
 
 # Tauri (not needed for web build)
 apps/native
+# Re-include package.json needed by playwright.Dockerfile
+!apps/native/package.json
 
 # ===========================
 # IDE & OS

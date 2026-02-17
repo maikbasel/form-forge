@@ -152,10 +152,11 @@ See [Development Guide](.claude/CLAUDE.md) for detailed architecture documentati
 
 ### Docker Compose
 
-The repository includes two Docker Compose configurations:
+The repository includes three Docker Compose configurations:
 
 - `compose.dev.yml` - Development (used by `just up`)
 - `compose.prod.yml` - Production (full stack with nginx reverse proxy)
+- `compose.e2e.yml` - E2E testing (full stack with Playwright runner)
 
 **Development** (infrastructure only):
 
@@ -284,6 +285,26 @@ pnpm --filter <package-name> test
 # pnpm --filter ui test
 ```
 
+### E2E Tests
+
+E2E tests use Playwright across Chromium, Firefox, and WebKit.
+
+**Local** (headed browsers, requires Rust toolchain + Playwright browsers installed):
+
+```bash
+pnpm test:e2e
+```
+
+**Docker** (headless, requires only Docker):
+
+```bash
+pnpm test:e2e:docker    # Run tests
+pnpm test:e2e:docker:down  # Clean up containers/volumes
+
+# Or using just (runs + cleans up automatically):
+just test-e2e-docker
+```
+
 ## API Documentation
 
 Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is running.
@@ -314,5 +335,5 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 - [ ] Setup demo
 - [x] implement ttl for uploaded files
 - [ ] implement application/problem+json
-- [ ] dockerize playwright tests
+- [x] dockerize playwright tests
 - [ ] add translation

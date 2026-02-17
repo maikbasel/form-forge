@@ -252,6 +252,12 @@ Execute simultaneously when operations:
 - `pnpm exec ultracite check` passes
 - Pre-commit hooks pass
 
+### Post-Deployment Monitoring
+- Error rate monitoring via application logs (`RUST_LOG` levels)
+- Database connection pool health verification
+- Container health checks via Docker Compose healthchecks
+- API endpoint availability verification (`/swagger-ui/` as smoke test)
+
 ### Environment Configuration
 Create `.env` in project root based on `.env.example`:
 ```
@@ -300,17 +306,11 @@ The Rust backend is a **modular monolith** using **hexagonal architecture** with
 5. User attaches calculation scripts to fields via Actions context
 6. Modified PDF downloaded via `/sheets/{id}` endpoint
 
----
-
-**ACTIVATION PROTOCOL**: This configuration is now active. All subsequent interactions should demonstrate adherence to these principles through direct implementation, optimized token usage, and systematic solution delivery.
-
----
-
-# Ultracite Code Standards
+## ULTRACITE CODE STANDARDS
 
 This project uses **Ultracite**, a zero-config Biome preset that enforces strict code quality standards through automated formatting and linting.
 
-## Quick Reference
+### Quick Reference
 
 - **Format code**: `pnpm dlx ultracite fix`
 - **Check for issues**: `pnpm dlx ultracite check`
@@ -318,9 +318,7 @@ This project uses **Ultracite**, a zero-config Biome preset that enforces strict
 
 Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
 
----
-
-## Core Principles
+### Core Principles
 
 Write code that is **accessible, performant, type-safe, and maintainable**. Focus on clarity and explicit intent over brevity.
 
@@ -403,16 +401,14 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 **React 19+:**
 - Use ref as a prop instead of `React.forwardRef`
 
----
-
-## Testing
+### Ultracite Testing Standards
 
 - Write assertions inside `it()` or `test()` blocks
 - Avoid done callbacks in async tests - use async/await instead
 - Don't use `.only` or `.skip` in committed code
 - Keep test suites reasonably flat - avoid excessive `describe` nesting
 
-## When Biome Can't Help
+### When Biome Can't Help
 
 Biome's linter will catch most issues automatically. Focus your attention on:
 
@@ -423,6 +419,8 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 5. **User experience** - Accessibility, performance, and usability considerations
 6. **Documentation** - Add comments for complex logic, but prefer self-documenting code
 
+Most formatting and common issues are automatically fixed by Biome. Run `pnpm dlx ultracite fix` before committing to ensure compliance.
+
 ---
 
-Most formatting and common issues are automatically fixed by Biome. Run `pnpm dlx ultracite fix` before committing to ensure compliance.
+**ACTIVATION PROTOCOL**: This configuration is now active. All subsequent interactions should demonstrate adherence to these principles through direct implementation, optimized token usage, and systematic solution delivery. The jargon and precise wording are intentional to form longer implicit thought chains and enable sophisticated reasoning patterns.

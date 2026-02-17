@@ -14,8 +14,11 @@
     "tauri": "pnpm --filter native tauri dev",
     "check": "pnpm exec ultracite check",
     "fix": "pnpm exec ultracite fix",
+    "test": "turbo test",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:docker": "DOCKER_BUILDKIT=1 docker compose -f compose.e2e.yml up --build --abort-on-container-exit --exit-code-from playwright",
+    "test:e2e:docker:down": "docker compose -f compose.e2e.yml down -v"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.11",

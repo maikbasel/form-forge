@@ -1,0 +1,108 @@
+# E2E test orchestration - runs full stack + Playwright in Docker
+# Usage: docker compose -f compose.e2e.yml up --build --abort-on-container-exit --exit-code-from playwright
+services:
+  db:
+    image: postgres:17
+    restart: "no"
+    tmpfs:
+      - /var/lib/postgresql/data
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: form-forge
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    restart: "no"
+    environment:
+      RUSTFS_ROOT_USER: rustfsadmin
+      RUSTFS_ROOT_PASSWORD: rustfsadmin
+      RUSTFS_VOLUMES: /data/rustfs0
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  createbuckets:
+    image: quay.io/minio/mc:latest
+    restart: "no"
+    profiles: [init]
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        /usr/bin/mc alias set rustfs http://rustfs:9000 rustfsadmin rustfsadmin
+        /usr/bin/mc mb --ignore-existing rustfs/form-forge
+        echo "Bucket 'form-forge' initialized successfully"
+
+  backend:
+    build:
+      context: ./apps/api
+      dockerfile: ../../docker/api.Dockerfile
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: form-forge
+      DB_HOST: db
+      DB_PORT: 5432
+      BIND_ADDR: 0.0.0.0:8081
+      RUST_LOG: error
+      S3_ENDPOINT: http://rustfs:9000
+      S3_BUCKET: form-forge
+      S3_ACCESS_KEY: rustfsadmin
+      S3_SECRET_KEY: rustfsadmin
+      S3_REGION: us-east-1
+      S3_LIFECYCLE_EXPIRATION_DAYS: 1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    restart: "no"
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      API_URL: http://backend:8081
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # NOTE: Playwright image version must match the @playwright/test package version in package.json
+  playwright:
+    build:
+      context: .
+      dockerfile: docker/playwright.Dockerfile
+    restart: "no"
+    depends_on:
+      frontend:
+        condition: service_healthy
+    volumes:
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results

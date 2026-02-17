@@ -110,3 +110,19 @@ dev:
 
     # Wait for any process to exit
     wait
+
+# Run E2E tests in Docker (headless, requires only Docker)
+e2e:
+    #!/usr/bin/env bash
+    set -e
+    cleanup() {
+        echo "Cleaning up E2E containers..."
+        docker compose -f compose.e2e.yml --profile init down -v
+    }
+    trap cleanup EXIT
+    # Build all images first
+    DOCKER_BUILDKIT=1 docker compose -f compose.e2e.yml build
+    # Start infrastructure and wait for it to be healthy
+    docker compose -f compose.e2e.yml up -d db rustfs && docker compose -f compose.e2e.yml --profile init run --rm createbuckets
+    # Run the stack (createbuckets excluded via profile, won't trigger --abort-on-container-exit)
+    docker compose -f compose.e2e.yml up --no-build --abort-on-container-exit --exit-code-from playwright
