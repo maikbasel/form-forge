@@ -121,4 +121,4 @@ tauri-plugin-single-instance = "2"
 tauri-plugin-window-state = "2"
 
 # Embedded database
-libsql = "0.6"
+libsql = "0.9"
