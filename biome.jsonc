@@ -22,12 +22,9 @@
   },
   "overrides": [
     {
-      "includes": ["apps/api/crates/actions/core/js/**/*.js"],
+      "includes": ["crates/actions_core/js/**/*.js"],
       "linter": {
         "rules": {
-          "nursery": {
-            "useMaxParams": "off"
-          },
           "style": {
             "noRestrictedGlobals": "off"
           },
@@ -89,7 +86,6 @@
             "noExcessiveCognitiveComplexity": "off"
           },
           "nursery": {
-            "useMaxParams": "off",
             "noShadow": "off"
           },
           "correctness": {

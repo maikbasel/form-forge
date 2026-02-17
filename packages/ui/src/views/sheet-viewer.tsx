@@ -663,14 +663,26 @@ function ActionConfigModal({
   );
 }
 
+export interface PdfLoadStrategy {
+  loadPdfUrl(fileRef: string): Promise<string>;
+}
+
+export interface DownloadStrategy {
+  download(sheetId: string): Promise<void>;
+}
+
 interface SheetViewerProps {
   file?: string;
   sheetId?: string;
+  pdfLoader?: PdfLoadStrategy;
+  downloadHandler?: DownloadStrategy;
 }
 
 export default function SheetViewer({
   file,
   sheetId,
+  pdfLoader,
+  downloadHandler,
 }: Readonly<SheetViewerProps>) {
   const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
@@ -733,7 +745,7 @@ export default function SheetViewer({
     };
   }, []);
 
-  // Fetch pre-signed URL for PDF
+  // Fetch PDF URL (via strategy or default pre-signed URL fetch)
   useEffect(() => {
     if (!file) {
       return;
@@ -744,17 +756,22 @@ export default function SheetViewer({
       setPdfUrlError(null);
 
       try {
-        const response = await fetch(file);
+        if (pdfLoader) {
+          const url = await pdfLoader.loadPdfUrl(file);
+          setPdfUrl(url);
+        } else {
+          const response = await fetch(file);
 
-        if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ message: "Unknown error" }));
-          throw new Error(errorData.message ?? "Failed to fetch PDF URL");
+          if (!response.ok) {
+            const errorData = await response
+              .json()
+              .catch(() => ({ message: "Unknown error" }));
+            throw new Error(errorData.message ?? "Failed to fetch PDF URL");
+          }
+
+          const data = await response.json();
+          setPdfUrl(data.url);
         }
-
-        const data = await response.json();
-        setPdfUrl(data.url);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Failed to load PDF";
@@ -766,7 +783,7 @@ export default function SheetViewer({
     };
 
     fetchPdfUrl();
-  }, [file]);
+  }, [file, pdfLoader]);
 
   // Recalculate field positions when data changes
   useEffect(() => {
@@ -957,9 +974,12 @@ export default function SheetViewer({
     setIsDownloading(true);
 
     try {
-      const { blob, filename } = await apiClient.downloadSheet(sheetId);
-
-      triggerBrowserDownload(blob, filename);
+      if (downloadHandler) {
+        await downloadHandler.download(sheetId);
+      } else {
+        const { blob, filename } = await apiClient.downloadSheet(sheetId);
+        triggerBrowserDownload(blob, filename);
+      }
       toast.success("Sheet downloaded successfully");
     } catch (err) {
       let errorMessage: string;
