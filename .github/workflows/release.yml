@@ -49,7 +49,7 @@ jobs:
       matrix:
         include:
           - image: form-forge-api
-            context: ./apps/api
+            context: .
             dockerfile: docker/api.Dockerfile
           - image: form-forge-web
             context: .

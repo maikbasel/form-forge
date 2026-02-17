@@ -5,6 +5,7 @@ on:
     paths:
       - 'apps/web/**'
       - 'apps/api/**'
+      - 'crates/**'
       - 'packages/**'
       - 'tests/**'
       - 'playwright.config.ts'
@@ -19,6 +20,7 @@ on:
     paths:
       - 'apps/web/**'
       - 'apps/api/**'
+      - 'crates/**'
       - 'packages/**'
       - 'tests/**'
       - 'playwright.config.ts'
@@ -52,11 +54,8 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
     - name: Cache Rust dependencies
       uses: Swatinem/rust-cache@v2
-      with:
-        workspaces: apps/api
     - name: Build backend
-      run: cargo build --release
-      working-directory: ./apps/api
+      run: cargo build --release -p form-forge-api
     - name: Install dependencies
       run: npm install -g pnpm && pnpm install
     - name: Install Playwright Browsers

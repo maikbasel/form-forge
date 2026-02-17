@@ -16,6 +16,20 @@ members = [
     "apps/native/src-tauri/crates/sheets_fs",
     "apps/native/src-tauri/crates/sheets_libsql",
 ]
+default-members = [
+    "apps/api",
+    "apps/api/crates/common",
+    "apps/api/crates/sheets/adapters/web",
+    "apps/api/crates/sheets/adapters/s3",
+    "apps/api/crates/sheets/adapters/db",
+    "apps/api/crates/actions/adapters/web",
+    "crates/common_telemetry",
+    "crates/common_pdf",
+    "crates/sheets_core",
+    "crates/actions_core",
+    "crates/sheets_pdf",
+    "crates/actions_pdf",
+]
 resolver = "2"
 
 [workspace.package]

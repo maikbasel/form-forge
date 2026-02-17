@@ -39,6 +39,16 @@ expression = "MIT OR Apache-2.0"
 license-files = []
 
 [[licenses.clarify]]
+name = "common_telemetry"
+expression = "MIT OR Apache-2.0"
+license-files = []
+
+[[licenses.clarify]]
+name = "common_pdf"
+expression = "MIT OR Apache-2.0"
+license-files = []
+
+[[licenses.clarify]]
 name = "sheets_core"
 expression = "MIT OR Apache-2.0"
 license-files = []
@@ -54,7 +64,22 @@ expression = "MIT OR Apache-2.0"
 license-files = []
 
 [[licenses.clarify]]
+name = "sheets_s3"
+expression = "MIT OR Apache-2.0"
+license-files = []
+
+[[licenses.clarify]]
 name = "sheets_pdf"
+expression = "MIT OR Apache-2.0"
+license-files = []
+
+[[licenses.clarify]]
+name = "sheets_fs"
+expression = "MIT OR Apache-2.0"
+license-files = []
+
+[[licenses.clarify]]
+name = "sheets_libsql"
 expression = "MIT OR Apache-2.0"
 license-files = []
 
@@ -70,6 +95,16 @@ license-files = []
 
 [[licenses.clarify]]
 name = "actions_pdf"
+expression = "MIT OR Apache-2.0"
+license-files = []
+
+[[licenses.clarify]]
+name = "native"
+expression = "MIT OR Apache-2.0"
+license-files = []
+
+[[licenses.clarify]]
+name = "native_lib"
 expression = "MIT OR Apache-2.0"
 license-files = []
 

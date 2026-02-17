@@ -2,7 +2,7 @@ version: 2
 updates:
   # Backend - Cargo dependencies
   - package-ecosystem: "cargo"
-    directory: "/apps/api"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
