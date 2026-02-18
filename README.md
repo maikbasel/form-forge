@@ -125,18 +125,30 @@ This installs git hooks that automatically run on every commit:
 ## Project Structure
 
 ```
+crates/                     # Shared Rust crates (used by both API and Tauri)
+  sheets_core/              # Sheets domain logic + ports
+  sheets_pdf/               # PDF adapter for sheets
+  actions_core/             # Actions domain logic + ports + JS helpers
+  actions_pdf/              # PDF adapter for actions
+  common_pdf/               # Shared PDF utilities
+  common_telemetry/         # Shared telemetry
+
 apps/
-  api/              # Rust backend
+  api/                      # Rust backend (Actix-Web)
     crates/
-      sheets/       # PDF upload, storage, field extraction
-      actions/      # JavaScript action attachment
-      common/       # Shared utilities (DB, telemetry, errors)
-  web/              # Next.js web application
-  native/           # Tauri desktop application
+      common/               # API-specific utilities (DB config, errors)
+      sheets/adapters/      # Sheets HTTP, S3, and DB adapters
+      actions/adapters/     # Actions HTTP adapter
+  web/                      # Next.js web application
+  native/                   # Tauri desktop application
+    src-tauri/crates/
+      sheets_fs/            # Filesystem adapter for sheets (Tauri)
+      sheets_libsql/        # libSQL adapter for sheets (Tauri)
 
 packages/
-  ui/               # Shared React component library
-  typescript-config/# Shared TypeScript configs
+  ui/                       # Shared React component library
+  api-spec/                 # OpenAPI spec and generated API client
+  typescript-config/        # Shared TypeScript configs
 ```
 
 ### Architecture

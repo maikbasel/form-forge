@@ -125,10 +125,13 @@ docker compose down                         # Stop development containers
 ### File Structure & Boundaries
 
 **SAFE TO MODIFY**:
-- `apps/api/crates/*/` - Backend Rust crates (bounded contexts)
+- `crates/*/` - Shared Rust crates (domain logic + PDF adapters, used by API and Tauri)
+- `apps/api/crates/*/` - API-specific Rust adapters (web, db, s3)
+- `apps/native/src-tauri/crates/*/` - Tauri-specific Rust adapters
 - `apps/web/` - Next.js web application
 - `apps/native/` - Tauri desktop application (early development)
 - `packages/ui/` - Shared React components library
+- `packages/api-spec/` - OpenAPI spec and generated API client
 - `packages/typescript-config/` - Shared TypeScript configurations
 
 **NEVER MODIFY**:
@@ -281,15 +284,17 @@ The Rust backend is a **modular monolith** using **hexagonal architecture** with
 - **Actions Context**: JavaScript action attachment to form fields
 - **Common**: Shared utilities (database config, telemetry, error handling)
 
-**Port Structure** (per context):
-- `core/ports/driving` - Service interfaces (inbound ports)
-- `core/ports/driven` - Adapter interfaces (outbound ports)
+**Port Structure** (per context, in `crates/<context>_core/src/ports/`):
+- `driving/` - Service interfaces (inbound ports)
+- `driven/` - Adapter interfaces (outbound ports)
 
 **Adapter Structure** (per context):
-- `adapters/web` - HTTP handlers (Actix-Web)
-- `adapters/db` - PostgreSQL persistence (SQLx)
-- `adapters/pdf` - PDF processing (lopdf)
-- `adapters/s3` - S3-compatible storage
+- `apps/api/crates/<context>/adapters/web` - HTTP handlers (Actix-Web)
+- `apps/api/crates/<context>/adapters/db` - PostgreSQL persistence (SQLx)
+- `apps/api/crates/<context>/adapters/s3` - S3-compatible storage
+- `crates/<context>_pdf` - PDF processing (lopdf) — root crate, shared with Tauri
+- `apps/native/src-tauri/crates/<context>_fs` - Filesystem adapter (Tauri only)
+- `apps/native/src-tauri/crates/<context>_libsql` - libSQL adapter (Tauri only)
 
 **Key Principles**:
 - Traits define ports (interfaces) between layers
