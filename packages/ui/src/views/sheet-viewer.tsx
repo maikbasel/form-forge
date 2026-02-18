@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Document, Page, type pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import {
@@ -55,8 +55,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
-
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs"; // Worker was copied to public directory.
 
 function triggerBrowserDownload(blob: Blob, filename: string): void {
   const url = globalThis.URL.createObjectURL(blob);
@@ -428,10 +426,24 @@ function ActionConfigModal({
     });
   };
 
-  const getUnassignedFields = () => {
+  const unassignedFields = useMemo(() => {
     const assigned = new Set(Object.values(fieldMapping));
     return selectedFields.filter((f) => !assigned.has(f));
-  };
+  }, [fieldMapping, selectedFields]);
+
+  const sortedRoles = useMemo(() => {
+    if (!currentAction) {
+      return [];
+    }
+    return [...currentAction.roles].sort((a, b) => {
+      const aHasField = !!fieldMapping[a.key];
+      const bHasField = !!fieldMapping[b.key];
+      if (aHasField !== bHasField) {
+        return aHasField ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [currentAction, fieldMapping]);
 
   const isValid = () => {
     if (!currentAction) {
@@ -562,7 +574,7 @@ function ActionConfigModal({
                 >
                   <div className="mx-auto max-w-3xl space-y-6">
                     {/* Unassigned Fields Pool */}
-                    <AvailableFieldsPool fields={getUnassignedFields()} />
+                    <AvailableFieldsPool fields={unassignedFields} />
 
                     <Separator />
 
@@ -572,36 +584,23 @@ function ActionConfigModal({
                         Field Roles
                       </h3>
                       <div className="space-y-4">
-                        {[...currentAction.roles]
-                          .sort((a, b) => {
-                            const aHasField = !!fieldMapping[a.key];
-                            const bHasField = !!fieldMapping[b.key];
+                        {sortedRoles.map((role) => {
+                          const assignedField = fieldMapping[role.key];
 
-                            // Unmapped roles first, mapped roles last
-                            if (aHasField !== bHasField) {
-                              return aHasField ? 1 : -1;
-                            }
-
-                            // Maintain original order within each group
-                            return 0;
-                          })
-                          .map((role) => {
-                            const assignedField = fieldMapping[role.key];
-
-                            return (
-                              <FieldRoleDropZone
-                                assignedField={assignedField}
-                                isDragging={!!activeId}
-                                key={role.key}
-                                onRemove={() => removeAssignment(role.key)}
-                                onSelectField={(field) =>
-                                  assignField(role.key, field)
-                                }
-                                role={role}
-                                unassignedFields={getUnassignedFields()}
-                              />
-                            );
-                          })}
+                          return (
+                            <FieldRoleDropZone
+                              assignedField={assignedField}
+                              isDragging={!!activeId}
+                              key={role.key}
+                              onRemove={() => removeAssignment(role.key)}
+                              onSelectField={(field) =>
+                                assignField(role.key, field)
+                              }
+                              role={role}
+                              unassignedFields={unassignedFields}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -671,6 +670,62 @@ export interface DownloadStrategy {
   download(sheetId: string): Promise<void>;
 }
 
+interface FieldOverlayProps {
+  field: FieldPosition;
+  isSelected: boolean;
+  isHovered: boolean;
+  isFlashing: boolean;
+  onMouseEnter: (name: string) => void;
+  onMouseLeave: () => void;
+  onToggle: (name: string) => void;
+}
+
+const FieldOverlay = memo(function FieldOverlay({
+  field,
+  isSelected,
+  isHovered,
+  isFlashing,
+  onMouseEnter,
+  onMouseLeave,
+  onToggle,
+}: FieldOverlayProps) {
+  const handleEnter = useCallback(
+    () => onMouseEnter(field.name),
+    [onMouseEnter, field.name]
+  );
+  const handleLeave = useCallback(() => onMouseLeave(), [onMouseLeave]);
+  const handleToggle = useCallback(
+    () => onToggle(field.name),
+    [onToggle, field.name]
+  );
+
+  return (
+    <Toggle
+      aria-label={`Select field ${field.name}`}
+      className={cn(
+        "box-border",
+        "data-[state=on]:z-20 data-[state=on]:border-2 data-[state=on]:border-blue-500 data-[state=on]:bg-blue-500/25 data-[state=on]:shadow-xl",
+        "data-[state=off]:z-10 data-[state=off]:border-2 data-[state=off]:border-yellow-400/50 data-[state=off]:bg-yellow-400/10",
+        "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30",
+        isHovered &&
+          "!border-blue-500 !bg-blue-500/30 z-30 shadow-xl ring-2 ring-blue-400",
+        isFlashing && "z-30 animate-flash"
+      )}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      onPressedChange={handleToggle}
+      pressed={isSelected}
+      style={{
+        position: "absolute",
+        left: `${field.bounds.left}px`,
+        top: `${field.bounds.top}px`,
+        width: `${field.bounds.width}px`,
+        height: `${field.bounds.height}px`,
+      }}
+    />
+  );
+});
+
 interface SheetViewerProps {
   file?: string;
   sheetId?: string;
@@ -707,6 +762,36 @@ export default function SheetViewer({
 
   // Ref to manage flash timeout (prevents memory leaks)
   const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Refs for stable callbacks (avoid stale closure deps)
+  const fieldPositionsRef = useRef<FieldPosition[]>(fieldPositions);
+  useEffect(() => {
+    fieldPositionsRef.current = fieldPositions;
+  }, [fieldPositions]);
+
+  const currentPageRef = useRef<number>(currentPage);
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+
+  // Stable event handlers — stable identity prevents cascade re-renders on hover/select
+  const handleMouseEnter = useCallback(
+    (name: string) => setHoveredFieldName(name),
+    []
+  );
+  const handleMouseLeave = useCallback(() => setHoveredFieldName(null), []);
+  const handleFieldSelect = useCallback((fieldName: string) => {
+    setSelectedFields((prev) =>
+      prev.includes(fieldName)
+        ? prev.filter((f) => f !== fieldName)
+        : [...prev, fieldName]
+    );
+    const field = fieldPositionsRef.current.find((f) => f.name === fieldName);
+    if (field && field.page !== currentPageRef.current) {
+      setCurrentPage(field.page);
+    }
+  }, []);
+
   const apiClient = useApiClient();
   const {
     setFieldPositions: setFieldSnippetPositions,
@@ -785,7 +870,7 @@ export default function SheetViewer({
     fetchPdfUrl();
   }, [file, pdfLoader]);
 
-  // Recalculate field positions when data changes
+  // Recalculate field positions when data changes — all pages fetched concurrently
   useEffect(() => {
     if (!(pdfDocument && data)) {
       return;
@@ -793,20 +878,25 @@ export default function SheetViewer({
 
     const extractFieldPositions = async () => {
       const apiFields = new Set(data.map((f) => f.name));
-      const allFields: FieldPosition[] = [];
 
-      for (let i = 1; i <= pdfDocument.numPages; i++) {
-        const page = await pdfDocument.getPage(i);
-        const annotations = await page.getAnnotations();
-        const viewport = page.getViewport({ scale });
+      const pageData = await Promise.all(
+        Array.from({ length: pdfDocument.numPages }, async (_, i) => {
+          const pageNum = i + 1;
+          const page = await pdfDocument.getPage(pageNum);
+          const annotations = await page.getAnnotations();
+          const viewport = page.getViewport({ scale });
+          return { pageNum, annotations, viewport };
+        })
+      );
 
-        const fields = annotations
+      const allFields = pageData.flatMap(({ pageNum, annotations, viewport }) =>
+        annotations
           .filter((ann) => apiFields.has(ann.fieldName))
           .map((ann) => {
             const pdfRect = ann.rect;
             return {
               name: ann.fieldName,
-              page: i,
+              page: pageNum,
               rect: pdfRect,
               bounds: {
                 left: pdfRect[0] * scale,
@@ -817,10 +907,8 @@ export default function SheetViewer({
                 height: (pdfRect[3] - pdfRect[1]) * scale,
               },
             };
-          });
-
-        allFields.push(...fields);
-      }
+          })
+      );
 
       setFieldPositions(allFields);
     };
@@ -834,23 +922,6 @@ export default function SheetViewer({
 
   const previousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleFieldSelect = (fieldName: string) => {
-    setSelectedFields((prev) => {
-      // If a field is already selected, remove it
-      if (prev.includes(fieldName)) {
-        return prev.filter((f) => f !== fieldName);
-      }
-
-      // Add the new field
-      return [...prev, fieldName];
-    });
-
-    const field = fieldPositions.find((f) => f.name === fieldName);
-    if (field && field.page !== currentPage) {
-      setCurrentPage(field.page);
-    }
   };
 
   const handleBadgeClick = (fieldName: string) => {
@@ -976,8 +1047,14 @@ export default function SheetViewer({
     try {
       if (downloadHandler) {
         await downloadHandler.download(sheetId);
-      } else {
-        const { blob, filename } = await apiClient.downloadSheet(sheetId);
+      } else if ("downloadSheet" in apiClient) {
+        const { blob, filename } = await (
+          apiClient as {
+            downloadSheet(
+              id: string
+            ): Promise<{ blob: Blob; filename: string }>;
+          }
+        ).downloadSheet(sheetId);
         triggerBrowserDownload(blob, filename);
       }
       toast.success("Sheet downloaded successfully");
@@ -1089,7 +1166,10 @@ export default function SheetViewer({
           <Separator />
 
           <CardContent className="flex flex-1 flex-col items-center overflow-auto p-6">
-            <div className="relative inline-block">
+            <div
+              className="relative inline-block"
+              style={{ willChange: "transform" }}
+            >
               {isPdfUrlLoading && (
                 <div className="flex h-[600px] w-[450px] items-center justify-center">
                   <Spinner className="h-8 w-8" />
@@ -1104,51 +1184,29 @@ export default function SheetViewer({
               {pdfUrl && !isPdfUrlLoading && !pdfUrlError && (
                 <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess}>
                   <Page
-                    className="shadow-lg"
+                    className="shadow-md"
+                    devicePixelRatio={1}
                     pageNumber={currentPage}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={false}
                     scale={scale}
                   />
                 </Document>
               )}
 
               {/* Overlays for current page only */}
-              {currentPageFields.map((field, index) => {
-                const isSelected = selectedFields.includes(field.name);
-                const isHovered = hoveredFieldName === field.name;
-                const isFlashing = flashingFieldName === field.name;
-
-                return (
-                  <Toggle
-                    aria-label={`Select field ${field.name}`}
-                    className={cn(
-                      "box-border transition-all duration-200",
-                      // Base selected state (z-20)
-                      "data-[state=on]:z-20 data-[state=on]:border-2 data-[state=on]:border-blue-500 data-[state=on]:bg-blue-500/25 data-[state=on]:shadow-xl",
-                      // Base unselected state (z-10)
-                      "data-[state=off]:z-10 data-[state=off]:border-2 data-[state=off]:border-yellow-400/50 data-[state=off]:bg-yellow-400/10",
-                      // Hover enhancement for unselected
-                      "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30",
-                      // Hovered state - blue emphasis (z-30, highest priority)
-                      isHovered &&
-                        "!border-blue-500 !bg-blue-500/30 z-30 shadow-xl ring-2 ring-blue-400",
-                      // Flashing state (z-30)
-                      isFlashing && "z-30 animate-flash"
-                    )}
-                    key={`${field.name}-${index}`}
-                    onMouseEnter={() => setHoveredFieldName(field.name)}
-                    onMouseLeave={() => setHoveredFieldName(null)}
-                    onPressedChange={() => handleFieldSelect(field.name)}
-                    pressed={isSelected}
-                    style={{
-                      position: "absolute",
-                      left: `${field.bounds.left}px`,
-                      top: `${field.bounds.top}px`,
-                      width: `${field.bounds.width}px`,
-                      height: `${field.bounds.height}px`,
-                    }}
-                  />
-                );
-              })}
+              {currentPageFields.map((field) => (
+                <FieldOverlay
+                  field={field}
+                  isFlashing={flashingFieldName === field.name}
+                  isHovered={hoveredFieldName === field.name}
+                  isSelected={selectedFields.includes(field.name)}
+                  key={field.name}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  onToggle={handleFieldSelect}
+                />
+              ))}
             </div>
           </CardContent>
 
