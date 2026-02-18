@@ -4,11 +4,13 @@ import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiClientProvider } from "../context/api-client-context.tsx";
 import { SheetProvider } from "../context/sheet-context.tsx";
-import type { ApiClient } from "../lib/api.ts";
+import type { FileApiClient } from "../lib/api.ts";
 import { ApiClientError } from "../types/api.ts";
 import SheetUploader from "./sheet-uploader.tsx";
 
-function createMockApiClient(overrides: Partial<ApiClient> = {}): ApiClient {
+function createMockApiClient(
+  overrides: Partial<FileApiClient> = {}
+): FileApiClient {
   return {
     uploadSheet: vi.fn(),
     getSheetFields: vi.fn(),
@@ -19,7 +21,7 @@ function createMockApiClient(overrides: Partial<ApiClient> = {}): ApiClient {
 }
 
 function renderUploader(
-  apiClient: ApiClient,
+  apiClient: FileApiClient,
   onUploadSuccess?: (sheetId: string) => void
 ) {
   return render(

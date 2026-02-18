@@ -13,7 +13,7 @@ import {
   FileUploadTrigger,
 } from "@repo/ui/components/file-upload.tsx";
 import { Progress } from "@repo/ui/components/progress.tsx";
-import { useApiClient } from "@repo/ui/context/api-client-context.tsx";
+import { useFileApiClient } from "@repo/ui/context/api-client-context.tsx";
 import { useSheet } from "@repo/ui/context/sheet-context.tsx";
 import { ApiClientError } from "@repo/ui/types/api.ts";
 import { Loader2, Upload } from "lucide-react";
@@ -37,7 +37,7 @@ export default function SheetUploader({
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const { setSheetPath, setSheetId } = useSheet();
-  const apiClient = useApiClient();
+  const apiClient = useFileApiClient();
 
   const getErrorMessage = useCallback((error: unknown): string => {
     if (error instanceof ApiClientError) {

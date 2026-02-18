@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiClientProvider } from "../context/api-client-context.tsx";
 import { FieldSnippetProvider } from "../context/field-snippet-context.tsx";
-import type { ApiClient } from "../lib/api.ts";
+import type { FileApiClient } from "../lib/api.ts";
 import SheetViewer from "./sheet-viewer.tsx";
 
 vi.mock("swr", () => ({
@@ -14,7 +14,9 @@ vi.mock("swr", () => ({
   }),
 }));
 
-function createMockApiClient(overrides: Partial<ApiClient> = {}): ApiClient {
+function createMockApiClient(
+  overrides: Partial<FileApiClient> = {}
+): FileApiClient {
   return {
     uploadSheet: vi.fn(),
     getSheetFields: vi.fn().mockResolvedValue([]),
@@ -25,7 +27,7 @@ function createMockApiClient(overrides: Partial<ApiClient> = {}): ApiClient {
 }
 
 function renderViewer(
-  apiClient: ApiClient,
+  apiClient: FileApiClient,
   props: { file?: string; sheetId?: string } = {}
 ) {
   return render(

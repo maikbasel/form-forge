@@ -1,6 +1,6 @@
 import type { UploadSheetResponse } from "@repo/api-spec/model";
 import {
-  type ApiClient,
+  type FileApiClient,
   type FormField,
   handleAxiosError,
   handleFetchError,
@@ -15,7 +15,7 @@ import type {
 import axios from "axios";
 import { getSheetFields as getSheetFieldsServer } from "./actions.ts";
 
-export const apiClient: ApiClient = {
+export const apiClient: FileApiClient = {
   async uploadSheet(
     file: File,
     options?: UploadOptions

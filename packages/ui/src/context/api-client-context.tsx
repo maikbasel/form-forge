@@ -1,4 +1,4 @@
-import type { ApiClient } from "@repo/ui/lib/api.ts";
+import type { ApiClient, FileApiClient } from "@repo/ui/lib/api.ts";
 import { createContext, type ReactNode, useContext } from "react";
 
 const ApiClientContext = createContext<ApiClient | null>(null);
@@ -23,4 +23,12 @@ export function useApiClient(): ApiClient {
     throw new Error("useApiClient must be used within ApiClientProvider");
   }
   return client;
+}
+
+export function useFileApiClient(): FileApiClient {
+  const client = useContext(ApiClientContext);
+  if (!(client && "uploadSheet" in client)) {
+    throw new Error("useFileApiClient requires a FileApiClient in context");
+  }
+  return client as FileApiClient;
 }

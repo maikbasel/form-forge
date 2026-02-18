@@ -26,10 +26,13 @@ export type UploadSheetResult = UploadSheetResponse & { location?: string };
 export const API_BASE_URL = process.env.API_URL ?? "http://localhost:8081";
 
 export interface ApiClient {
-  uploadSheet(file: File, options?: UploadOptions): Promise<UploadSheetResult>;
   getSheetFields(sheetId: string): Promise<FormField[]>;
-  downloadSheet(sheetId: string): Promise<DownloadSheetResult>;
   attachAction(sheetId: string, action: AttachActionRequest): Promise<void>;
+}
+
+export interface FileApiClient extends ApiClient {
+  uploadSheet(file: File, options?: UploadOptions): Promise<UploadSheetResult>;
+  downloadSheet(sheetId: string): Promise<DownloadSheetResult>;
 }
 
 export function handleFetchError(response: Response, data: unknown): never {
