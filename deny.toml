@@ -9,6 +9,35 @@ ignore = [
     # rustls-pemfile is unmaintained but used only in dev deps via testcontainers
     # Migration to rustls-pki-types would require updating testcontainers
     "RUSTSEC-2025-0134",
+
+    # Tauri 2.x transitive deps: gtk-rs GTK3 bindings are unmaintained (replaced by gtk4-rs)
+    # These are required by webkit2gtk which is Tauri's Linux WebView backend
+    "RUSTSEC-2024-0411",
+    "RUSTSEC-2024-0412",
+    "RUSTSEC-2024-0413",
+    "RUSTSEC-2024-0414",
+    "RUSTSEC-2024-0415",
+    "RUSTSEC-2024-0416",
+    "RUSTSEC-2024-0417",
+    "RUSTSEC-2024-0418",
+    "RUSTSEC-2024-0419",
+    "RUSTSEC-2024-0420",
+
+    # proc-macro-error is unmaintained, used by Tauri's macros
+    "RUSTSEC-2024-0370",
+
+    # fxhash is unmaintained, used by Tauri transitive deps
+    "RUSTSEC-2025-0057",
+
+    # unic-* crates are unmaintained, used by wry (Tauri's WebView)
+    "RUSTSEC-2025-0075",
+    "RUSTSEC-2025-0080",
+    "RUSTSEC-2025-0081",
+    "RUSTSEC-2025-0098",
+    "RUSTSEC-2025-0100",
+
+    # bincode is unmaintained, used by Tauri transitive deps
+    "RUSTSEC-2025-0141",
 ]
 
 [licenses]
@@ -24,6 +53,10 @@ allow = [
     "Unicode-DFS-2016",
     "Unicode-3.0",
     "Zlib",
+    # Tauri 2.x transitive deps (kuchikiki, selectors via wry)
+    "MPL-2.0",
+    # Tauri 2.x transitive deps
+    "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.8
 
