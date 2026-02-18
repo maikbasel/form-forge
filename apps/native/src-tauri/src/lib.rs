@@ -81,6 +81,14 @@ async fn export_sheet(
 }
 
 #[tauri::command]
+async fn read_pdf_bytes(file_path: String) -> Result<tauri::ipc::Response, String> {
+    let bytes = tokio::fs::read(&file_path)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+#[tauri::command]
 async fn attach_calculation_action(
     sheet_id: String,
     action: CalculationAction,
@@ -107,8 +115,7 @@ pub fn run() {
             common_telemetry::initialize().expect("initialize telemetry");
 
             // Build adapters
-            let sheet_fs_storage =
-                Arc::new(SheetFsStorage::new(app_data_dir.join("sheets")));
+            let sheet_fs_storage = Arc::new(SheetFsStorage::new(app_data_dir.join("sheets")));
             let sheet_reference_db = tauri::async_runtime::block_on(async {
                 Arc::new(
                     SheetReferenceLibSql::new(app_data_dir.join("form-forge.db"))
@@ -121,11 +128,8 @@ pub fn run() {
             // Compose SheetService
             let sheet_storage_port: Arc<dyn SheetStoragePort> = sheet_fs_storage.clone();
             let sheet_reference_port: Arc<dyn SheetReferencePort> = sheet_reference_db.clone();
-            let sheet_service = SheetService::new(
-                sheet_pdf_port,
-                sheet_storage_port,
-                sheet_reference_port,
-            );
+            let sheet_service =
+                SheetService::new(sheet_pdf_port, sheet_storage_port, sheet_reference_port);
 
             // Compose ActionService
             let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
@@ -148,6 +152,7 @@ pub fn run() {
             get_sheet_form_fields,
             export_sheet,
             attach_calculation_action,
+            read_pdf_bytes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

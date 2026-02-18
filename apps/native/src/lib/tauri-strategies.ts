@@ -2,14 +2,15 @@ import type {
   DownloadStrategy,
   PdfLoadStrategy,
 } from "@repo/ui/views/sheet-viewer.tsx";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { toast } from "sonner";
-import { exportSheet } from "./tauri-api-client";
+import { exportSheet, readPdfBytes } from "./tauri-api-client";
 
 export const tauriPdfLoader: PdfLoadStrategy = {
-  loadPdfUrl(filePath: string): Promise<string> {
-    return Promise.resolve(convertFileSrc(filePath));
+  async loadPdfUrl(filePath: string): Promise<string> {
+    const buffer = await readPdfBytes(filePath);
+    const blob = new Blob([buffer], { type: "application/pdf" });
+    return URL.createObjectURL(blob);
   },
 };
 

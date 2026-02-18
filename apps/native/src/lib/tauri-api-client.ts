@@ -1,6 +1,5 @@
 import type { ApiClient, FormField } from "@repo/ui/lib/api.ts";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
-import type { DownloadSheetResult } from "@repo/ui/types/sheet.ts";
 import { invoke } from "@tauri-apps/api/core";
 
 interface SheetReferenceResponse {
@@ -98,24 +97,16 @@ export function exportSheet(sheetId: string): Promise<ExportSheetResponse> {
   return invoke<ExportSheetResponse>("export_sheet", { sheetId });
 }
 
-export const tauriApiClient: ApiClient = {
-  uploadSheet() {
-    throw new Error(
-      "Use uploadSheetFromPath for Tauri — file picker provides a path, not a File object"
-    );
-  },
+export function readPdfBytes(filePath: string): Promise<ArrayBuffer> {
+  return invoke<ArrayBuffer>("read_pdf_bytes", { filePath });
+}
 
+export const tauriApiClient: ApiClient = {
   async getSheetFields(sheetId: string): Promise<FormField[]> {
     const fields = await invoke<SheetFieldResponse[]>("get_sheet_form_fields", {
       sheetId,
     });
     return fields.map((f) => ({ name: f.name }));
-  },
-
-  downloadSheet(): Promise<DownloadSheetResult> {
-    throw new Error(
-      "Use exportSheet for Tauri — desktop export writes to filesystem"
-    );
   },
 
   async attachAction(

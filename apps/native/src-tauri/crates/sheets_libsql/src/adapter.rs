@@ -98,11 +98,19 @@ impl SheetReferencePort for SheetReferenceLibSql {
             .map_err(|e| SheetError::DatabaseError(e.into()))?
             .ok_or(SheetError::NotFound(sheet_id.to_string()))?;
 
-        let id: String = row.get(0).map_err(|e| SheetError::DatabaseError(e.into()))?;
-        let original_name: String = row.get(1).map_err(|e| SheetError::DatabaseError(e.into()))?;
-        let name: String = row.get(2).map_err(|e| SheetError::DatabaseError(e.into()))?;
+        let id: String = row
+            .get(0)
+            .map_err(|e| SheetError::DatabaseError(e.into()))?;
+        let original_name: String = row
+            .get(1)
+            .map_err(|e| SheetError::DatabaseError(e.into()))?;
+        let name: String = row
+            .get(2)
+            .map_err(|e| SheetError::DatabaseError(e.into()))?;
         let extension: Option<String> = row.get(3).ok();
-        let path: String = row.get(4).map_err(|e| SheetError::DatabaseError(e.into()))?;
+        let path: String = row
+            .get(4)
+            .map_err(|e| SheetError::DatabaseError(e.into()))?;
 
         let uuid = Uuid::parse_str(&id)
             .map_err(|e| SheetError::DatabaseError(anyhow::anyhow!("invalid UUID: {}", e)))?;
@@ -153,12 +161,19 @@ impl SheetReferencePort for SheetReferenceLibSql {
             .await
             .map_err(|e| SheetError::DatabaseError(e.into()))?
         {
-            let id: String = row.get(0).map_err(|e| SheetError::DatabaseError(e.into()))?;
-            let original_name: String =
-                row.get(1).map_err(|e| SheetError::DatabaseError(e.into()))?;
-            let name: String = row.get(2).map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let id: String = row
+                .get(0)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let original_name: String = row
+                .get(1)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let name: String = row
+                .get(2)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
             let extension: Option<String> = row.get(3).ok();
-            let path: String = row.get(4).map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let path: String = row
+                .get(4)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
 
             let uuid = Uuid::parse_str(&id)
                 .map_err(|e| SheetError::DatabaseError(anyhow::anyhow!("invalid UUID: {}", e)))?;
@@ -236,7 +251,13 @@ mod tests {
     async fn test_create_and_find_by_id() {
         let db = setup_db().await;
         let id = Uuid::new_v4();
-        let sheet_ref = SheetReference::new(id, "test", "abc123", Some("pdf"), PathBuf::from("/tmp/test.pdf"));
+        let sheet_ref = SheetReference::new(
+            id,
+            "test",
+            "abc123",
+            Some("pdf"),
+            PathBuf::from("/tmp/test.pdf"),
+        );
 
         db.create(&sheet_ref).await.unwrap();
         let found = db.find_by_id(&id).await.unwrap();
@@ -259,7 +280,13 @@ mod tests {
     async fn test_delete() {
         let db = setup_db().await;
         let id = Uuid::new_v4();
-        let sheet_ref = SheetReference::new(id, "test", "abc123", Some("pdf"), PathBuf::from("/tmp/test.pdf"));
+        let sheet_ref = SheetReference::new(
+            id,
+            "test",
+            "abc123",
+            Some("pdf"),
+            PathBuf::from("/tmp/test.pdf"),
+        );
 
         db.create(&sheet_ref).await.unwrap();
         db.delete(&id).await.unwrap();

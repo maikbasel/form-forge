@@ -78,9 +78,7 @@ impl sheets_core::ports::driven::SheetStoragePort for SheetFsStorage {
 
     #[instrument(name = "fs.exists", skip(self), level = "info", fields(path = %path.display()))]
     async fn exists(&self, path: &Path) -> Result<bool, SheetError> {
-        fs::try_exists(path)
-            .await
-            .map_err(SheetError::StorageError)
+        fs::try_exists(path).await.map_err(SheetError::StorageError)
     }
 }
 
@@ -124,9 +122,7 @@ mod tests {
         let storage = SheetFsStorage::new(tmp.path().to_path_buf());
 
         let source = tmp.path().join("source.pdf");
-        fs::write(&source, b"%PDF-1.4 test content")
-            .await
-            .unwrap();
+        fs::write(&source, b"%PDF-1.4 test content").await.unwrap();
 
         let sheet_ref = SheetReference::new(
             Uuid::new_v4(),
@@ -148,9 +144,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let storage = SheetFsStorage::new(tmp.path().to_path_buf());
 
-        let result = storage
-            .read(PathBuf::from("/nonexistent/path.pdf"))
-            .await;
+        let result = storage.read(PathBuf::from("/nonexistent/path.pdf")).await;
         assert!(result.is_err());
     }
 

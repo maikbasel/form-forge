@@ -1,6 +1,10 @@
 "use client";
 
 import { Button } from "@repo/ui/components/button.tsx";
+import { GlobalWorkerOptions } from "pdfjs-dist";
+
+GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+
 import { Skeleton } from "@repo/ui/components/skeleton.tsx";
 import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
