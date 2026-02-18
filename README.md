@@ -309,6 +309,39 @@ just test-e2e-docker
 
 Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is running.
 
+## FAQ
+
+### The native app crashes on startup with "Protocol error" or error 71
+
+This affects NVIDIA GPUs on Wayland. WebKitGTK fails to negotiate the explicit sync protocol with
+the NVIDIA driver. Fix: set `__NV_DISABLE_EXPLICIT_SYNC=1` in your environment.
+
+**Permanent fix (recommended)** — create a systemd environment drop-in, picked up on every login
+and visible to all apps including GUI launchers and IDEs:
+
+```sh
+mkdir -p ~/.config/environment.d
+echo '__NV_DISABLE_EXPLICIT_SYNC=1' >> ~/.config/environment.d/nvidia-wayland.conf
+```
+
+Log out and back in for it to take effect.
+
+**Terminal only** — if you only run the app from a terminal, adding it to your shell profile is
+sufficient:
+
+```sh
+# ~/.bashrc / ~/.zshrc
+export __NV_DISABLE_EXPLICIT_SYNC=1
+
+# ~/.config/fish/config.fish
+set -gx __NV_DISABLE_EXPLICIT_SYNC 1
+```
+
+Note: shell profile variables are not visible to GUI-launched apps (IDEs, app menu shortcuts).
+
+This flag disables explicit sync negotiation at the driver level without disabling DMA-BUF hardware
+acceleration. Non-NVIDIA systems do not need this.
+
 ## Contributing
 
 1. Fork the repository
