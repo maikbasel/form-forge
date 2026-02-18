@@ -21,3 +21,7 @@ default = ["pretty-logs"]
 pretty-logs = ["common_telemetry/pretty-logs"]
 json-logs = ["common_telemetry/json-logs"]
 otel = ["common_telemetry/otel"]
+
+[package.metadata.cargo-udeps.ignore]
+# common_telemetry is used for feature forwarding only (not direct code usage)
+normal = ["common_telemetry"]
