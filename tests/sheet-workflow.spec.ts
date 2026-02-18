@@ -17,7 +17,7 @@ test.describe("Sheet Workflow - Happy Path", () => {
 
       const pdfPath = join(
         __dirname,
-        "../apps/api/crates/sheets/adapters/pdf/tests/fixtures/DnD_5E_CharacterSheet_FormFillable.pdf"
+        "../crates/sheets_pdf/tests/fixtures/DnD_5E_CharacterSheet_FormFillable.pdf"
       );
       await uploadPage.uploadPDF(pdfPath);
     });

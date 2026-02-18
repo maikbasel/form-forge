@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
+ARG CARGO_FEATURES=json-logs,otel
+
 WORKDIR /app
 
 # Copy workspace root manifests and lock file
@@ -65,11 +67,12 @@ RUN mkdir -p apps/api/src/bin && \
     echo "// dummy" > crates/sheets_pdf/src/lib.rs && \
     echo "// dummy" > crates/actions_pdf/src/lib.rs && \
     echo "fn main() {}" > apps/native/src-tauri/src/main.rs && \
+    echo "// dummy" > apps/native/src-tauri/src/lib.rs && \
     echo "// dummy" > apps/native/src-tauri/crates/sheets_fs/src/lib.rs && \
     echo "// dummy" > apps/native/src-tauri/crates/sheets_libsql/src/lib.rs
 
 # Build dependencies (cached layer) - uses default-members (API crates only)
-RUN cargo build --release --no-default-features --features json-logs,otel
+RUN cargo build --release --no-default-features --features ${CARGO_FEATURES}
 
 # Remove dummy sources and build artifacts for API crates
 RUN rm -rf apps/api/src apps/api/crates/common/src \
@@ -90,7 +93,7 @@ COPY crates/ ./crates/
 
 # Build the application with SQLx offline mode (production logs + OpenTelemetry)
 ENV SQLX_OFFLINE=true
-RUN cargo build --release --no-default-features --features json-logs,otel
+RUN cargo build --release --no-default-features --features ${CARGO_FEATURES}
 
 # Runtime stage - use trixie (Debian 13) to match GLIBC 2.38 from rust:nightly
 FROM debian:trixie-slim

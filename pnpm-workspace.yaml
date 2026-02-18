@@ -1,4 +1,4 @@
 packages:
   - "apps/*"
   - "packages/*"
-  - "apps/api/crates/actions/core/js"
+  - "crates/actions_core/js"

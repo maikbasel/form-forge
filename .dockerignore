@@ -4,12 +4,9 @@
 # ===========================
 
 # ===========================
-# Backend (exclude from frontend builds)
+# Backend (exclude large build artifacts)
 # ===========================
-apps/api/
-# Re-include paths needed by playwright.Dockerfile
-!apps/api/crates/actions/core/js/package.json
-!apps/api/crates/sheets/adapters/pdf/tests/fixtures/
+apps/api/target/
 
 # ===========================
 # Node/Frontend
@@ -36,10 +33,16 @@ yarn-error.log*
 coverage
 .nyc_output
 
-# Tauri (not needed for web build)
-apps/native
+# Tauri (exclude source - desktop app, not deployed via Docker)
+apps/native/
 # Re-include package.json needed by playwright.Dockerfile
 !apps/native/package.json
+# Re-include Cargo.toml stubs needed by api.Dockerfile: cargo requires all workspace
+# members' manifests to be present for workspace resolution, even when only building the API.
+# No Tauri source or binary is included - just the manifests.
+!apps/native/src-tauri/Cargo.toml
+!apps/native/src-tauri/crates/sheets_fs/Cargo.toml
+!apps/native/src-tauri/crates/sheets_libsql/Cargo.toml
 
 # ===========================
 # IDE & OS

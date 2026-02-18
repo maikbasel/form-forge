@@ -14,7 +14,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 # Copy workspace package.json stubs so pnpm can resolve the workspace
 COPY apps/web/package.json ./apps/web/package.json
 COPY apps/native/package.json ./apps/native/package.json
-COPY apps/api/crates/actions/core/js/package.json ./apps/api/crates/actions/core/js/package.json
+COPY crates/actions_core/js/package.json ./crates/actions_core/js/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/api-spec/package.json ./packages/api-spec/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
@@ -26,6 +26,6 @@ COPY tests ./tests
 COPY playwright.docker.config.ts ./
 
 # Copy PDF fixture referenced by sheet-workflow.spec.ts
-COPY apps/api/crates/sheets/adapters/pdf/tests/fixtures/ ./apps/api/crates/sheets/adapters/pdf/tests/fixtures/
+COPY crates/sheets_pdf/tests/fixtures/ ./crates/sheets_pdf/tests/fixtures/
 
 CMD ["npx", "playwright", "test", "--config=playwright.docker.config.ts"]
