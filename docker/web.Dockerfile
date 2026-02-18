@@ -13,7 +13,7 @@ FROM base AS builder
 WORKDIR /app
 
 # Copy workspace configuration
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
 
 # Copy package files
 COPY apps/web/package.json ./apps/web/package.json
