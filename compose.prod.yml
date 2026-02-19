@@ -63,8 +63,8 @@ services:
 
   backend:
     build:
-      context: ./apps/api
-      dockerfile: ../../docker/api.Dockerfile
+      context: .
+      dockerfile: docker/api.Dockerfile
       args:
         CARGO_FEATURES: json-logs,otel
     restart: unless-stopped
