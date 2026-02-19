@@ -382,3 +382,11 @@ acceleration. Non-NVIDIA systems do not need this.
 - [ ] implement application/problem+json
 - [x] dockerize playwright tests
 - [ ] add translation
+- [ ] Recent sheets
+
+
+- drag & drop doesnt work
+- go back to drop zone not possible
+- add ways to open the downloaded sheet directly or open folder with the sheet.
+- save as option
+- no tooltip on minimized settings icon
