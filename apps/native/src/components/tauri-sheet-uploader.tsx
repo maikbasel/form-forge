@@ -7,9 +7,11 @@ import {
   DialogTitle,
 } from "@repo/ui/components/dialog.tsx";
 import { useSheet } from "@repo/ui/context/sheet-context.tsx";
+import { cn } from "@repo/ui/lib/utils";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Loader2, Upload } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { uploadSheetFromPath } from "../lib/tauri-api-client";
 
@@ -23,7 +25,33 @@ export default function TauriSheetUploader({
   onUploadSuccess,
 }: TauriSheetUploaderProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const { setSheetPath, setSheetId } = useSheet();
+
+  useEffect(() => {
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+
+    getCurrentWebview()
+      .onDragDropEvent((event) => {
+        setIsDragOver(
+          event.payload.type === "over" || event.payload.type === "enter"
+        );
+      })
+      .then((fn) => {
+        if (cancelled) {
+          fn();
+        } else {
+          unlisten = fn;
+        }
+      })
+      .catch(console.error);
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, []);
 
   const handleBrowse = async () => {
     const selected = await open({
@@ -55,14 +83,19 @@ export default function TauriSheetUploader({
 
   return (
     <>
-      <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-lg border-2 border-dashed p-8">
+      <div
+        className={cn(
+          "flex w-full max-w-md flex-col items-center gap-4 rounded-lg border-2 border-dashed p-8 transition-colors",
+          isDragOver && "border-primary bg-primary/5"
+        )}
+      >
         <div className="flex items-center justify-center rounded-full border p-2.5">
           <Upload className="size-6 text-muted-foreground" />
         </div>
         <div className="text-center">
           <p className="font-medium text-sm">Import a PDF character sheet</p>
           <p className="text-muted-foreground text-xs">
-            Select a PDF file from your computer
+            Drop a PDF file or select one from your computer
           </p>
         </div>
         <Button onClick={handleBrowse} size="sm" variant="outline">

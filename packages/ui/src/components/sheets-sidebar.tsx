@@ -2,7 +2,6 @@
 
 import { cn } from "@repo/ui/lib/utils";
 import { FileText, FolderOpen, Settings } from "lucide-react";
-import { Button } from "./button.tsx";
 import { ScrollArea } from "./scroll-area.tsx";
 import {
   Sidebar,
@@ -26,6 +25,7 @@ interface SheetsSidebarProps {
   onSelectSheet: (id: string) => void;
   onOpenNew: () => void;
   onOpenSettings?: () => void;
+  onGoHome?: () => void;
 }
 
 export function SheetsSidebar({
@@ -34,25 +34,35 @@ export function SheetsSidebar({
   onSelectSheet,
   onOpenNew,
   onOpenSettings,
+  onGoHome,
 }: SheetsSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b px-2 py-2">
         <div className="flex items-center gap-2">
           <SidebarTrigger />
-          <span className="font-semibold text-sm tracking-tight group-data-[collapsible=icon]:hidden">
-            Form Forge
-          </span>
-          <Button
+          {onGoHome ? (
+            <button
+              className="font-semibold text-sm tracking-tight transition-opacity hover:opacity-70 group-data-[collapsible=icon]:hidden"
+              onClick={onGoHome}
+              type="button"
+            >
+              Form Forge
+            </button>
+          ) : (
+            <span className="font-semibold text-sm tracking-tight group-data-[collapsible=icon]:hidden">
+              Form Forge
+            </span>
+          )}
+          <SidebarMenuButton
             aria-label="Open new sheet"
-            className="ml-auto group-data-[collapsible=icon]:hidden"
+            className="ml-auto size-8 group-data-[collapsible=icon]:hidden"
             onClick={onOpenNew}
-            size="icon"
-            title="Open new sheet"
-            variant="ghost"
+            size="sm"
+            tooltip="Open new sheet"
           >
             <FolderOpen className="size-4" />
-          </Button>
+          </SidebarMenuButton>
         </div>
       </SidebarHeader>
 
@@ -92,18 +102,14 @@ export function SheetsSidebar({
 
       {onOpenSettings && (
         <SidebarFooter className="border-t p-2">
-          <Button
-            aria-label="Open settings"
-            className="w-full justify-start gap-2"
-            onClick={onOpenSettings}
-            size="sm"
-            variant="ghost"
-          >
-            <Settings className="size-4 shrink-0" />
-            <span className="group-data-[collapsible=icon]:hidden">
-              Settings
-            </span>
-          </Button>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={onOpenSettings} tooltip="Settings">
+                <Settings className="size-4 shrink-0" />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
       )}
     </Sidebar>
