@@ -46,6 +46,7 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-toggle": "^1.1.10",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@repo/api-spec": "workspace:*",
     "autoprefixer": "^10.4.23",
     "axios": "^1.13.2",
