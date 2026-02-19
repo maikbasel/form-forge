@@ -83,6 +83,24 @@ function mapActionToPayload(
   }
 }
 
+export interface SheetSummary {
+  id: string;
+  originalName: string;
+  storedPath: string;
+}
+
+export function listSheets(): Promise<SheetSummary[]> {
+  return invoke<Array<{ id: string; original_name: string; path: string }>>(
+    "list_sheets"
+  ).then((items) =>
+    items.map((i) => ({
+      id: i.id,
+      originalName: i.original_name,
+      storedPath: i.path,
+    }))
+  );
+}
+
 export function uploadSheetFromPath(
   filePath: string,
   fileName: string
@@ -99,6 +117,14 @@ export function exportSheet(sheetId: string): Promise<ExportSheetResponse> {
 
 export function readPdfBytes(filePath: string): Promise<ArrayBuffer> {
   return invoke<ArrayBuffer>("read_pdf_bytes", { filePath });
+}
+
+export function copyFileToDir(
+  src: string,
+  dstDir: string,
+  filename: string
+): Promise<string> {
+  return invoke<string>("copy_file_to_dir", { src, dstDir, filename });
 }
 
 export const tauriApiClient: ApiClient = {

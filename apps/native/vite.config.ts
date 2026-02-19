@@ -9,6 +9,13 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [react()],
 
+  define: {
+    // @ts-expect-error process is a nodejs global
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(
+      process.env.npm_package_version
+    ),
+  },
+
   resolve: {
     alias: {
       "@repo/ui": path.resolve(import.meta.dirname, "../../packages/ui/src"),
