@@ -52,6 +52,52 @@ impl SheetReferenceLibSql {
             .connect()
             .map_err(|e| SheetError::DatabaseError(e.into()))
     }
+
+    pub async fn list_all(&self) -> Result<Vec<SheetReference>, SheetError> {
+        let conn = self.conn()?;
+
+        let mut rows = conn
+            .query(
+                "SELECT id, original_name, name, extension, path FROM sheet_reference ORDER BY created_at DESC",
+                libsql::params![],
+            )
+            .await
+            .map_err(|e| SheetError::DatabaseError(e.into()))?;
+
+        let mut refs = Vec::new();
+        while let Some(row) = rows
+            .next()
+            .await
+            .map_err(|e| SheetError::DatabaseError(e.into()))?
+        {
+            let id: String = row
+                .get(0)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let original_name: String = row
+                .get(1)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let name: String = row
+                .get(2)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let extension: Option<String> = row.get(3).ok();
+            let path: String = row
+                .get(4)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
+
+            let uuid = Uuid::parse_str(&id)
+                .map_err(|e| SheetError::DatabaseError(anyhow::anyhow!("invalid UUID: {}", e)))?;
+
+            refs.push(SheetReference::new(
+                uuid,
+                original_name,
+                name,
+                extension,
+                PathBuf::from(path),
+            ));
+        }
+
+        Ok(refs)
+    }
 }
 
 #[async_trait]
@@ -293,5 +339,34 @@ mod tests {
 
         let result = db.find_by_id(&id).await;
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_list_all() {
+        let db = setup_db().await;
+        let id1 = Uuid::new_v4();
+        let id2 = Uuid::new_v4();
+
+        db.create(&SheetReference::new(
+            id1,
+            "Sheet A",
+            "sha1",
+            Some("pdf"),
+            PathBuf::from("/tmp/a.pdf"),
+        ))
+        .await
+        .unwrap();
+        db.create(&SheetReference::new(
+            id2,
+            "Sheet B",
+            "sha2",
+            Some("pdf"),
+            PathBuf::from("/tmp/b.pdf"),
+        ))
+        .await
+        .unwrap();
+
+        let all = db.list_all().await.unwrap();
+        assert_eq!(all.len(), 2);
     }
 }

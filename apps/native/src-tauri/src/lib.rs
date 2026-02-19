@@ -8,13 +8,20 @@ use sheets_fs::adapter::SheetFsStorage;
 use sheets_libsql::adapter::SheetReferenceLibSql;
 use sheets_pdf::adapter::SheetsPdf;
 use std::sync::Arc;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use uuid::Uuid;
 
 #[derive(Clone, serde::Serialize)]
 struct SheetReferenceResponse {
     id: Uuid,
     original_name: String,
+}
+
+#[derive(Clone, serde::Serialize)]
+struct SheetSummaryResponse {
+    id: Uuid,
+    original_name: String,
+    path: String,
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -101,6 +108,34 @@ async fn attach_calculation_action(
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn list_sheets(
+    db: tauri::State<'_, Arc<SheetReferenceLibSql>>,
+) -> Result<Vec<SheetSummaryResponse>, String> {
+    let refs = db.list_all().await.map_err(|e| e.to_string())?;
+    Ok(refs
+        .into_iter()
+        .map(|r| SheetSummaryResponse {
+            id: r.id,
+            original_name: r.original_name,
+            path: r.path.display().to_string(),
+        })
+        .collect())
+}
+
+#[tauri::command]
+async fn copy_file_to_dir(
+    src: String,
+    dst_dir: String,
+    filename: String,
+) -> Result<String, String> {
+    let dst = std::path::PathBuf::from(&dst_dir).join(&filename);
+    tokio::fs::copy(&src, &dst)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(dst.display().to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -108,6 +143,21 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
+        .on_menu_event(|app, event| match event.id().0.as_str() {
+            "open_sheet" => {
+                let _ = app.emit("menu:open-sheet", ());
+            }
+            "export_sheet" => {
+                let _ = app.emit("menu:export-sheet", ());
+            }
+            "settings" => {
+                let _ = app.emit("menu:settings", ());
+            }
+            "about" => {
+                let _ = app.emit("menu:about", ());
+            }
+            _ => {}
+        })
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir().expect("app data dir");
 
@@ -135,15 +185,61 @@ pub fn run() {
             let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
                 sheet_fs_storage;
             let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
-                sheet_reference_db;
+                sheet_reference_db.clone();
             let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
                 Arc::new(PdfActionAdapter);
             let action_service =
                 ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
 
-            // Store in managed state
+            // Store in managed state — concrete Arc for list_sheets, trait objects for services
+            app.manage(sheet_reference_db);
             app.manage(sheet_service);
             app.manage(action_service);
+
+            // Build native menu
+            let file_menu = tauri::menu::SubmenuBuilder::new(app, "File")
+                .item(&tauri::menu::MenuItem::with_id(
+                    app,
+                    "open_sheet",
+                    "Open Sheet",
+                    true,
+                    Some("CmdOrCtrl+O"),
+                )?)
+                .item(&tauri::menu::MenuItem::with_id(
+                    app,
+                    "export_sheet",
+                    "Export Sheet",
+                    true,
+                    Some("CmdOrCtrl+S"),
+                )?)
+                .separator()
+                .item(&tauri::menu::MenuItem::with_id(
+                    app,
+                    "settings",
+                    "Settings",
+                    true,
+                    Some("CmdOrCtrl+,"),
+                )?)
+                .separator()
+                .item(&tauri::menu::PredefinedMenuItem::quit(app, None)?)
+                .build()?;
+
+            let help_menu = tauri::menu::SubmenuBuilder::new(app, "Help")
+                .item(&tauri::menu::MenuItem::with_id(
+                    app,
+                    "about",
+                    "About Form Forge",
+                    true,
+                    None::<&str>,
+                )?)
+                .build()?;
+
+            let menu = tauri::menu::MenuBuilder::new(app)
+                .item(&file_menu)
+                .item(&help_menu)
+                .build()?;
+
+            app.set_menu(menu)?;
 
             Ok(())
         })
@@ -153,6 +249,8 @@ pub fn run() {
             export_sheet,
             attach_calculation_action,
             read_pdf_bytes,
+            list_sheets,
+            copy_file_to_dir,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
