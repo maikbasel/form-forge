@@ -21,14 +21,14 @@
     "test:e2e:docker:down": "docker compose -f compose.e2e.yml down -v"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.11",
+    "@biomejs/biome": "2.4.4",
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.3.0",
     "knip": "^5.84.1",
     "pdf-lib": "^1.17.1",
     "turbo": "^2.8.10",
     "typescript": "5.9.3",
-    "ultracite": "7.0.11"
+    "ultracite": "7.2.3"
   },
   "packageManager": "pnpm@9.15.9",
   "engines": {
