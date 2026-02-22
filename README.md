@@ -373,20 +373,13 @@ acceleration. Non-NVIDIA systems do not need this.
 - [x] ~~BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role
   mapping.~~
 - [ ] Add product tour.
-- [ ] Implement native application.
+- [x] Implement native application.
 - [x] Generate API client from OpenAPI specification.
-- [ ] Generate docker images in ci.
+- [x] ~~Generate docker images in ci.~~
 - [x] Implement release workflow
-- [ ] Setup demo
+- [x] ~~Setup demo~~
 - [x] implement ttl for uploaded files
 - [ ] implement application/problem+json
 - [x] dockerize playwright tests
 - [ ] add translation
-- [ ] Recent sheets
-
-
-- drag & drop doesnt work
-- go back to drop zone not possible
-- add ways to open the downloaded sheet directly or open folder with the sheet.
-- save as option
-- no tooltip on minimized settings icon
+- [x] Recent sheets
