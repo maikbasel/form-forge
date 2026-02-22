@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 
 const CONFIGURE_ACTION_REGEX = /configure calculation/i;
 const ATTACH_CALCULATION_REGEX = /attach calculation/i;
-const DOWNLOAD_REGEX = /download/i;
+const EXPORT_REGEX = /export/i;
 const PDF_FILENAME_REGEX = /\.pdf$/;
 
 export class SheetViewerPage {
@@ -63,7 +63,7 @@ export class SheetViewerPage {
   async downloadSheet(): Promise<Download> {
     const downloadPromise = this.page.waitForEvent("download");
 
-    await this.page.getByRole("button", { name: DOWNLOAD_REGEX }).click();
+    await this.page.getByRole("button", { name: EXPORT_REGEX }).click();
 
     const download = await downloadPromise;
 
