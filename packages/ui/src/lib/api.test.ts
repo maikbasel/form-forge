@@ -8,9 +8,14 @@ import {
 } from "./api.ts";
 
 describe("handleFetchError", () => {
-  it("throws ApiClientError with correct status and parsed error", () => {
+  it("throws ApiClientError with correct status and parsed problem", () => {
     const response = { status: 400 } as Response;
-    const data = { message: "Bad request" };
+    const data = {
+      type: "/problems/invalid-pdf-file",
+      title: "Invalid PDF File",
+      status: 400,
+      detail: "invalid PDF header",
+    };
 
     expect(() => handleFetchError(response, data)).toThrow(ApiClientError);
     try {
@@ -18,17 +23,29 @@ describe("handleFetchError", () => {
     } catch (err) {
       const error = err as ApiClientError;
       expect(error.statusCode).toBe(400);
-      expect(error.apiError).toEqual({ message: "Bad request" });
+      expect(error.problem.type).toBe("/problems/invalid-pdf-file");
+      expect(error.problem.detail).toBe("invalid PDF header");
     }
   });
 });
 
 describe("handleAxiosError", () => {
   it("wraps Axios error with response into ApiClientError", () => {
-    const axiosError = new AxiosError("Request failed", "ERR_BAD_REQUEST", undefined, undefined, {
-      status: 422,
-      data: { message: "Validation failed" },
-    } as AxiosResponse);
+    const axiosError = new AxiosError(
+      "Request failed",
+      "ERR_BAD_REQUEST",
+      undefined,
+      undefined,
+      {
+        status: 422,
+        data: {
+          type: "/problems/invalid-action",
+          title: "Invalid Action",
+          status: 422,
+          detail: "Validation failed",
+        },
+      } as AxiosResponse,
+    );
 
     expect(() => handleAxiosError(axiosError)).toThrow(ApiClientError);
     try {
@@ -36,7 +53,8 @@ describe("handleAxiosError", () => {
     } catch (err) {
       const error = err as ApiClientError;
       expect(error.statusCode).toBe(422);
-      expect(error.apiError).toEqual({ message: "Validation failed" });
+      expect(error.problem.type).toBe("/problems/invalid-action");
+      expect(error.problem.detail).toBe("Validation failed");
     }
   });
 
@@ -49,7 +67,7 @@ describe("handleAxiosError", () => {
     } catch (err) {
       const error = err as ApiClientError;
       expect(error.statusCode).toBe(0);
-      expect(error.apiError.message).toBe("Network Error");
+      expect(error.problem.title).toBe("Network Error");
     }
   });
 
@@ -62,7 +80,7 @@ describe("handleAxiosError", () => {
     } catch (err) {
       const apiErr = err as ApiClientError;
       expect(apiErr.statusCode).toBe(0);
-      expect(apiErr.apiError.message).toBe("fetch failed");
+      expect(apiErr.problem.title).toBe("fetch failed");
     }
   });
 
@@ -73,7 +91,7 @@ describe("handleAxiosError", () => {
     } catch (err) {
       const apiErr = err as ApiClientError;
       expect(apiErr.statusCode).toBe(0);
-      expect(apiErr.apiError.message).toBe("Unknown error");
+      expect(apiErr.problem.title).toBe("Unknown error");
     }
   });
 });

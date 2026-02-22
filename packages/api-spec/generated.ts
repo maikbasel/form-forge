@@ -1,10 +1,5 @@
 import z from "zod";
 
-export type ApiErrorResponse = z.infer<typeof ApiErrorResponse>;
-export const ApiErrorResponse = z.object({
-  message: z.string(),
-});
-
 export type AttachAbilityModCalcScriptRequest = z.infer<typeof AttachAbilityModCalcScriptRequest>;
 export const AttachAbilityModCalcScriptRequest = z.object({
   abilityModifierFieldName: z.string(),
@@ -51,6 +46,15 @@ export const SheetFieldDto = z.object({
 export type ListSheetFieldsResponse = z.infer<typeof ListSheetFieldsResponse>;
 export const ListSheetFieldsResponse = z.object({
   fields: z.array(SheetFieldDto),
+});
+
+export type ProblemDetails = z.infer<typeof ProblemDetails>;
+export const ProblemDetails = z.object({
+  detail: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  instance: z.union([z.string(), z.null(), z.undefined()]).optional(),
+  status: z.number(),
+  title: z.string(),
+  type: z.string(),
 });
 
 export type UploadSheetRequest = z.infer<typeof UploadSheetRequest>;

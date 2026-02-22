@@ -1619,6 +1619,7 @@ dependencies = [
  "common_telemetry",
  "pretty_assertions",
  "serde",
+ "serde_json",
  "utoipa",
  "uuid",
 ]

@@ -43,9 +43,10 @@ export const apiClient: FileApiClient = {
 
       if (!location) {
         // noinspection ExceptionCaughtLocallyJS
-        throw new ApiClientError(response.status, {
-          message: "Missing Location header in response",
-        });
+        throw ApiClientError.fromResponse(
+          response.status,
+          "Missing Location header in response"
+        );
       }
 
       return {
@@ -68,9 +69,11 @@ export const apiClient: FileApiClient = {
     });
 
     if (!response.ok) {
-      const data = await response
-        .json()
-        .catch(() => ({ message: "Unknown error" }));
+      const data = await response.json().catch(() => ({
+        type: "about:blank",
+        title: "Unknown error",
+        status: 0,
+      }));
       handleFetchError(response, data);
     }
 
@@ -81,9 +84,10 @@ export const apiClient: FileApiClient = {
     const downloadResponse = await fetch(url);
 
     if (!downloadResponse.ok) {
-      throw new ApiClientError(downloadResponse.status, {
-        message: `Failed to download from storage: ${downloadResponse.statusText}`,
-      });
+      throw ApiClientError.fromResponse(
+        downloadResponse.status,
+        `Failed to download from storage: ${downloadResponse.statusText}`
+      );
     }
 
     const blob = await downloadResponse.blob();
@@ -103,9 +107,11 @@ export const apiClient: FileApiClient = {
     });
 
     if (!response.ok) {
-      const data = await response
-        .json()
-        .catch(() => ({ message: "Unknown error" }));
+      const data = await response.json().catch(() => ({
+        type: "about:blank",
+        title: "Unknown error",
+        status: 0,
+      }));
       handleFetchError(response, data);
     }
   },

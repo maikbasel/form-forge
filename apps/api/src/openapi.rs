@@ -2,7 +2,7 @@ use actions_web::handler::{
     AttachAbilityModCalcScriptRequest, AttachSavingThrowModifierCalculationScriptRequest,
     AttachSkillModifierCalculationScriptRequest,
 };
-use common::error::ApiErrorResponse;
+use common::error::ProblemDetails;
 use sheets_web::handler::{
     DownloadSheetResponse, ListSheetFieldsResponse, SheetFieldDto, UploadSheetRequest,
     UploadSheetResponse,
@@ -29,7 +29,7 @@ use crate::health::HealthResponse;
         DownloadSheetResponse,
         ListSheetFieldsResponse,
         SheetFieldDto,
-        ApiErrorResponse,
+        ProblemDetails,
         AttachAbilityModCalcScriptRequest,
         AttachSavingThrowModifierCalculationScriptRequest,
         AttachSkillModifierCalculationScriptRequest,

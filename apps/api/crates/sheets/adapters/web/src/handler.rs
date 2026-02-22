@@ -3,7 +3,7 @@ use actix_multipart::form::MultipartForm;
 use actix_multipart::form::tempfile::TempFile;
 use actix_web::http::header::{CACHE_CONTROL, LOCATION};
 use actix_web::{HttpResponse, get, post, web};
-use common::error::ApiErrorResponse;
+use common::error::ProblemDetails;
 use serde::{Deserialize, Serialize};
 use sheets_core::ports::driving::{SheetCleanupPort, SheetService};
 use sheets_core::sheet::{Sheet, SheetField, SheetReference};
@@ -106,18 +106,16 @@ fn build_filename(sheet_reference: &SheetReference) -> String {
     ),
     responses(
         (status = CREATED, description = "Sheet uploaded successfully", body = UploadSheetResponse, content_type = "application/json"),
-        (status = BAD_REQUEST, description = "Invalid PDF or request", body = ApiErrorResponse, content_type = "application/json",
+        (status = BAD_REQUEST, description = "Invalid PDF or request", body = ProblemDetails, content_type = "application/problem+json",
             examples(
-                ("invalid_pdf_header" = (summary = "Invalid PDF file", value = json!({"message": "invalid PDF header - file is not a PDF"}))),
-                ("not_supported" = (summary = "PDF sheet is not supported", value = json!({"message": "PDF sheet is encrypted"}))),
-                ("file_too_large" = (summary = "File size exceeded", value = json!({"message": "file size exceeds 5MB limit"}))),
-                ("invalid_filename" = (summary = "Invalid filename", value = json!({"message": "invalid sheet name"})))
+                ("invalid_pdf_header" = (summary = "Invalid PDF file", value = json!({"type": "/problems/invalid-pdf-file", "title": "Invalid PDF File", "status": 400, "detail": "invalid PDF header - file is not a PDF"}))),
+                ("not_supported" = (summary = "PDF sheet is not supported", value = json!({"type": "/problems/invalid-pdf-file", "title": "Invalid PDF File", "status": 400, "detail": "PDF sheet is encrypted"}))),
+                ("invalid_filename" = (summary = "Invalid filename", value = json!({"type": "/problems/invalid-file-name", "title": "Invalid File Name", "status": 400, "detail": "invalid sheet name"})))
             )
         ),
-        (status = INTERNAL_SERVER_ERROR, description = "Unexpected server error", body = ApiErrorResponse, content_type = "application/json",
+        (status = INTERNAL_SERVER_ERROR, description = "Unexpected server error", body = ProblemDetails, content_type = "application/problem+json",
             examples(
-                ("storage_error" = (summary = "Storage failure", value = json!({"message": "failed to save sheet"}))),
-                ("database_error" = (summary = "Database failure", value = json!({"message": "failed to save sheet reference"})))
+                ("server_error" = (summary = "Internal server error", value = json!({"type": "about:blank", "title": "Internal Server Error", "status": 500})))
             )
         )
     )
@@ -151,9 +149,9 @@ pub async fn upload_sheet(
     ),
     responses(
         (status = OK, description = "Download URL returned", body = DownloadSheetResponse, content_type = "application/json"),
-        (status = NOT_FOUND, description = "Sheet not found", body = ApiErrorResponse, content_type = "application/json",
+        (status = NOT_FOUND, description = "Sheet not found", body = ProblemDetails, content_type = "application/problem+json",
             examples(
-                ("sheet_not_found" = (summary = "Sheet does not exist", value = json!({"message": "sheet not found: 123e4567-e89b-12d3-a456-426614174000"})))
+                ("sheet_not_found" = (summary = "Sheet does not exist", value = json!({"type": "/problems/sheet-not-found", "title": "Sheet Not Found", "status": 404, "detail": "sheet not found: 123e4567-e89b-12d3-a456-426614174000"})))
             )
         )
     )
@@ -189,9 +187,9 @@ pub async fn download_sheet(
     ),
     responses(
         (status = 200, description = "List of interactive PDF AcroForm fields", body = ListSheetFieldsResponse),
-        (status = NOT_FOUND, description = "Sheet not found", body = ApiErrorResponse, content_type = "application/json",
+        (status = NOT_FOUND, description = "Sheet not found", body = ProblemDetails, content_type = "application/problem+json",
             examples(
-                ("sheet_not_found" = (summary = "Sheet does not exist", value = json!({"message": "sheet not found: 123e4567-e89b-12d3-a456-426614174000"})))
+                ("sheet_not_found" = (summary = "Sheet does not exist", value = json!({"type": "/problems/sheet-not-found", "title": "Sheet Not Found", "status": 404, "detail": "sheet not found: 123e4567-e89b-12d3-a456-426614174000"})))
             )
         )
     )

@@ -12,11 +12,11 @@ export type FormField = SheetFieldDto;
 
 // Re-export types from generated OpenAPI spec
 export type {
-  ApiErrorResponse,
   AttachAbilityModCalcScriptRequest,
   AttachSavingThrowModifierCalculationScriptRequest,
   AttachSkillModifierCalculationScriptRequest,
   ListSheetFieldsResponse,
+  ProblemDetails,
   UploadSheetResponse,
 } from "@repo/api-spec/model";
 
@@ -36,21 +36,26 @@ export interface FileApiClient extends ApiClient {
 }
 
 export function handleFetchError(response: Response, data: unknown): never {
-  const apiError = parseApiError(data);
-  throw new ApiClientError(response.status, apiError);
+  const problem = parseApiError(data);
+  throw new ApiClientError(response.status, problem);
 }
 
 export function handleAxiosError(error: unknown): never {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status || 0;
-    const errorData = error.response?.data || { message: error.message };
-    const apiError = parseApiError(errorData);
-    throw new ApiClientError(status, apiError);
+    const errorData = error.response?.data || {
+      type: "about:blank",
+      title: error.message,
+      status,
+    };
+    const problem = parseApiError(errorData);
+    throw new ApiClientError(status, problem);
   }
 
-  throw new ApiClientError(0, {
-    message: error instanceof Error ? error.message : "Unknown error",
-  });
+  throw ApiClientError.fromResponse(
+    0,
+    error instanceof Error ? error.message : "Unknown error"
+  );
 }
 
 export const downloadSheetFilenameRegex =

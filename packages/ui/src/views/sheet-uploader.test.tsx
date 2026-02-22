@@ -112,11 +112,14 @@ describe("SheetUploader", () => {
   it("displays the API error message on ApiClientError", async () => {
     const user = userEvent.setup();
     const client = createMockApiClient({
-      uploadSheet: vi
-        .fn()
-        .mockRejectedValue(
-          new ApiClientError(400, { message: "Invalid PDF format" })
-        ),
+      uploadSheet: vi.fn().mockRejectedValue(
+        new ApiClientError(400, {
+          type: "/problems/invalid-pdf-file",
+          title: "Invalid PDF File",
+          status: 400,
+          detail: "Invalid PDF format",
+        })
+      ),
     });
 
     renderUploader(client);

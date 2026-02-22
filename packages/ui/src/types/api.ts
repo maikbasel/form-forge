@@ -1,14 +1,16 @@
 import {
-  type ApiErrorResponse,
-  ApiErrorResponseSchema,
+  type ProblemDetails,
+  ProblemDetailsSchema,
 } from "@repo/api-spec/model";
 
 /**
- * Parse unknown data as ApiErrorResponse with Zod validation
+ * Parse unknown data as ProblemDetails with Zod validation
  */
-export function parseApiError(data: unknown): ApiErrorResponse {
-  const result = ApiErrorResponseSchema.safeParse(data);
-  return result.success ? result.data : { message: "Unknown error" };
+export function parseApiError(data: unknown): ProblemDetails {
+  const result = ProblemDetailsSchema.safeParse(data);
+  return result.success
+    ? result.data
+    : { type: "about:blank", title: "Unknown Error", status: 0 };
 }
 
 /**
@@ -16,16 +18,20 @@ export function parseApiError(data: unknown): ApiErrorResponse {
  */
 export class ApiClientError extends Error {
   statusCode: number;
-  apiError: ApiErrorResponse;
+  problem: ProblemDetails;
 
-  constructor(statusCode: number, apiError: ApiErrorResponse) {
-    super(apiError.message);
+  constructor(statusCode: number, problem: ProblemDetails) {
+    super(problem.detail ?? problem.title);
     this.name = "ApiClientError";
     this.statusCode = statusCode;
-    this.apiError = apiError;
+    this.problem = problem;
   }
 
   static fromResponse(statusCode: number, message: string): ApiClientError {
-    return new ApiClientError(statusCode, { message });
+    return new ApiClientError(statusCode, {
+      type: "about:blank",
+      title: message,
+      status: statusCode,
+    });
   }
 }

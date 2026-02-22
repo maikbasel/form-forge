@@ -146,41 +146,44 @@ paths:
         '400':
           description: Invalid PDF or request
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: '#/components/schemas/ProblemDetails'
               examples:
-                file_too_large:
-                  summary: File size exceeded
-                  value:
-                    message: file size exceeds 5MB limit
                 invalid_filename:
                   summary: Invalid filename
                   value:
-                    message: invalid sheet name
+                    detail: invalid sheet name
+                    status: 400
+                    title: Invalid File Name
+                    type: /problems/invalid-file-name
                 invalid_pdf_header:
                   summary: Invalid PDF file
                   value:
-                    message: invalid PDF header - file is not a PDF
+                    detail: invalid PDF header - file is not a PDF
+                    status: 400
+                    title: Invalid PDF File
+                    type: /problems/invalid-pdf-file
                 not_supported:
                   summary: PDF sheet is not supported
                   value:
-                    message: PDF sheet is encrypted
+                    detail: PDF sheet is encrypted
+                    status: 400
+                    title: Invalid PDF File
+                    type: /problems/invalid-pdf-file
         '500':
           description: Unexpected server error
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: '#/components/schemas/ProblemDetails'
               examples:
-                database_error:
-                  summary: Database failure
+                server_error:
+                  summary: Internal server error
                   value:
-                    message: failed to save sheet reference
-                storage_error:
-                  summary: Storage failure
-                  value:
-                    message: failed to save sheet
+                    status: 500
+                    title: Internal Server Error
+                    type: about:blank
   /sheets/{sheet_id}:
     get:
       tags:
@@ -206,14 +209,17 @@ paths:
         '404':
           description: Sheet not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: '#/components/schemas/ProblemDetails'
               examples:
                 sheet_not_found:
                   summary: Sheet does not exist
                   value:
-                    message: 'sheet not found: 123e4567-e89b-12d3-a456-426614174000'
+                    detail: 'sheet not found: 123e4567-e89b-12d3-a456-426614174000'
+                    status: 404
+                    title: Sheet Not Found
+                    type: /problems/sheet-not-found
   /sheets/{sheet_id}/fields:
     get:
       tags:
@@ -239,24 +245,19 @@ paths:
         '404':
           description: Sheet not found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: '#/components/schemas/ProblemDetails'
               examples:
                 sheet_not_found:
                   summary: Sheet does not exist
                   value:
-                    message: 'sheet not found: 123e4567-e89b-12d3-a456-426614174000'
+                    detail: 'sheet not found: 123e4567-e89b-12d3-a456-426614174000'
+                    status: 404
+                    title: Sheet Not Found
+                    type: /problems/sheet-not-found
 components:
   schemas:
-    ApiErrorResponse:
-      type: object
-      required:
-      - message
-      properties:
-        message:
-          type: string
-          description: Human-readable error message describing what went wrong.
     AttachAbilityModCalcScriptRequest:
       type: object
       required:
@@ -352,6 +353,35 @@ components:
           items:
             $ref: '#/components/schemas/SheetFieldDto'
           description: List of interactive PDF AcroForm fields.
+    ProblemDetails:
+      type: object
+      description: RFC 9457 Problem Details response body.
+      required:
+      - type
+      - title
+      - status
+      properties:
+        detail:
+          type:
+          - string
+          - 'null'
+          description: A human-readable explanation specific to this occurrence.
+        instance:
+          type:
+          - string
+          - 'null'
+          description: A URI reference that identifies the specific occurrence.
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code.
+          minimum: 0
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
     SheetFieldDto:
       type: object
       required:

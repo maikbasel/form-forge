@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof ApiClientError) {
-      return NextResponse.json(error.apiError, { status: error.statusCode });
+      return NextResponse.json(error.problem, { status: error.statusCode });
     }
 
     return NextResponse.json(

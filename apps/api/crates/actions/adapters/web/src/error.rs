@@ -2,24 +2,24 @@ use actions_core::error::ActionError;
 use actix_web::body::BoxBody;
 use actix_web::http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use common::error::ApiErrorResponse;
+use common::error::ProblemDetails;
 use std::fmt;
 
 #[derive(Debug)]
 pub struct ApiError {
     status: StatusCode,
-    body: ApiErrorResponse,
+    body: ProblemDetails,
 }
 
 impl ApiError {
-    pub fn new(status: StatusCode, body: ApiErrorResponse) -> Self {
+    pub fn new(status: StatusCode, body: ProblemDetails) -> Self {
         Self { status, body }
     }
 }
 
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}", self.status, self.body.message)
+        write!(f, "{}: {}", self.status, self.body.title)
     }
 }
 
@@ -28,45 +28,36 @@ impl From<ActionError> for ApiError {
         match value {
             ActionError::NotFound(_) => ApiError::new(
                 StatusCode::NOT_FOUND,
-                ApiErrorResponse {
-                    message: value.to_string(),
-                },
+                ProblemDetails::new("/problems/sheet-not-found", "Sheet Not Found", 404)
+                    .with_detail(value.to_string()),
             ),
             ActionError::FileNotFound => ApiError::new(
                 StatusCode::NOT_FOUND,
-                ApiErrorResponse {
-                    message: value.to_string(),
-                },
-            ),
-            ActionError::LoadPdfError => ApiError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ApiErrorResponse {
-                    message: value.to_string(),
-                },
+                ProblemDetails::new("/problems/file-not-found", "File Not Found", 404)
+                    .with_detail(value.to_string()),
             ),
             ActionError::InvalidPdfSheet(_) => ApiError::new(
                 StatusCode::BAD_REQUEST,
-                ApiErrorResponse {
-                    message: value.to_string(),
-                },
-            ),
-            ActionError::SavePdfError => ApiError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ApiErrorResponse {
-                    message: value.to_string(),
-                },
+                ProblemDetails::new("/problems/invalid-pdf-sheet", "Invalid PDF Sheet", 400)
+                    .with_detail(value.to_string()),
             ),
             ActionError::FieldNotFound(_) => ApiError::new(
                 StatusCode::BAD_REQUEST,
-                ApiErrorResponse {
-                    message: value.to_string(),
-                },
+                ProblemDetails::new("/problems/field-not-found", "Field Not Found", 400)
+                    .with_detail(value.to_string()),
             ),
             ActionError::InvalidAction(_) => ApiError::new(
                 StatusCode::BAD_REQUEST,
-                ApiErrorResponse {
-                    message: value.to_string(),
-                },
+                ProblemDetails::new("/problems/invalid-action", "Invalid Action", 400)
+                    .with_detail(value.to_string()),
+            ),
+            ActionError::LoadPdfError => ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ProblemDetails::internal(),
+            ),
+            ActionError::SavePdfError => ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ProblemDetails::internal(),
             ),
         }
     }
@@ -74,6 +65,8 @@ impl From<ActionError> for ApiError {
 
 impl ResponseError for ApiError {
     fn error_response(&self) -> HttpResponse<BoxBody> {
-        HttpResponse::build(self.status).json(&self.body)
+        HttpResponse::build(self.status)
+            .content_type("application/problem+json")
+            .json(&self.body)
     }
 }

@@ -41,7 +41,7 @@ export default function SheetUploader({
 
   const getErrorMessage = useCallback((error: unknown): string => {
     if (error instanceof ApiClientError) {
-      return error.apiError.message;
+      return error.problem.detail ?? error.problem.title;
     }
     if (error instanceof Error) {
       return error.message;

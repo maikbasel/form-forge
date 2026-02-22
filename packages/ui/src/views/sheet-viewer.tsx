@@ -1025,7 +1025,7 @@ export default function SheetViewer({
     } catch (err) {
       let errorMessage: string;
       if (err instanceof ApiClientError) {
-        errorMessage = err.apiError.message;
+        errorMessage = err.problem.detail ?? err.problem.title;
       } else if (err instanceof Error) {
         errorMessage = err.message;
       } else {
@@ -1064,7 +1064,7 @@ export default function SheetViewer({
     } catch (err) {
       let errorMessage: string;
       if (err instanceof ApiClientError) {
-        errorMessage = err.apiError.message;
+        errorMessage = err.problem.detail ?? err.problem.title;
       } else if (err instanceof Error) {
         errorMessage = err.message;
       } else {
