@@ -94,7 +94,7 @@ test.describe("Sheet Workflow - Happy Path", () => {
 
     await test.step("Download and verify sheet", async () => {
       const download = await sheetViewerPage.downloadSheet();
-      await sheetViewerPage.verifySuccessToast("downloaded successfully");
+      await sheetViewerPage.verifySuccessToast("exported successfully");
 
       const downloadPath = join(
         __dirname,
