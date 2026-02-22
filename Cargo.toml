@@ -73,7 +73,7 @@ serde_json = "1.0"
 serde_yaml = "0.9"
 
 # Identifiers
-uuid = { version = "1.18.1", features = ["v4", "serde"] }
+uuid = { version = "1.21.0", features = ["v4", "serde"] }
 
 # Async
 async-trait = "0.1"
@@ -94,12 +94,12 @@ utoipa-actix-web = "0.1"
 validator = { version = "0.20", features = ["derive"] }
 
 # S3
-aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
-aws-sdk-s3 = "1.120.0"
+aws-config = { version = "1.8.14", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.124.0"
 url = "2"
 
 # Testing
-tempfile = "3.21"
+tempfile = "3.25"
 testcontainers = "0.26"
 testcontainers-modules = { version = "0.14", features = ["postgres", "minio", "blocking"] }
 rstest = "0.26"
