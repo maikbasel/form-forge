@@ -1,17 +1,20 @@
 import { SheetsSidebar } from "@repo/ui/components/sheets-sidebar";
 import { useSheet } from "@repo/ui/context/sheet-context";
 import { listen } from "@tauri-apps/api/event";
+import { appDataDir, dirname } from "@tauri-apps/api/path";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
+import { openPath } from "@tauri-apps/plugin-opener";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { getExportDir } from "../lib/settings";
 import {
   listSheets,
   type SheetSummary,
   uploadSheetFromPath,
 } from "../lib/tauri-api-client";
-import { tauriDownloadStrategy } from "../lib/tauri-strategies";
+import { tauriExportStrategy } from "../lib/tauri-strategies";
 
 const PATH_SEPARATOR_REGEX = /[\\/]/;
 
@@ -42,7 +45,12 @@ export function AppSidebar() {
       setSheetPath(selected);
       setSheetId(ref.id);
       setSheets((prev) => [
-        { id: ref.id, originalName: ref.original_name, storedPath: selected },
+        {
+          id: ref.id,
+          originalName: ref.original_name,
+          storedPath: selected,
+          createdAt: new Date().toISOString(),
+        },
         ...prev,
       ]);
       navigate(`/sheets/${ref.id}`);
@@ -60,13 +68,45 @@ export function AppSidebar() {
       setSheetPath(filePath);
       setSheetId(ref.id);
       setSheets((prev) => [
-        { id: ref.id, originalName: ref.original_name, storedPath: filePath },
+        {
+          id: ref.id,
+          originalName: ref.original_name,
+          storedPath: filePath,
+          createdAt: new Date().toISOString(),
+        },
         ...prev,
       ]);
       navigate(`/sheets/${ref.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Import failed";
       toast.error(`Failed to import sheet: ${message}`);
+    }
+  };
+
+  const handleOpenInFolder = async (id: string) => {
+    const sheet = sheets.find((s) => s.id === id);
+    if (!sheet?.storedPath) {
+      return;
+    }
+    const folder = await dirname(sheet.storedPath);
+    await openPath(folder);
+  };
+
+  const handleOpenPdf = async (id: string) => {
+    const sheet = sheets.find((s) => s.id === id);
+    if (!sheet?.storedPath) {
+      return;
+    }
+    await openPath(sheet.storedPath);
+  };
+
+  const handleOpenFolder = async () => {
+    const customDir = await getExportDir();
+    if (customDir) {
+      await openPath(customDir);
+    } else {
+      const dataDir = await appDataDir();
+      await openPath(`${dataDir}/sheets`);
     }
   };
 
@@ -97,7 +137,7 @@ export function AppSidebar() {
       listen("menu:export-sheet", () => {
         const id = currentIdRef.current;
         if (id) {
-          tauriDownloadStrategy.download(id).catch(console.error);
+          tauriExportStrategy.export(id).catch(console.error);
         }
       }),
     ]).then((fns) => {
@@ -154,7 +194,9 @@ export function AppSidebar() {
     <SheetsSidebar
       currentSheetId={currentId}
       onGoHome={() => navigate("/")}
-      onOpenNew={handleOpenNew}
+      onOpenFolder={handleOpenFolder}
+      onOpenInFolder={handleOpenInFolder}
+      onOpenPdf={handleOpenPdf}
       onOpenSettings={() => navigate("/settings")}
       onSelectSheet={(id) => {
         const sheet = sheets.find((s) => s.id === id);

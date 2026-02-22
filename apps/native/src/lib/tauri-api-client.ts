@@ -87,16 +87,23 @@ export interface SheetSummary {
   id: string;
   originalName: string;
   storedPath: string;
+  createdAt: string;
 }
 
 export function listSheets(): Promise<SheetSummary[]> {
-  return invoke<Array<{ id: string; original_name: string; path: string }>>(
-    "list_sheets"
-  ).then((items) =>
+  return invoke<
+    Array<{
+      id: string;
+      original_name: string;
+      path: string;
+      created_at: string;
+    }>
+  >("list_sheets").then((items) =>
     items.map((i) => ({
       id: i.id,
       originalName: i.original_name,
       storedPath: i.path,
+      createdAt: i.created_at,
     }))
   );
 }
@@ -119,12 +126,8 @@ export function readPdfBytes(filePath: string): Promise<ArrayBuffer> {
   return invoke<ArrayBuffer>("read_pdf_bytes", { filePath });
 }
 
-export function copyFileToDir(
-  src: string,
-  dstDir: string,
-  filename: string
-): Promise<string> {
-  return invoke<string>("copy_file_to_dir", { src, dstDir, filename });
+export function copyFile(src: string, dst: string): Promise<void> {
+  return invoke<void>("copy_file", { src, dst });
 }
 
 export const tauriApiClient: ApiClient = {

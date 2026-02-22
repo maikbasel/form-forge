@@ -29,6 +29,11 @@ CREATE TABLE IF NOT EXISTS failed_sheet_deletions (
 );
 "#;
 
+pub struct SheetListRow {
+    pub reference: SheetReference,
+    pub created_at: String,
+}
+
 pub struct SheetReferenceLibSql {
     db: Database,
 }
@@ -53,12 +58,12 @@ impl SheetReferenceLibSql {
             .map_err(|e| SheetError::DatabaseError(e.into()))
     }
 
-    pub async fn list_all(&self) -> Result<Vec<SheetReference>, SheetError> {
+    pub async fn list_all(&self) -> Result<Vec<SheetListRow>, SheetError> {
         let conn = self.conn()?;
 
         let mut rows = conn
             .query(
-                "SELECT id, original_name, name, extension, path FROM sheet_reference ORDER BY created_at DESC",
+                "SELECT id, original_name, name, extension, path, created_at FROM sheet_reference ORDER BY created_at DESC LIMIT 50",
                 libsql::params![],
             )
             .await
@@ -83,17 +88,23 @@ impl SheetReferenceLibSql {
             let path: String = row
                 .get(4)
                 .map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let created_at: String = row
+                .get(5)
+                .map_err(|e| SheetError::DatabaseError(e.into()))?;
 
             let uuid = Uuid::parse_str(&id)
                 .map_err(|e| SheetError::DatabaseError(anyhow::anyhow!("invalid UUID: {}", e)))?;
 
-            refs.push(SheetReference::new(
-                uuid,
-                original_name,
-                name,
-                extension,
-                PathBuf::from(path),
-            ));
+            refs.push(SheetListRow {
+                reference: SheetReference::new(
+                    uuid,
+                    original_name,
+                    name,
+                    extension,
+                    PathBuf::from(path),
+                ),
+                created_at,
+            });
         }
 
         Ok(refs)

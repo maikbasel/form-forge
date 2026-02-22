@@ -31,7 +31,11 @@ function applyTheme(theme: Theme, prefersDark: boolean): void {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(getTheme);
+  const [theme, setThemeState] = useState<Theme>("system");
+
+  useEffect(() => {
+    getTheme().then(setThemeState);
+  }, []);
 
   const setTheme = useCallback((next: Theme) => {
     persistTheme(next);

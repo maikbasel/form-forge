@@ -1,11 +1,11 @@
 import type {
-  DownloadStrategy,
+  ExportStrategy,
   PdfLoadStrategy,
 } from "@repo/ui/views/sheet-viewer";
-import { openPath } from "@tauri-apps/plugin-opener";
-import { toast } from "sonner";
-import { getExportDir } from "./settings";
-import { copyFileToDir, exportSheet, readPdfBytes } from "./tauri-api-client";
+import { downloadDir } from "@tauri-apps/api/path";
+import { save } from "@tauri-apps/plugin-dialog";
+import { getExportDir, setExportDir } from "./settings";
+import { copyFile, exportSheet, readPdfBytes } from "./tauri-api-client";
 
 export const tauriPdfLoader: PdfLoadStrategy = {
   async loadPdfUrl(filePath: string): Promise<string> {
@@ -15,25 +15,26 @@ export const tauriPdfLoader: PdfLoadStrategy = {
   },
 };
 
-export const tauriDownloadStrategy: DownloadStrategy = {
-  async download(sheetId: string): Promise<void> {
+export const tauriExportStrategy: ExportStrategy = {
+  async export(sheetId: string): Promise<boolean> {
     const result = await exportSheet(sheetId);
-    const customDir = getExportDir();
+    const lastDir = await getExportDir();
+    const baseDir = lastDir ?? (await downloadDir());
+    const defaultPath = `${baseDir}/${result.filename}`;
 
-    if (customDir) {
-      try {
-        await copyFileToDir(result.path, customDir, result.filename);
-        await openPath(customDir);
-      } catch {
-        toast.info(`Exported to: ${result.path}`);
-      }
-    } else {
-      const dir = result.path.substring(0, result.path.lastIndexOf("/"));
-      try {
-        await openPath(dir);
-      } catch {
-        toast.info(`Exported to: ${result.path}`);
-      }
+    const savePath = await save({
+      defaultPath,
+      filters: [{ name: "PDF Files", extensions: ["pdf"] }],
+    });
+
+    if (!savePath) {
+      return false;
     }
+
+    await copyFile(result.path, savePath);
+
+    const chosenDir = savePath.substring(0, savePath.lastIndexOf("/"));
+    setExportDir(chosenDir);
+    return true;
   },
 };

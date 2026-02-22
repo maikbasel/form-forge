@@ -22,6 +22,7 @@ struct SheetSummaryResponse {
     id: Uuid,
     original_name: String,
     path: String,
+    created_at: String,
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -116,24 +117,25 @@ async fn list_sheets(
     Ok(refs
         .into_iter()
         .map(|r| SheetSummaryResponse {
-            id: r.id,
-            original_name: r.original_name,
-            path: r.path.display().to_string(),
+            id: r.reference.id,
+            original_name: r.reference.original_name,
+            path: r.reference.path.display().to_string(),
+            created_at: r.created_at,
         })
         .collect())
 }
 
 #[tauri::command]
-async fn copy_file_to_dir(
-    src: String,
-    dst_dir: String,
-    filename: String,
-) -> Result<String, String> {
-    let dst = std::path::PathBuf::from(&dst_dir).join(&filename);
+async fn copy_file(src: String, dst: String) -> Result<(), String> {
+    if let Some(parent) = std::path::Path::new(&dst).parent() {
+        tokio::fs::create_dir_all(parent)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
     tokio::fs::copy(&src, &dst)
         .await
         .map_err(|e| e.to_string())?;
-    Ok(dst.display().to_string())
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -142,6 +144,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
         .plugin(tauri_plugin_window_state::Builder::new().build())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .on_menu_event(|app, event| match event.id().0.as_str() {
             "open_sheet" => {
@@ -250,7 +253,7 @@ pub fn run() {
             attach_calculation_action,
             read_pdf_bytes,
             list_sheets,
-            copy_file_to_dir,
+            copy_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

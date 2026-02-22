@@ -28,12 +28,13 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const [exportDir, setExportDirState] = useState<string | null>(getExportDir);
+  const [exportDir, setExportDirState] = useState<string | null>(null);
   const [dataDir, setDataDir] = useState<string>("");
 
   useEffect(() => {
     getCurrentWindow().setTitle("Settings – Form Forge").catch(console.error);
     appDataDir().then(setDataDir).catch(console.error);
+    getExportDir().then(setExportDirState).catch(console.error);
   }, []);
 
   const handleChangeExportDir = async () => {
@@ -103,7 +104,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Export</CardTitle>
           <CardDescription>
-            Where exported PDFs are saved after processing.
+            Default location suggested when saving exported PDFs.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

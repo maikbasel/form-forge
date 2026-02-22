@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { listSheets } from "../lib/tauri-api-client";
-import { tauriDownloadStrategy, tauriPdfLoader } from "../lib/tauri-strategies";
+import { tauriExportStrategy, tauriPdfLoader } from "../lib/tauri-strategies";
 
 export default function SheetViewerPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,7 +42,7 @@ export default function SheetViewerPage() {
       </header>
       <div className="flex-1 overflow-hidden">
         <SheetViewer
-          downloadHandler={tauriDownloadStrategy}
+          exportHandler={tauriExportStrategy}
           file={sheetPath ?? undefined}
           pdfLoader={tauriPdfLoader}
           sheetId={id}
