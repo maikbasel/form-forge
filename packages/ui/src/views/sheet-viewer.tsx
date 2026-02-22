@@ -50,7 +50,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Download,
+  FileDown,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -666,8 +666,8 @@ export interface PdfLoadStrategy {
   loadPdfUrl(fileRef: string): Promise<string>;
 }
 
-export interface DownloadStrategy {
-  download(sheetId: string): Promise<void>;
+export interface ExportStrategy {
+  export(sheetId: string): Promise<boolean>;
 }
 
 interface FieldOverlayProps {
@@ -730,14 +730,14 @@ interface SheetViewerProps {
   file?: string;
   sheetId?: string;
   pdfLoader?: PdfLoadStrategy;
-  downloadHandler?: DownloadStrategy;
+  exportHandler?: ExportStrategy;
 }
 
 export default function SheetViewer({
   file,
   sheetId,
   pdfLoader,
-  downloadHandler,
+  exportHandler,
 }: Readonly<SheetViewerProps>) {
   const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
@@ -749,7 +749,7 @@ export default function SheetViewer({
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [showActionModal, setShowActionModal] = useState(false);
   const [attachedActions, setAttachedActions] = useState<AttachedAction[]>([]);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   // State for pre-signed PDF URL
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isPdfUrlLoading, setIsPdfUrlLoading] = useState(false);
@@ -1037,16 +1037,19 @@ export default function SheetViewer({
     }
   };
 
-  const handleDownloadSheet = async () => {
+  const handleExportSheet = async () => {
     if (!sheetId) {
       return;
     }
 
-    setIsDownloading(true);
+    setIsExporting(true);
 
     try {
-      if (downloadHandler) {
-        await downloadHandler.download(sheetId);
+      if (exportHandler) {
+        const exported = await exportHandler.export(sheetId);
+        if (exported) {
+          toast.success("Sheet exported successfully");
+        }
       } else if ("downloadSheet" in apiClient) {
         const { blob, filename } = await (
           apiClient as {
@@ -1056,8 +1059,8 @@ export default function SheetViewer({
           }
         ).downloadSheet(sheetId);
         triggerBrowserDownload(blob, filename);
+        toast.success("Sheet exported successfully");
       }
-      toast.success("Sheet downloaded successfully");
     } catch (err) {
       let errorMessage: string;
       if (err instanceof ApiClientError) {
@@ -1068,9 +1071,9 @@ export default function SheetViewer({
         errorMessage = "Unknown error";
       }
 
-      toast.error(`Failed to download sheet: ${errorMessage}`);
+      toast.error(`Failed to export sheet: ${errorMessage}`);
     } finally {
-      setIsDownloading(false);
+      setIsExporting(false);
     }
   };
 
@@ -1091,13 +1094,13 @@ export default function SheetViewer({
               </div>
               <div className="flex gap-2">
                 <Button
-                  disabled={isDownloading || !sheetId}
-                  onClick={handleDownloadSheet}
+                  disabled={isExporting || !sheetId}
+                  onClick={handleExportSheet}
                   size="sm"
                   variant="outline"
                 >
-                  <Download className="mr-2 h-4 w-4" />
-                  {isDownloading ? "Downloading..." : "Download"}
+                  <FileDown className="mr-2 h-4 w-4" />
+                  {isExporting ? "Exporting..." : "Export"}
                 </Button>
                 {selectedFields.length > 0 && (
                   <>

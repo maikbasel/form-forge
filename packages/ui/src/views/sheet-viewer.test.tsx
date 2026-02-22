@@ -55,7 +55,7 @@ describe("SheetViewer", () => {
     expect(screen.queryByText("Configure Calculation")).not.toBeInTheDocument();
   });
 
-  it("download button calls apiClient.downloadSheet and shows success toast", async () => {
+  it("export button calls apiClient.downloadSheet and shows success toast", async () => {
     const user = userEvent.setup();
     const blob = new Blob(["pdf"], { type: "application/pdf" });
     const client = createMockApiClient({
@@ -87,14 +87,12 @@ describe("SheetViewer", () => {
 
     renderViewer(client, { sheetId: "sheet-1" });
 
-    const downloadButton = screen.getByText("Download");
-    await user.click(downloadButton);
+    const exportButton = screen.getByText("Export");
+    await user.click(exportButton);
 
     await waitFor(() => {
       expect(client.downloadSheet).toHaveBeenCalledWith("sheet-1");
-      expect(toast.success).toHaveBeenCalledWith(
-        "Sheet downloaded successfully"
-      );
+      expect(toast.success).toHaveBeenCalledWith("Sheet exported successfully");
     });
 
     vi.restoreAllMocks();
