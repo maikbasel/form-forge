@@ -12,7 +12,7 @@ tracing-subscriber.workspace = true
 # OpenTelemetry dependencies (optional, for production tracing)
 opentelemetry = { version = "0.27", features = ["metrics", "logs"], optional = true }
 opentelemetry_sdk = { version = "0.27", features = ["rt-tokio", "metrics", "logs"], optional = true }
-opentelemetry-otlp = { version = "0.27", features = ["http-proto", "reqwest-client", "metrics", "logs"], optional = true }
+opentelemetry-otlp = { version = "0.31", features = ["http-proto", "reqwest-client", "metrics", "logs"], optional = true }
 opentelemetry-appender-tracing = { version = "0.27", optional = true }
 tracing-opentelemetry = { version = "0.28", optional = true }
 
