@@ -7,6 +7,15 @@
 A PDF form processing application that enables non-technical D&D 5e players to add dynamic calculations to their PDF
 character sheets without writing JavaScript or understanding PDF AcroForm internals.
 
+> [!NOTE]
+> The pre-built binaries provided on the [Releases](https://github.com/maikbasel/form-forge/releases) page are **not code-signed**. This means:
+>
+> - **Windows**: Microsoft SmartScreen may show a "Windows protected your PC" warning. Click **"More info"** and then **"Run anyway"** to proceed.
+> - **macOS**: Gatekeeper will block the app with a message that it "can't be opened because it is from an unidentified developer." To bypass this, go to **System Settings > Privacy & Security**, find the blocked app, and click **"Open Anyway"**. Alternatively, right-click the app and select **"Open"**.
+> - **Linux**: No additional steps required.
+>
+> The application is safe to use — code signing certificates are costly for an open-source project. You can verify the integrity of the binaries by building from source.
+
 ## What It Does
 
 Users upload a PDF character sheet, the application extracts form fields, and provides a visual interface to map
