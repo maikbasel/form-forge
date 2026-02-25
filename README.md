@@ -16,6 +16,20 @@ character sheets without writing JavaScript or understanding PDF AcroForm intern
 >
 > The application is safe to use — code signing certificates are costly for an open-source project. You can verify the integrity of the binaries by building from source.
 
+### Building from Source
+Ensure you have the [prerequisites](#prerequisites) installed, including the
+[Tauri v2 system dependencies](https://v2.tauri.app/start/prerequisites/) for your platform.
+
+```bash
+git clone https://github.com/maikbasel/form-forge.git
+cd form-forge
+pnpm install
+cd apps/native
+pnpm tauri build
+```
+
+The compiled binaries will be in `apps/native/src-tauri/target/release/bundle/`.
+
 ## What It Does
 
 Users upload a PDF character sheet, the application extracts form fields, and provides a visual interface to map
@@ -40,8 +54,8 @@ necessary JavaScript and embeds it into the PDF AcroForm structure.
 
 ## Prerequisites
 
-- Rust (stable toolchain)
-- Docker + Docker Compose
+- [Rust](https://www.rust-lang.org/tools/install) (stable toolchain)- Docker + Docker Compose
+- **Native app only:** [Tauri v2 system dependencies](https://v2.tauri.app/start/prerequisites/) for your platform (Rust, system libraries, etc.)
 
 **Recommended: Install via asdf** (version manager)
 
