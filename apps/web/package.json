@@ -16,7 +16,7 @@
     "@repo/i18n": "workspace:*",
     "@repo/ui": "workspace:*",
     "i18next": "^25.2.1",
-    "react-i18next": "^15.5.2",
+    "react-i18next": "^16.5.4",
     "axios": "^1.13.5",
     "lucide-react": "^0.562.0",
     "next": "^16.1.6",
@@ -27,7 +27,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20.19.33",
-    "@types/react": "19.2.10",
+    "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "jsdom": "^28.1.0",
     "postcss": "^8.5.6",
