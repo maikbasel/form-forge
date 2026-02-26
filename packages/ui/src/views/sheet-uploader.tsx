@@ -18,6 +18,7 @@ import { useSheet } from "@repo/ui/context/sheet-context.tsx";
 import { ApiClientError } from "@repo/ui/types/api.ts";
 import { Loader2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -30,6 +31,7 @@ interface SheetUploaderProps {
 export default function SheetUploader({
   onUploadSuccess,
 }: SheetUploaderProps = {}) {
+  const { t } = useTranslation("sheets");
   const [files, setFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -39,15 +41,18 @@ export default function SheetUploader({
   const { setSheetPath, setSheetId } = useSheet();
   const apiClient = useFileApiClient();
 
-  const getErrorMessage = useCallback((error: unknown): string => {
-    if (error instanceof ApiClientError) {
-      return error.problem.detail ?? error.problem.title;
-    }
-    if (error instanceof Error) {
-      return error.message;
-    }
-    return "Upload failed";
-  }, []);
+  const getErrorMessage = useCallback(
+    (error: unknown): string => {
+      if (error instanceof ApiClientError) {
+        return error.problem.detail ?? error.problem.title;
+      }
+      if (error instanceof Error) {
+        return error.message;
+      }
+      return t("common:uploadFailed");
+    },
+    [t]
+  );
 
   const uploadSingleFile = useCallback(
     async (options: {
@@ -87,7 +92,7 @@ export default function SheetUploader({
         setAbortController(null);
 
         if (error instanceof Error && error.message === "Upload aborted") {
-          toast.info("Upload cancelled");
+          toast.info(t("uploader.uploadCancelled"));
           return;
         }
 
@@ -95,7 +100,7 @@ export default function SheetUploader({
         onError(file, new Error(errorMessage));
       }
     },
-    [apiClient, setSheetPath, setSheetId, onUploadSuccess, getErrorMessage]
+    [apiClient, setSheetPath, setSheetId, onUploadSuccess, getErrorMessage, t]
   );
 
   const onUpload: NonNullable<FileUploadProps["onUpload"]> = useCallback(
@@ -140,11 +145,17 @@ export default function SheetUploader({
     }
   }, [abortController]);
 
-  const onFileReject = useCallback((file: File, message: string) => {
-    toast(message, {
-      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" has been rejected`,
-    });
-  }, []);
+  const onFileReject = useCallback(
+    (file: File, message: string) => {
+      toast(message, {
+        description: t("uploader.fileRejected", {
+          fileName:
+            file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name,
+        }),
+      });
+    },
+    [t]
+  );
 
   return (
     <>
@@ -163,14 +174,14 @@ export default function SheetUploader({
             <div className="flex items-center justify-center rounded-full border p-2.5">
               <Upload className="size-6 text-muted-foreground" />
             </div>
-            <p className="font-medium text-sm">
-              Drag & drop your PDF Sheet here
+            <p className="font-medium text-sm">{t("uploader.dragAndDrop")}</p>
+            <p className="text-muted-foreground text-xs">
+              {t("uploader.orClickToBrowse")}
             </p>
-            <p className="text-muted-foreground text-xs">Or click to browse</p>
           </div>
           <FileUploadTrigger asChild>
             <Button className="mt-2 w-fit" size="sm" variant="outline">
-              Browse Sheets
+              {t("uploader.browseSheets")}
             </Button>
           </FileUploadTrigger>
         </FileUploadDropzone>
@@ -183,12 +194,14 @@ export default function SheetUploader({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {isProcessing ? "Processing Sheet" : "Uploading Sheet"}
+              {isProcessing
+                ? t("uploader.processingSheet")
+                : t("uploader.uploadingSheet")}
             </DialogTitle>
             <DialogDescription>
               {isProcessing
-                ? "Extracting form fields from your PDF..."
-                : "Please wait while we upload your PDF sheet"}
+                ? t("uploader.extractingFormFields")
+                : t("uploader.pleaseWaitUploading")}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-6">

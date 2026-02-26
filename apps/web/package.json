@@ -13,7 +13,10 @@
   },
   "dependencies": {
     "@repo/api-spec": "workspace:*",
+    "@repo/i18n": "workspace:*",
     "@repo/ui": "workspace:*",
+    "i18next": "^25.2.1",
+    "react-i18next": "^15.5.2",
     "axios": "^1.13.5",
     "lucide-react": "^0.562.0",
     "next": "^16.1.6",

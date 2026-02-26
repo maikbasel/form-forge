@@ -1,0 +1,62 @@
+{
+  "sidebar": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "previous7Days": "Letzte 7 Tage",
+    "older": "\u00c4lter",
+    "openStorageFolder": "Speicherordner \u00f6ffnen",
+    "noSheetsYet": "Noch keine Bl\u00e4tter.",
+    "openPdfToGetStarted": "\u00d6ffne ein PDF, um loszulegen.",
+    "open": "\u00d6ffnen",
+    "openWithDefaultApp": "Mit Standard-App \u00f6ffnen",
+    "showInFolder": "Im Ordner anzeigen"
+  },
+  "uploader": {
+    "dragAndDrop": "PDF-Blatt hierher ziehen",
+    "orClickToBrowse": "Oder klicken zum Durchsuchen",
+    "browseSheets": "Bl\u00e4tter durchsuchen",
+    "processingSheet": "Blatt wird verarbeitet",
+    "uploadingSheet": "Blatt wird hochgeladen",
+    "extractingFormFields": "Formularfelder werden aus Ihrem PDF extrahiert...",
+    "pleaseWaitUploading": "Bitte warten Sie, w\u00e4hrend Ihr PDF-Blatt hochgeladen wird",
+    "uploadCancelled": "Upload abgebrochen",
+    "fileRejected": "\"{{fileName}}\" wurde abgelehnt"
+  },
+  "viewer": {
+    "characterSheetEditor": "Charakterbogen-Editor",
+    "selectFieldsToConfigureCalculations": "Felder ausw\u00e4hlen, um Berechnungen zu konfigurieren",
+    "exporting": "Wird exportiert...",
+    "export": "Exportieren",
+    "configureCalculation": "Berechnung konfigurieren",
+    "previous": "Zur\u00fcck",
+    "next": "Weiter",
+    "pageOf": "Seite {{current}} von {{total}}",
+    "selectField": "Feld {{field}} ausw\u00e4hlen",
+    "navigateToField": "Zu Feld {{field}} navigieren",
+    "removeField": "{{field}} entfernen",
+    "sheetNotFound": "Blatt nicht gefunden",
+    "errorWithCode": "Fehler {{code}}: {{message}}",
+    "noSheetIdAvailable": "Keine Blatt-ID verf\u00fcgbar",
+    "attachedSuccessfully": "{{name}} erfolgreich angeh\u00e4ngt",
+    "failedToAttach": "{{name}} konnte nicht angeh\u00e4ngt werden: {{message}}",
+    "sheetExportedSuccessfully": "Blatt erfolgreich exportiert",
+    "failedToExportSheet": "Blatt konnte nicht exportiert werden: {{message}}",
+    "failedToFetchPdfUrl": "PDF-URL konnte nicht abgerufen werden",
+    "failedToLoadPdf": "PDF konnte nicht geladen werden",
+    "fieldsCount": "{{count}} Felder",
+    "allFieldsAssigned": "Alle Felder zugewiesen",
+    "availableFields": "Verf\u00fcgbare Felder"
+  },
+  "web": {
+    "uploadTitle": "PDF-Charakterbogen hochladen",
+    "uploadDescription": "Lassen Sie Ihren D&D-Charakterbogen F\u00e4higkeitsmodifikatoren, Fertigkeitsproben und andere Werte automatisch berechnen"
+  },
+  "native": {
+    "uploadTitle": "PDF-Charakterbogen importieren",
+    "uploadDescription": "PDF-Datei ablegen oder vom Computer ausw\u00e4hlen",
+    "uploadStarted": "Laden Sie einen PDF-Charakterbogen hoch, um zu beginnen",
+    "failedToImportSheet": "Blatt konnte nicht importiert werden: {{message}}",
+    "importingAndExtracting": "Formularfelder werden importiert und extrahiert...",
+    "pleaseDropPdf": "Bitte legen Sie eine PDF-Datei ab"
+  }
+}

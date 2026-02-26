@@ -1,0 +1,31 @@
+{
+  "appName": "Form Forge",
+  "back": "Back",
+  "cancel": "Cancel",
+  "clear": "Clear",
+  "loading": "Loading\u2026",
+  "settings": "Settings",
+  "required": "Required",
+  "optional": "Optional",
+  "unknownError": "Unknown error",
+  "uploadFailed": "Upload failed",
+  "fileUpload": "File upload",
+  "maxFilesAllowed": "Maximum {{maxFiles}} files allowed",
+  "fileTypeNotAccepted": "File type not accepted",
+  "fileTooLarge": "File too large",
+  "errorWithMessage": "Error: {{error}}",
+  "uploadingProgress": "Uploading: {{progress}}% complete",
+  "uploadComplete": "Upload complete",
+  "readyToUpload": "Ready to upload",
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "toggle": "Toggle language",
+    "en": "English",
+    "de": "Deutsch"
+  }
+}

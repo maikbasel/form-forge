@@ -4,6 +4,7 @@ import SheetViewer from "@repo/ui/views/sheet-viewer";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { listSheets } from "../lib/tauri-api-client";
 import { tauriExportStrategy, tauriPdfLoader } from "../lib/tauri-strategies";
@@ -12,6 +13,7 @@ export default function SheetViewerPage() {
   const { id } = useParams<{ id: string }>();
   const { sheetPath } = useSheet();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!id) {
@@ -37,7 +39,7 @@ export default function SheetViewerPage() {
       <header className="flex shrink-0 items-center border-b px-2 py-1.5">
         <Button onClick={() => navigate("/")} size="sm" variant="ghost">
           <ArrowLeft className="size-4" />
-          Back
+          {t("common:back")}
         </Button>
       </header>
       <div className="flex-1 overflow-hidden">

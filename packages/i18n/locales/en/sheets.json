@@ -1,0 +1,62 @@
+{
+  "sidebar": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "previous7Days": "Previous 7 days",
+    "older": "Older",
+    "openStorageFolder": "Open storage folder",
+    "noSheetsYet": "No sheets yet.",
+    "openPdfToGetStarted": "Open a PDF to get started.",
+    "open": "Open",
+    "openWithDefaultApp": "Open with default app",
+    "showInFolder": "Show in folder"
+  },
+  "uploader": {
+    "dragAndDrop": "Drag & drop your PDF Sheet here",
+    "orClickToBrowse": "Or click to browse",
+    "browseSheets": "Browse Sheets",
+    "processingSheet": "Processing Sheet",
+    "uploadingSheet": "Uploading Sheet",
+    "extractingFormFields": "Extracting form fields from your PDF...",
+    "pleaseWaitUploading": "Please wait while we upload your PDF sheet",
+    "uploadCancelled": "Upload cancelled",
+    "fileRejected": "\"{{fileName}}\" has been rejected"
+  },
+  "viewer": {
+    "characterSheetEditor": "Character Sheet Editor",
+    "selectFieldsToConfigureCalculations": "Select fields to configure calculations",
+    "exporting": "Exporting...",
+    "export": "Export",
+    "configureCalculation": "Configure Calculation",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{current}} of {{total}}",
+    "selectField": "Select field {{field}}",
+    "navigateToField": "Navigate to field {{field}}",
+    "removeField": "Remove {{field}}",
+    "sheetNotFound": "Sheet not found",
+    "errorWithCode": "Error {{code}}: {{message}}",
+    "noSheetIdAvailable": "No sheet ID available",
+    "attachedSuccessfully": "{{name}} attached successfully",
+    "failedToAttach": "Failed to attach {{name}}: {{message}}",
+    "sheetExportedSuccessfully": "Sheet exported successfully",
+    "failedToExportSheet": "Failed to export sheet: {{message}}",
+    "failedToFetchPdfUrl": "Failed to fetch PDF URL",
+    "failedToLoadPdf": "Failed to load PDF",
+    "fieldsCount": "{{count}} fields",
+    "allFieldsAssigned": "All fields assigned",
+    "availableFields": "Available Fields"
+  },
+  "web": {
+    "uploadTitle": "Upload PDF Character Sheet",
+    "uploadDescription": "Make your D&D character sheet calculate ability modifiers, skill checks, and other values automatically"
+  },
+  "native": {
+    "uploadTitle": "Import a PDF character sheet",
+    "uploadDescription": "Drop a PDF file or select one from your computer",
+    "uploadStarted": "Upload a PDF character sheet to get started",
+    "failedToImportSheet": "Failed to import sheet: {{message}}",
+    "importingAndExtracting": "Importing and extracting form fields from your PDF...",
+    "pleaseDropPdf": "Please drop a PDF file"
+  }
+}

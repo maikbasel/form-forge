@@ -402,7 +402,7 @@ acceleration. Non-NVIDIA systems do not need this.
 - [x] Implement release workflow
 - [x] ~~Setup demo~~
 - [x] implement ttl for uploaded files
-- [ ] implement application/problem+json
+- [x] implement application/problem+json
 - [x] dockerize playwright tests
 - [ ] add translation
 - [x] Recent sheets

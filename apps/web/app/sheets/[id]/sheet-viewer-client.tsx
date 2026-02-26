@@ -10,6 +10,7 @@ import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Suspense } from "react";
+import { useTranslation } from "react-i18next";
 
 const SheetViewer = dynamic(() => import("@repo/ui/views/sheet-viewer.tsx"), {
   ssr: false,
@@ -39,6 +40,7 @@ interface SheetViewerClientProps {
 }
 
 export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
+  const { t } = useTranslation();
   const fileUrl = `/api/sheets/${sheetId}`;
 
   return (
@@ -47,7 +49,7 @@ export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
         <Button asChild size="sm" variant="outline">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Upload New Sheet
+            {t("common:back")}
           </Link>
         </Button>
       </div>

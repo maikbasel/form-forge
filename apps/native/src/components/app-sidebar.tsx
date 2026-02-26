@@ -6,6 +6,7 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { getExportDir } from "../lib/settings";
@@ -19,6 +20,7 @@ import { tauriExportStrategy } from "../lib/tauri-strategies";
 const PATH_SEPARATOR_REGEX = /[\\/]/;
 
 export function AppSidebar() {
+  const { t } = useTranslation("sheets");
   const [sheets, setSheets] = useState<SheetSummary[]>([]);
   const navigate = useNavigate();
   const { id: currentId } = useParams<{ id: string }>();
@@ -56,7 +58,7 @@ export function AppSidebar() {
       navigate(`/sheets/${ref.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Import failed";
-      toast.error(`Failed to import sheet: ${message}`);
+      toast.error(t("native.failedToImportSheet", { message }));
     }
   };
 
@@ -79,7 +81,7 @@ export function AppSidebar() {
       navigate(`/sheets/${ref.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Import failed";
-      toast.error(`Failed to import sheet: ${message}`);
+      toast.error(t("native.failedToImportSheet", { message }));
     }
   };
 
@@ -171,7 +173,7 @@ export function AppSidebar() {
           if (firstPdf) {
             handleDroppedFileRef.current(firstPdf).catch(console.error);
           } else if (event.payload.paths.length > 0) {
-            toast.error("Please drop a PDF file");
+            toast.error(t("native.pleaseDropPdf"));
           }
         }
       })
@@ -188,7 +190,7 @@ export function AppSidebar() {
       cancelled = true;
       unlisten?.();
     };
-  }, []);
+  }, [t]);
 
   return (
     <SheetsSidebar

@@ -13,29 +13,34 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../components/theme-provider";
 import { getExportDir, setExportDir, type Theme } from "../lib/settings";
 
 const GITHUB_URL = "https://github.com/maikbasel/form-forge";
 
-const THEME_OPTIONS: { value: Theme; label: string }[] = [
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-  { value: "system", label: "System" },
-];
-
 export default function SettingsPage() {
+  const { t } = useTranslation("actions");
+  const { t: tCommon, i18n } = useTranslation("common");
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [exportDir, setExportDirState] = useState<string | null>(null);
   const [dataDir, setDataDir] = useState<string>("");
 
+  const themeOptions: { value: Theme; label: string }[] = [
+    { value: "light", label: tCommon("theme.light") },
+    { value: "dark", label: tCommon("theme.dark") },
+    { value: "system", label: tCommon("theme.system") },
+  ];
+
   useEffect(() => {
-    getCurrentWindow().setTitle("Settings – Form Forge").catch(console.error);
+    getCurrentWindow()
+      .setTitle(t("settingsNative.windowTitle"))
+      .catch(console.error);
     appDataDir().then(setDataDir).catch(console.error);
     getExportDir().then(setExportDirState).catch(console.error);
-  }, []);
+  }, [t]);
 
   const handleChangeExportDir = async () => {
     const selected = await open({ directory: true, multiple: false });
@@ -65,13 +70,13 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-2xl space-y-6 p-6">
       <Button onClick={() => navigate(-1)} size="sm" variant="ghost">
         <ArrowLeft className="mr-1 size-4" />
-        Back
+        {tCommon("back")}
       </Button>
 
       <div>
-        <h1 className="font-bold text-2xl">Settings</h1>
+        <h1 className="font-bold text-2xl">{t("settingsNative.heading")}</h1>
         <p className="text-muted-foreground text-sm">
-          Manage your Form Forge preferences.
+          {t("settingsNative.description")}
         </p>
       </div>
 
@@ -80,12 +85,14 @@ export default function SettingsPage() {
       {/* Appearance */}
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <CardDescription>Choose your preferred color theme.</CardDescription>
+          <CardTitle>{t("settingsNative.appearance")}</CardTitle>
+          <CardDescription>
+            {t("settingsNative.appearanceDescription")}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
-            {THEME_OPTIONS.map((opt) => (
+            {themeOptions.map((opt) => (
               <Button
                 key={opt.value}
                 onClick={() => setTheme(opt.value)}
@@ -99,28 +106,52 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Language */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{tCommon("language.toggle")}</CardTitle>
+          <CardDescription>
+            {t("settingsNative.appearanceDescription")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            {(["en", "de"] as const).map((code) => (
+              <Button
+                key={code}
+                onClick={() => i18n.changeLanguage(code)}
+                size="sm"
+                variant={i18n.language.startsWith(code) ? "default" : "outline"}
+              >
+                {tCommon(`language.${code}`)}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Export */}
       <Card>
         <CardHeader>
-          <CardTitle>Export</CardTitle>
+          <CardTitle>{t("settingsNative.exportSection")}</CardTitle>
           <CardDescription>
-            Default location suggested when saving exported PDFs.
+            {t("settingsNative.exportDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-muted-foreground text-sm">
-            Current directory:{" "}
+            {t("settingsNative.currentDirectory")}{" "}
             <span className="font-mono text-foreground">
-              {exportDir ?? "Default (app data folder)"}
+              {exportDir ?? t("settingsNative.defaultAppDataFolder")}
             </span>
           </p>
           <div className="flex gap-2">
             <Button onClick={handleChangeExportDir} size="sm" variant="outline">
-              Change…
+              {t("settingsNative.change")}
             </Button>
             {exportDir && (
               <Button onClick={handleResetExportDir} size="sm" variant="ghost">
-                Reset to default
+                {t("settingsNative.resetToDefault")}
               </Button>
             )}
           </div>
@@ -130,17 +161,17 @@ export default function SettingsPage() {
       {/* Data */}
       <Card>
         <CardHeader>
-          <CardTitle>Data</CardTitle>
+          <CardTitle>{t("settingsNative.data")}</CardTitle>
           <CardDescription>
-            Location of the app database and stored sheets.
+            {t("settingsNative.dataDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="font-mono text-muted-foreground text-sm">
-            {dataDir || "Loading…"}
+            {dataDir || tCommon("loading")}
           </p>
           <Button onClick={handleOpenDataDir} size="sm" variant="outline">
-            Open in Files
+            {t("settingsNative.openInFiles")}
           </Button>
         </CardContent>
       </Card>
@@ -148,18 +179,21 @@ export default function SettingsPage() {
       {/* About */}
       <Card>
         <CardHeader>
-          <CardTitle>About</CardTitle>
-          <CardDescription>Form Forge application information.</CardDescription>
+          <CardTitle>{t("settingsNative.about")}</CardTitle>
+          <CardDescription>
+            {t("settingsNative.aboutDescription")}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-muted-foreground text-sm">
-            Version:{" "}
+            {t("settingsNative.version")}{" "}
             <span className="font-mono text-foreground">
-              {import.meta.env.VITE_APP_VERSION ?? "development"}
+              {import.meta.env.VITE_APP_VERSION ??
+                t("settingsNative.development")}
             </span>
           </p>
           <Button onClick={handleViewOnGitHub} size="sm" variant="outline">
-            View on GitHub
+            {t("settingsNative.viewOnGithub")}
           </Button>
         </CardContent>
       </Card>

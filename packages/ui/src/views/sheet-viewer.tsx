@@ -53,10 +53,11 @@ import {
   FileDown,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-function triggerBrowserDownload(blob: Blob, filename: string): void {
+function triggerBrowserDownload(blob: Blob, filename: string) {
   const url = globalThis.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -91,104 +92,111 @@ interface AttachedAction {
   mapping: FieldMapping;
 }
 
-const ACTIONS: ActionConfig[] = [
-  {
-    id: "ability-modifier",
-    name: "Ability Modifier",
-    description: "Calculate ability modifier from ability score",
-    endpoint: "ability-modifier",
-    roles: [
+function useActions(): ActionConfig[] {
+  const { t } = useTranslation("actions");
+
+  return useMemo(
+    () => [
       {
-        key: "abilityScoreFieldName",
-        label: "Ability Score",
-        required: true,
-        hint: "The base ability score (e.g., STR, DEX)",
+        id: "ability-modifier",
+        name: t("abilityModifier.name"),
+        description: t("abilityModifier.description"),
+        endpoint: "ability-modifier",
+        roles: [
+          {
+            key: "abilityScoreFieldName",
+            label: t("abilityModifier.roles.abilityScore.label"),
+            required: true,
+            hint: t("abilityModifier.roles.abilityScore.hint"),
+          },
+          {
+            key: "abilityModifierFieldName",
+            label: t("abilityModifier.roles.targetModifier.label"),
+            required: true,
+            hint: t("abilityModifier.roles.targetModifier.hint"),
+          },
+        ],
       },
       {
-        key: "abilityModifierFieldName",
-        label: "Target Modifier",
-        required: true,
-        hint: "Where the calculated modifier will appear",
+        id: "skill-modifier",
+        name: t("skillModifier.name"),
+        description: t("skillModifier.description"),
+        endpoint: "skill-modifier",
+        roles: [
+          {
+            key: "abilityModifierFieldName",
+            label: t("skillModifier.roles.abilityModifier.label"),
+            required: true,
+            hint: t("skillModifier.roles.abilityModifier.hint"),
+          },
+          {
+            key: "proficiencyBonusFieldName",
+            label: t("skillModifier.roles.proficiencyBonus.label"),
+            required: true,
+            hint: t("skillModifier.roles.proficiencyBonus.hint"),
+          },
+          {
+            key: "proficiencyFieldName",
+            label: t("skillModifier.roles.proficiency.label"),
+            required: true,
+            hint: t("skillModifier.roles.proficiency.hint"),
+          },
+          {
+            key: "skillModifierFieldName",
+            label: t("skillModifier.roles.targetSkill.label"),
+            required: true,
+            hint: t("skillModifier.roles.targetSkill.hint"),
+          },
+          {
+            key: "expertiseFieldName",
+            label: t("skillModifier.roles.expertise.label"),
+            required: false,
+            hint: t("skillModifier.roles.expertise.hint"),
+          },
+          {
+            key: "halfProfFieldName",
+            label: t("skillModifier.roles.halfProf.label"),
+            required: false,
+            hint: t("skillModifier.roles.halfProf.hint"),
+          },
+        ],
+      },
+      {
+        id: "saving-throw-modifier",
+        name: t("savingThrowModifier.name"),
+        description: t("savingThrowModifier.description"),
+        endpoint: "saving-throw-modifier",
+        roles: [
+          {
+            key: "abilityModifierFieldName",
+            label: t("savingThrowModifier.roles.abilityModifier.label"),
+            required: true,
+            hint: t("savingThrowModifier.roles.abilityModifier.hint"),
+          },
+          {
+            key: "proficiencyBonusFieldName",
+            label: t("savingThrowModifier.roles.proficiencyBonus.label"),
+            required: true,
+            hint: t("savingThrowModifier.roles.proficiencyBonus.hint"),
+          },
+          {
+            key: "proficiencyFieldName",
+            label: t("savingThrowModifier.roles.proficiency.label"),
+            required: true,
+            hint: t("savingThrowModifier.roles.proficiency.hint"),
+          },
+          {
+            key: "savingThrowModifierFieldName",
+            label: t("savingThrowModifier.roles.targetSavingThrow.label"),
+            required: true,
+            hint: t("savingThrowModifier.roles.targetSavingThrow.hint"),
+          },
+        ],
       },
     ],
-  },
-  {
-    id: "skill-modifier",
-    name: "Skill Modifier",
-    description: "Calculate skill modifier with proficiency",
-    endpoint: "skill-modifier",
-    roles: [
-      {
-        key: "abilityModifierFieldName",
-        label: "Ability Modifier",
-        required: true,
-        hint: "The relevant ability modifier (e.g., WIS_mod for Perception)",
-      },
-      {
-        key: "proficiencyBonusFieldName",
-        label: "Proficiency Bonus",
-        required: true,
-        hint: "Character's proficiency bonus",
-      },
-      {
-        key: "proficiencyFieldName",
-        label: "Proficiency",
-        required: true,
-        hint: "Checkbox indicating proficiency in this skill",
-      },
-      {
-        key: "skillModifierFieldName",
-        label: "Target Skill",
-        required: true,
-        hint: "Where the skill modifier will appear",
-      },
-      {
-        key: "expertiseFieldName",
-        label: "Expertise",
-        required: false,
-        hint: "Checkbox for double proficiency (expertise)",
-      },
-      {
-        key: "halfProfFieldName",
-        label: "Half-Prof",
-        required: false,
-        hint: "Checkbox for half proficiency (Jack of All Trades)",
-      },
-    ],
-  },
-  {
-    id: "saving-throw-modifier",
-    name: "Saving Throw Modifier",
-    description: "Calculate saving throw modifier",
-    endpoint: "saving-throw-modifier",
-    roles: [
-      {
-        key: "abilityModifierFieldName",
-        label: "Ability Modifier",
-        required: true,
-        hint: "The relevant ability modifier",
-      },
-      {
-        key: "proficiencyBonusFieldName",
-        label: "Proficiency Bonus",
-        required: true,
-        hint: "Character's proficiency bonus",
-      },
-      {
-        key: "proficiencyFieldName",
-        label: "Proficiency",
-        required: true,
-        hint: "Checkbox indicating proficiency in this save",
-      },
-      {
-        key: "savingThrowModifierFieldName",
-        label: "Target Saving Throw",
-        required: true,
-        hint: "Where the save modifier will appear",
-      },
-    ],
-  },
-];
+    [t]
+  );
+}
 
 function DraggableField({ field }: Readonly<{ field: string }>) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -225,6 +233,7 @@ function DraggableField({ field }: Readonly<{ field: string }>) {
 }
 
 function AvailableFieldsPool({ fields }: Readonly<{ fields: string[] }>) {
+  const { t } = useTranslation("sheets");
   const { setNodeRef, isOver } = useDroppable({
     id: "available-fields",
   });
@@ -232,8 +241,10 @@ function AvailableFieldsPool({ fields }: Readonly<{ fields: string[] }>) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold text-sm">Available Fields</h3>
-        <Badge variant="secondary">{fields.length} fields</Badge>
+        <h3 className="font-semibold text-sm">{t("viewer.availableFields")}</h3>
+        <Badge variant="secondary">
+          {t("viewer.fieldsCount", { count: fields.length })}
+        </Badge>
       </div>
       <div
         className={`flex min-h-[80px] flex-wrap gap-2 rounded-lg border-2 border-dashed p-4 transition-colors ${
@@ -245,7 +256,7 @@ function AvailableFieldsPool({ fields }: Readonly<{ fields: string[] }>) {
       >
         {fields.length === 0 ? (
           <span className="text-muted-foreground text-sm italic">
-            All fields assigned
+            {t("viewer.allFieldsAssigned")}
           </span>
         ) : (
           fields.map((field) => <DraggableField field={field} key={field} />)
@@ -273,6 +284,7 @@ function FieldRoleDropZone({
   unassignedFields,
   isDragging,
 }: Readonly<FieldRoleDropZoneProps>) {
+  const { t } = useTranslation("actions");
   const { setNodeRef, isOver } = useDroppable({
     id: `role-${role.key}`,
   });
@@ -317,11 +329,11 @@ function FieldRoleDropZone({
             <span className="font-semibold text-sm">{role.label}</span>
             {role.required ? (
               <Badge className="text-xs" variant="default">
-                Required
+                {t("common:required")}
               </Badge>
             ) : (
               <Badge className="text-xs" variant="secondary">
-                Optional
+                {t("common:optional")}
               </Badge>
             )}
           </div>
@@ -353,7 +365,7 @@ function FieldRoleDropZone({
       ) : (
         <div className="space-y-2">
           <div className="rounded-md border-2 border-dashed p-3 text-center text-muted-foreground text-sm italic">
-            {isDragging ? "Drop here" : "Drag a field here"}
+            {isDragging ? t("dropHere") : t("dragFieldHere")}
           </div>
 
           {/* Dropdown as alternative */}
@@ -362,7 +374,7 @@ function FieldRoleDropZone({
               <SelectTrigger
                 data-testid={`role-select-trigger-${role.label.toLowerCase().replaceAll(/\s+/g, "-")}`}
               >
-                <SelectValue placeholder="Or select from list..." />
+                <SelectValue placeholder={t("orSelectFromList")} />
               </SelectTrigger>
               <SelectContent>
                 {unassignedFields.map((field) => (
@@ -380,23 +392,26 @@ function FieldRoleDropZone({
 }
 
 interface ActionConfigModalProps {
+  actions: ActionConfig[];
   selectedFields: string[];
   onClose: () => void;
   onAttach: (action: AttachedAction) => Promise<void>;
 }
 
 function ActionConfigModal({
+  actions,
   selectedFields,
   onClose,
   onAttach,
 }: Readonly<ActionConfigModalProps>) {
+  const { t } = useTranslation("actions");
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isAttaching, setIsAttaching] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const currentAction = ACTIONS.find((a) => a.id === selectedAction);
+  const currentAction = actions.find((a) => a.id === selectedAction);
 
   const assignField = (roleKey: string, fieldName: string) => {
     // Capture scroll position before state change
@@ -520,10 +535,8 @@ function ActionConfigModal({
         <CardHeader className="border-b">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Configure Calculation Action</CardTitle>
-              <CardDescription>
-                Map selected fields to their roles in the calculation
-              </CardDescription>
+              <CardTitle>{t("configureCalculationAction")}</CardTitle>
+              <CardDescription>{t("mapSelectedFieldsToRoles")}</CardDescription>
             </div>
             <Button onClick={onClose} size="icon" variant="ghost">
               <X className="h-4 w-4" />
@@ -535,9 +548,9 @@ function ActionConfigModal({
           {/* Action Selection Sidebar */}
           <div className="w-80 border-r bg-muted/30">
             <ScrollArea className="h-full p-6">
-              <h3 className="mb-4 font-semibold text-sm">Action Type</h3>
+              <h3 className="mb-4 font-semibold text-sm">{t("actionType")}</h3>
               <div className="space-y-3">
-                {ACTIONS.map((action) => (
+                {actions.map((action) => (
                   <button
                     className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
                       selectedAction === action.id
@@ -581,7 +594,7 @@ function ActionConfigModal({
                     {/* Role Assignment Slots */}
                     <div>
                       <h3 className="mb-4 font-semibold text-sm">
-                        Field Roles
+                        {t("fieldRoles")}
                       </h3>
                       <div className="space-y-4">
                         {sortedRoles.map((role) => {
@@ -618,12 +631,8 @@ function ActionConfigModal({
                 <div className="flex h-full items-center justify-center text-muted-foreground">
                   <div className="text-center">
                     <AlertCircle className="mx-auto mb-3 h-12 w-12 opacity-50" />
-                    <p className="font-medium">
-                      Select an action type to begin
-                    </p>
-                    <p className="mt-1 text-sm">
-                      Choose from the options on the left
-                    </p>
+                    <p className="font-medium">{t("selectActionToBegin")}</p>
+                    <p className="mt-1 text-sm">{t("chooseFromOptions")}</p>
                   </div>
                 </div>
               )}
@@ -638,22 +647,22 @@ function ActionConfigModal({
               (isValid() ? (
                 <span className="flex items-center gap-2 font-medium text-green-600">
                   <Check className="h-4 w-4" />
-                  Ready to attach
+                  {t("readyToAttach")}
                 </span>
               ) : (
                 <span className="flex items-center gap-2 font-medium text-amber-600">
                   <AlertCircle className="h-4 w-4" />
-                  Assign all required fields
+                  {t("assignAllRequiredFields")}
                 </span>
               ))}
           </div>
           <div className="flex gap-2">
             <Button disabled={isAttaching} onClick={onClose} variant="outline">
-              Cancel
+              {t("common:cancel")}
             </Button>
             <Button disabled={!isValid() || isAttaching} onClick={handleAttach}>
               {isAttaching && <Spinner />}
-              {isAttaching ? "Attaching..." : "Attach Calculation"}
+              {isAttaching ? t("attaching") : t("attachCalculation")}
             </Button>
           </div>
         </div>
@@ -678,6 +687,7 @@ interface FieldOverlayProps {
   onMouseEnter: (name: string) => void;
   onMouseLeave: () => void;
   onToggle: (name: string) => void;
+  selectFieldLabel: string;
 }
 
 const FieldOverlay = memo(function FieldOverlay({
@@ -688,6 +698,7 @@ const FieldOverlay = memo(function FieldOverlay({
   onMouseEnter,
   onMouseLeave,
   onToggle,
+  selectFieldLabel,
 }: FieldOverlayProps) {
   const handleEnter = useCallback(
     () => onMouseEnter(field.name),
@@ -701,7 +712,7 @@ const FieldOverlay = memo(function FieldOverlay({
 
   return (
     <Toggle
-      aria-label={`Select field ${field.name}`}
+      aria-label={selectFieldLabel}
       className={cn(
         "box-border",
         "data-[state=on]:z-20 data-[state=on]:border-2 data-[state=on]:border-blue-500 data-[state=on]:bg-blue-500/25 data-[state=on]:shadow-xl",
@@ -739,6 +750,9 @@ export default function SheetViewer({
   pdfLoader,
   exportHandler,
 }: Readonly<SheetViewerProps>) {
+  const { t } = useTranslation("sheets");
+  const { t: tActions } = useTranslation("actions");
+  const actions = useActions();
   const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -850,8 +864,10 @@ export default function SheetViewer({
           if (!response.ok) {
             const errorData = await response
               .json()
-              .catch(() => ({ message: "Unknown error" }));
-            throw new Error(errorData.message ?? "Failed to fetch PDF URL");
+              .catch(() => ({ message: t("common:unknownError") }));
+            throw new Error(
+              errorData.message ?? t("viewer.failedToFetchPdfUrl")
+            );
           }
 
           const data = await response.json();
@@ -859,7 +875,7 @@ export default function SheetViewer({
         }
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : "Failed to load PDF";
+          error instanceof Error ? error.message : t("viewer.failedToLoadPdf");
         setPdfUrlError(message);
         toast.error(message);
       } finally {
@@ -868,7 +884,7 @@ export default function SheetViewer({
     };
 
     fetchPdfUrl();
-  }, [file, pdfLoader]);
+  }, [file, pdfLoader, t]);
 
   // Recalculate field positions when data changes — all pages fetched concurrently
   useEffect(() => {
@@ -934,7 +950,7 @@ export default function SheetViewer({
     const scrollToField = () => {
       // Find the field overlay element by its aria-label
       const fieldElement = document.querySelector(
-        `button[aria-label="Select field ${fieldName}"]`
+        `button[aria-label="${t("viewer.selectField", { field: fieldName })}"]`
       );
 
       if (fieldElement) {
@@ -980,11 +996,14 @@ export default function SheetViewer({
   if (error) {
     // FIXME: Handle error better
     if (error.statusCode === 404) {
-      return <div>Sheet not found</div>;
+      return <div>{t("viewer.sheetNotFound")}</div>;
     }
     return (
       <div>
-        Error {error.statusCode}: {error.message}
+        {t("viewer.errorWithCode", {
+          code: error.statusCode,
+          message: error.message,
+        })}
       </div>
     );
   }
@@ -1001,7 +1020,7 @@ export default function SheetViewer({
   const handleAttachAction = async (config: AttachedAction) => {
     // TODO: Handle case where an action will overrides a previously attached action.
     if (!sheetId) {
-      toast.error("No sheet ID available");
+      toast.error(t("viewer.noSheetIdAvailable"));
       return;
     }
 
@@ -1021,7 +1040,7 @@ export default function SheetViewer({
       setSelectedFields((prev) =>
         prev.filter((field) => !usedFields.has(field))
       );
-      toast.success(`${config.name} attached successfully`);
+      toast.success(t("viewer.attachedSuccessfully", { name: config.name }));
     } catch (err) {
       let errorMessage: string;
       if (err instanceof ApiClientError) {
@@ -1029,11 +1048,16 @@ export default function SheetViewer({
       } else if (err instanceof Error) {
         errorMessage = err.message;
       } else {
-        errorMessage = "Unknown error";
+        errorMessage = t("common:unknownError");
       }
 
       console.error(errorMessage);
-      toast.error(`Failed to attach ${config.name}: ${errorMessage}`);
+      toast.error(
+        t("viewer.failedToAttach", {
+          name: config.name,
+          message: errorMessage,
+        })
+      );
     }
   };
 
@@ -1048,7 +1072,7 @@ export default function SheetViewer({
       if (exportHandler) {
         const exported = await exportHandler.export(sheetId);
         if (exported) {
-          toast.success("Sheet exported successfully");
+          toast.success(t("viewer.sheetExportedSuccessfully"));
         }
       } else if ("downloadSheet" in apiClient) {
         const { blob, filename } = await (
@@ -1059,7 +1083,7 @@ export default function SheetViewer({
           }
         ).downloadSheet(sheetId);
         triggerBrowserDownload(blob, filename);
-        toast.success("Sheet exported successfully");
+        toast.success(t("viewer.sheetExportedSuccessfully"));
       }
     } catch (err) {
       let errorMessage: string;
@@ -1068,10 +1092,10 @@ export default function SheetViewer({
       } else if (err instanceof Error) {
         errorMessage = err.message;
       } else {
-        errorMessage = "Unknown error";
+        errorMessage = t("common:unknownError");
       }
 
-      toast.error(`Failed to export sheet: ${errorMessage}`);
+      toast.error(t("viewer.failedToExportSheet", { message: errorMessage }));
     } finally {
       setIsExporting(false);
     }
@@ -1086,10 +1110,10 @@ export default function SheetViewer({
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-xl">
-                  Character Sheet Editor
+                  {t("viewer.characterSheetEditor")}
                 </CardTitle>
                 <CardDescription>
-                  Select fields to configure calculations
+                  {t("viewer.selectFieldsToConfigureCalculations")}
                 </CardDescription>
               </div>
               <div className="flex gap-2">
@@ -1100,7 +1124,7 @@ export default function SheetViewer({
                   variant="outline"
                 >
                   <FileDown className="mr-2 h-4 w-4" />
-                  {isExporting ? "Exporting..." : "Export"}
+                  {isExporting ? t("viewer.exporting") : t("viewer.export")}
                 </Button>
                 {selectedFields.length > 0 && (
                   <>
@@ -1110,10 +1134,10 @@ export default function SheetViewer({
                       variant="outline"
                     >
                       <X className="mr-2 h-4 w-4" />
-                      Clear
+                      {t("common:clear")}
                     </Button>
                     <Button onClick={() => setShowActionModal(true)} size="sm">
-                      Configure Calculation
+                      {t("viewer.configureCalculation")}
                     </Button>
                   </>
                 )}
@@ -1140,7 +1164,7 @@ export default function SheetViewer({
                       key={field}
                     >
                       <button
-                        aria-label={`Navigate to field ${field}`}
+                        aria-label={t("viewer.navigateToField", { field })}
                         className="cursor-pointer px-2.5 py-0.5"
                         onClick={() => handleBadgeClick(field)}
                         onMouseEnter={() => setHoveredFieldName(field)}
@@ -1150,7 +1174,7 @@ export default function SheetViewer({
                         <span className="font-semibold text-xs">{field}</span>
                       </button>
                       <button
-                        aria-label={`Remove ${field}`}
+                        aria-label={t("viewer.removeField", { field })}
                         className="px-1 py-0.5 hover:text-destructive"
                         onClick={() => handleFieldSelect(field)}
                         onMouseEnter={() => setHoveredFieldName(field)}
@@ -1208,6 +1232,9 @@ export default function SheetViewer({
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
                   onToggle={handleFieldSelect}
+                  selectFieldLabel={t("viewer.selectField", {
+                    field: field.name,
+                  })}
                 />
               ))}
             </div>
@@ -1222,10 +1249,13 @@ export default function SheetViewer({
               variant="outline"
             >
               <ChevronLeft className="mr-1 h-4 w-4" />
-              Previous
+              {t("viewer.previous")}
             </Button>
             <span className="font-medium text-sm">
-              Page {currentPage} of {numPages || "..."}
+              {t("viewer.pageOf", {
+                current: currentPage,
+                total: numPages || "...",
+              })}
             </span>
             <Button
               disabled={currentPage >= (numPages || 1)}
@@ -1233,7 +1263,7 @@ export default function SheetViewer({
               size="sm"
               variant="outline"
             >
-              Next
+              {t("viewer.next")}
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
@@ -1244,10 +1274,13 @@ export default function SheetViewer({
       <div className="w-96 p-6 pl-0">
         <Card className="flex h-full flex-col">
           <CardHeader>
-            <CardTitle className="text-lg">Attached Actions</CardTitle>
+            <CardTitle className="text-lg">
+              {tActions("attachedActions")}
+            </CardTitle>
             <CardDescription>
-              {attachedActions.length} calculation
-              {attachedActions.length === 1 ? "" : "s"} configured
+              {tActions("calculationsConfigured", {
+                count: attachedActions.length,
+              })}
             </CardDescription>
           </CardHeader>
 
@@ -1259,15 +1292,17 @@ export default function SheetViewer({
                 <div className="mb-3 rounded-full bg-muted p-3">
                   <AlertCircle className="h-6 w-6" />
                 </div>
-                <p className="font-medium">No actions configured yet</p>
+                <p className="font-medium">
+                  {tActions("noActionsConfiguredYet")}
+                </p>
                 <p className="mt-1 text-sm">
-                  Select fields and configure an action
+                  {tActions("selectFieldsAndConfigure")}
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
                 {attachedActions.map((attachedAction, index) => {
-                  const action = ACTIONS.find(
+                  const action = actions.find(
                     (a) => a.id === attachedAction.id
                   );
 
@@ -1284,7 +1319,7 @@ export default function SheetViewer({
                               <AlertCircle className="mt-0.5 h-4 w-4 text-destructive" />
                               <div>
                                 <div className="font-semibold text-destructive text-sm">
-                                  Unknown Action
+                                  {tActions("unknownAction")}
                                 </div>
                                 <div className="mt-0.5 text-muted-foreground text-xs">
                                   {attachedAction.id}
@@ -1364,6 +1399,7 @@ export default function SheetViewer({
       {/* Action Configuration Modal */}
       {showActionModal && (
         <ActionConfigModal
+          actions={actions}
           onAttach={handleAttachAction}
           onClose={() => setShowActionModal(false)}
           selectedFields={selectedFields}

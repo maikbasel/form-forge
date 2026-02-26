@@ -1,0 +1,108 @@
+{
+  "configureCalculationAction": "Configure Calculation Action",
+  "mapSelectedFieldsToRoles": "Map selected fields to their roles in the calculation",
+  "actionType": "Action Type",
+  "fieldRoles": "Field Roles",
+  "dropHere": "Drop here",
+  "dragFieldHere": "Drag a field here",
+  "orSelectFromList": "Or select from list...",
+  "readyToAttach": "Ready to attach",
+  "assignAllRequiredFields": "Assign all required fields",
+  "attaching": "Attaching...",
+  "attachCalculation": "Attach Calculation",
+  "selectActionToBegin": "Select an action type to begin",
+  "chooseFromOptions": "Choose from the options on the left",
+  "attachedActions": "Attached Actions",
+  "calculationsConfigured_one": "{{count}} calculation configured",
+  "calculationsConfigured_other": "{{count}} calculations configured",
+  "noActionsConfiguredYet": "No actions configured yet",
+  "selectFieldsAndConfigure": "Select fields and configure an action",
+  "unknownAction": "Unknown Action",
+  "abilityModifier": {
+    "name": "Ability Modifier",
+    "description": "Calculate ability modifier from ability score",
+    "roles": {
+      "abilityScore": {
+        "label": "Ability Score",
+        "hint": "The base ability score (e.g., STR, DEX)"
+      },
+      "targetModifier": {
+        "label": "Target Modifier",
+        "hint": "Where the calculated modifier will appear"
+      }
+    }
+  },
+  "skillModifier": {
+    "name": "Skill Modifier",
+    "description": "Calculate skill modifier with proficiency",
+    "roles": {
+      "abilityModifier": {
+        "label": "Ability Modifier",
+        "hint": "The relevant ability modifier (e.g., WIS_mod for Perception)"
+      },
+      "proficiencyBonus": {
+        "label": "Proficiency Bonus",
+        "hint": "Character's proficiency bonus"
+      },
+      "proficiency": {
+        "label": "Proficiency",
+        "hint": "Checkbox indicating proficiency in this skill"
+      },
+      "targetSkill": {
+        "label": "Target Skill",
+        "hint": "Where the skill modifier will appear"
+      },
+      "expertise": {
+        "label": "Expertise",
+        "hint": "Checkbox for double proficiency (expertise)"
+      },
+      "halfProf": {
+        "label": "Half-Prof",
+        "hint": "Checkbox for half proficiency (Jack of All Trades)"
+      }
+    }
+  },
+  "savingThrowModifier": {
+    "name": "Saving Throw Modifier",
+    "description": "Calculate saving throw modifier",
+    "roles": {
+      "abilityModifier": {
+        "label": "Ability Modifier",
+        "hint": "The relevant ability modifier"
+      },
+      "proficiencyBonus": {
+        "label": "Proficiency Bonus",
+        "hint": "Character's proficiency bonus"
+      },
+      "proficiency": {
+        "label": "Proficiency",
+        "hint": "Checkbox indicating proficiency in this save"
+      },
+      "targetSavingThrow": {
+        "label": "Target Saving Throw",
+        "hint": "Where the save modifier will appear"
+      }
+    }
+  },
+  "settingsNative": {
+    "windowTitle": "Settings \u2013 Form Forge",
+    "heading": "Settings",
+    "description": "Manage your Form Forge preferences.",
+    "appearance": "Appearance",
+    "appearanceDescription": "Choose your preferred color theme.",
+    "exportSection": "Export",
+    "exportDescription": "Default location suggested when saving exported PDFs.",
+    "currentDirectory": "Current directory:",
+    "defaultAppDataFolder": "Default (app data folder)",
+    "change": "Change\u2026",
+    "resetToDefault": "Reset to default",
+    "data": "Data",
+    "dataDescription": "Location of the app database and stored sheets.",
+    "openInFiles": "Open in Files",
+    "about": "About",
+    "aboutDescription": "Form Forge application information.",
+    "version": "Version:",
+    "development": "development",
+    "viewOnGithub": "View on GitHub"
+  }
+}

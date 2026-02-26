@@ -8,6 +8,7 @@ import {
   FolderOpen,
   Settings,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -48,9 +49,13 @@ interface SheetsSidebarProps {
   onOpenPdf?: (id: string) => void;
 }
 
-type DateGroup = "Today" | "Yesterday" | "Previous 7 days" | "Older";
+type DateGroupKey =
+  | "sidebar.today"
+  | "sidebar.yesterday"
+  | "sidebar.previous7Days"
+  | "sidebar.older";
 
-function getDateGroup(createdAt: string): DateGroup {
+function getDateGroupKey(createdAt: string): DateGroupKey {
   const date = new Date(createdAt.replace(" ", "T").concat("Z"));
   const now = new Date();
 
@@ -65,28 +70,30 @@ function getDateGroup(createdAt: string): DateGroup {
   startOf7DaysAgo.setDate(startOf7DaysAgo.getDate() - 6);
 
   if (date >= startOfToday) {
-    return "Today";
+    return "sidebar.today";
   }
   if (date >= startOfYesterday) {
-    return "Yesterday";
+    return "sidebar.yesterday";
   }
   if (date >= startOf7DaysAgo) {
-    return "Previous 7 days";
+    return "sidebar.previous7Days";
   }
-  return "Older";
+  return "sidebar.older";
 }
 
 function groupSheets(
   sheets: SheetSummary[]
-): Array<{ label: DateGroup; sheets: SheetSummary[] }> {
-  const groups: Array<{ label: DateGroup; sheets: SheetSummary[] }> = [];
-  let currentGroup: DateGroup | undefined;
+): Array<{ labelKey: DateGroupKey; sheets: SheetSummary[] }> {
+  const groups: Array<{ labelKey: DateGroupKey; sheets: SheetSummary[] }> = [];
+  let currentGroup: DateGroupKey | undefined;
 
   for (const sheet of sheets) {
-    const group = sheet.createdAt ? getDateGroup(sheet.createdAt) : "Older";
+    const group = sheet.createdAt
+      ? getDateGroupKey(sheet.createdAt)
+      : "sidebar.older";
     if (group !== currentGroup) {
       currentGroup = group;
-      groups.push({ label: group, sheets: [] });
+      groups.push({ labelKey: group, sheets: [] });
     }
     groups.at(-1)?.sheets.push(sheet);
   }
@@ -118,6 +125,8 @@ function SheetItem({
   onOpenPdf?: (id: string) => void;
   onOpenInFolder?: (id: string) => void;
 }) {
+  const { t } = useTranslation("sheets");
+
   return (
     <SidebarMenuItem>
       <ContextMenu>
@@ -146,19 +155,19 @@ function SheetItem({
         <ContextMenuContent>
           <ContextMenuItem onClick={() => onSelectSheet(sheet.id)}>
             <Eye className="mr-2 size-4" />
-            Open
+            {t("sidebar.open")}
           </ContextMenuItem>
           {(onOpenPdf ?? onOpenInFolder) && <ContextMenuSeparator />}
           {onOpenPdf && (
             <ContextMenuItem onClick={() => onOpenPdf(sheet.id)}>
               <ExternalLink className="mr-2 size-4" />
-              Open with default app
+              {t("sidebar.openWithDefaultApp")}
             </ContextMenuItem>
           )}
           {onOpenInFolder && (
             <ContextMenuItem onClick={() => onOpenInFolder(sheet.id)}>
               <FolderOpen className="mr-2 size-4" />
-              Show in folder
+              {t("sidebar.showInFolder")}
             </ContextMenuItem>
           )}
         </ContextMenuContent>
@@ -177,6 +186,7 @@ export function SheetsSidebar({
   onOpenInFolder,
   onOpenPdf,
 }: SheetsSidebarProps) {
+  const { t } = useTranslation("sheets");
   const groups = groupSheets(sheets);
 
   return (
@@ -190,20 +200,20 @@ export function SheetsSidebar({
               onClick={onGoHome}
               type="button"
             >
-              Form Forge
+              {t("common:appName")}
             </button>
           ) : (
             <span className="font-semibold text-sm tracking-tight group-data-[collapsible=icon]:hidden">
-              Form Forge
+              {t("common:appName")}
             </span>
           )}
           {onOpenFolder && (
             <SidebarMenuButton
-              aria-label="Open storage folder"
+              aria-label={t("sidebar.openStorageFolder")}
               className="ml-auto size-8 group-data-[collapsible=icon]:hidden"
               onClick={onOpenFolder}
               size="sm"
-              tooltip="Open storage folder"
+              tooltip={t("sidebar.openStorageFolder")}
             >
               <FolderOpen className="size-4" />
             </SidebarMenuButton>
@@ -215,15 +225,15 @@ export function SheetsSidebar({
         <ScrollArea className="flex-1">
           {sheets.length === 0 ? (
             <div className="px-4 py-8 text-center text-muted-foreground text-xs group-data-[collapsible=icon]:hidden">
-              No sheets yet.
+              {t("sidebar.noSheetsYet")}
               <br />
-              Open a PDF to get started.
+              {t("sidebar.openPdfToGetStarted")}
             </div>
           ) : (
             groups.map((group) => (
-              <SidebarGroup className="py-0" key={group.label}>
+              <SidebarGroup className="py-0" key={group.labelKey}>
                 <SidebarGroupLabel className="px-3 text-muted-foreground text-xs">
-                  {group.label}
+                  {t(group.labelKey)}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="px-1">
@@ -249,9 +259,12 @@ export function SheetsSidebar({
         <SidebarFooter className="border-t p-2">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={onOpenSettings} tooltip="Settings">
+              <SidebarMenuButton
+                onClick={onOpenSettings}
+                tooltip={t("common:settings")}
+              >
                 <Settings className="size-4 shrink-0" />
-                <span>Settings</span>
+                <span>{t("common:settings")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

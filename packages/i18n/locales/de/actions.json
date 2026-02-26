@@ -1,0 +1,108 @@
+{
+  "configureCalculationAction": "Berechnungsaktion konfigurieren",
+  "mapSelectedFieldsToRoles": "Ausgew\u00e4hlte Felder ihren Rollen in der Berechnung zuordnen",
+  "actionType": "Aktionstyp",
+  "fieldRoles": "Feldrollen",
+  "dropHere": "Hier ablegen",
+  "dragFieldHere": "Feld hierher ziehen",
+  "orSelectFromList": "Oder aus Liste ausw\u00e4hlen...",
+  "readyToAttach": "Bereit zum Anh\u00e4ngen",
+  "assignAllRequiredFields": "Alle erforderlichen Felder zuweisen",
+  "attaching": "Wird angeh\u00e4ngt...",
+  "attachCalculation": "Berechnung anh\u00e4ngen",
+  "selectActionToBegin": "W\u00e4hlen Sie einen Aktionstyp aus, um zu beginnen",
+  "chooseFromOptions": "W\u00e4hlen Sie aus den Optionen links",
+  "attachedActions": "Angeh\u00e4ngte Aktionen",
+  "calculationsConfigured_one": "{{count}} Berechnung konfiguriert",
+  "calculationsConfigured_other": "{{count}} Berechnungen konfiguriert",
+  "noActionsConfiguredYet": "Noch keine Aktionen konfiguriert",
+  "selectFieldsAndConfigure": "Felder ausw\u00e4hlen und Aktion konfigurieren",
+  "unknownAction": "Unbekannte Aktion",
+  "abilityModifier": {
+    "name": "F\u00e4higkeitsmodifikator",
+    "description": "F\u00e4higkeitsmodifikator aus F\u00e4higkeitswert berechnen",
+    "roles": {
+      "abilityScore": {
+        "label": "F\u00e4higkeitswert",
+        "hint": "Der F\u00e4higkeits-Grundwert (z.B. STR, DEX)"
+      },
+      "targetModifier": {
+        "label": "Zielmodifikator",
+        "hint": "Wo der berechnete Modifikator erscheinen soll"
+      }
+    }
+  },
+  "skillModifier": {
+    "name": "Fertigkeitsmodifikator",
+    "description": "Fertigkeitsmodifikator mit \u00dcbung berechnen",
+    "roles": {
+      "abilityModifier": {
+        "label": "F\u00e4higkeitsmodifikator",
+        "hint": "Der relevante F\u00e4higkeitsmodifikator (z.B. WIS_mod f\u00fcr Wahrnehmung)"
+      },
+      "proficiencyBonus": {
+        "label": "\u00dcbungsbonus",
+        "hint": "\u00dcbungsbonus des Charakters"
+      },
+      "proficiency": {
+        "label": "\u00dcbung",
+        "hint": "Kontrollk\u00e4stchen f\u00fcr \u00dcbung in dieser Fertigkeit"
+      },
+      "targetSkill": {
+        "label": "Zielfertigkeit",
+        "hint": "Wo der Fertigkeitsmodifikator erscheinen soll"
+      },
+      "expertise": {
+        "label": "Expertise",
+        "hint": "Kontrollk\u00e4stchen f\u00fcr doppelte \u00dcbung (Expertise)"
+      },
+      "halfProf": {
+        "label": "Halbe \u00dcbung",
+        "hint": "Kontrollk\u00e4stchen f\u00fcr halbe \u00dcbung (Alleskönner)"
+      }
+    }
+  },
+  "savingThrowModifier": {
+    "name": "Rettungswurfmodifikator",
+    "description": "Rettungswurfmodifikator berechnen",
+    "roles": {
+      "abilityModifier": {
+        "label": "F\u00e4higkeitsmodifikator",
+        "hint": "Der relevante F\u00e4higkeitsmodifikator"
+      },
+      "proficiencyBonus": {
+        "label": "\u00dcbungsbonus",
+        "hint": "\u00dcbungsbonus des Charakters"
+      },
+      "proficiency": {
+        "label": "\u00dcbung",
+        "hint": "Kontrollk\u00e4stchen f\u00fcr \u00dcbung in diesem Rettungswurf"
+      },
+      "targetSavingThrow": {
+        "label": "Ziel-Rettungswurf",
+        "hint": "Wo der Rettungswurfmodifikator erscheinen soll"
+      }
+    }
+  },
+  "settingsNative": {
+    "windowTitle": "Einstellungen \u2013 Form Forge",
+    "heading": "Einstellungen",
+    "description": "Form Forge Einstellungen verwalten.",
+    "appearance": "Erscheinungsbild",
+    "appearanceDescription": "W\u00e4hlen Sie Ihr bevorzugtes Farbschema.",
+    "exportSection": "Export",
+    "exportDescription": "Standardspeicherort beim Speichern exportierter PDFs.",
+    "currentDirectory": "Aktuelles Verzeichnis:",
+    "defaultAppDataFolder": "Standard (App-Datenordner)",
+    "change": "\u00c4ndern\u2026",
+    "resetToDefault": "Auf Standard zur\u00fccksetzen",
+    "data": "Daten",
+    "dataDescription": "Speicherort der App-Datenbank und gespeicherten Bl\u00e4tter.",
+    "openInFiles": "Im Dateimanager \u00f6ffnen",
+    "about": "\u00dcber",
+    "aboutDescription": "Form Forge Anwendungsinformationen.",
+    "version": "Version:",
+    "development": "Entwicklung",
+    "viewOnGithub": "Auf GitHub ansehen"
+  }
+}

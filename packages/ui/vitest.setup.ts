@@ -1,5 +1,9 @@
 import "@testing-library/jest-dom/vitest";
+import { initI18n } from "@repo/i18n";
 import { vi } from "vitest";
+
+// Initialize i18n with English for tests
+initI18n("en");
 
 // Mock react-pdf: simulates onLoadSuccess with numPages: 3, renders placeholder divs
 vi.mock("react-pdf", () => {

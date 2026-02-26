@@ -12,6 +12,7 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Loader2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { uploadSheetFromPath } from "../lib/tauri-api-client";
 
@@ -24,6 +25,7 @@ interface TauriSheetUploaderProps {
 export default function TauriSheetUploader({
   onUploadSuccess,
 }: TauriSheetUploaderProps) {
+  const { t } = useTranslation("sheets");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const { setSheetPath, setSheetId } = useSheet();
@@ -75,7 +77,7 @@ export default function TauriSheetUploader({
       onUploadSuccess?.(result.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Import failed";
-      toast.error(`Failed to import sheet: ${message}`);
+      toast.error(t("native.failedToImportSheet", { message }));
     } finally {
       setIsProcessing(false);
     }
@@ -93,22 +95,22 @@ export default function TauriSheetUploader({
           <Upload className="size-6 text-muted-foreground" />
         </div>
         <div className="text-center">
-          <p className="font-medium text-sm">Import a PDF character sheet</p>
+          <p className="font-medium text-sm">{t("native.uploadTitle")}</p>
           <p className="text-muted-foreground text-xs">
-            Drop a PDF file or select one from your computer
+            {t("native.uploadDescription")}
           </p>
         </div>
         <Button onClick={handleBrowse} size="sm" variant="outline">
-          Browse Sheets
+          {t("uploader.browseSheets")}
         </Button>
       </div>
 
       <Dialog open={isProcessing}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Processing Sheet</DialogTitle>
+            <DialogTitle>{t("uploader.processingSheet")}</DialogTitle>
             <DialogDescription>
-              Importing and extracting form fields from your PDF...
+              {t("native.importingAndExtracting")}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-6">
