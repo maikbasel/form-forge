@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "typed-openapi": "^0.5.0",
+    "typed-openapi": "^2.2.4",
     "typescript": "5.9.3"
   },
   "dependencies": {
