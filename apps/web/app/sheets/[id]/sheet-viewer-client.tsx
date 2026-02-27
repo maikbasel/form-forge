@@ -1,10 +1,6 @@
 "use client";
 
 import { Button } from "@repo/ui/components/button.tsx";
-import { GlobalWorkerOptions } from "pdfjs-dist";
-
-GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-
 import { Skeleton } from "@repo/ui/components/skeleton.tsx";
 import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -12,9 +8,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
-const SheetViewer = dynamic(() => import("@repo/ui/views/sheet-viewer.tsx"), {
-  ssr: false,
-});
+const SheetViewer = dynamic(
+  () =>
+    import("pdfjs-dist").then((pdfjs) => {
+      pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+      return import("@repo/ui/views/sheet-viewer.tsx");
+    }),
+  { ssr: false }
+);
 
 function SheetViewerSkeleton() {
   return (
