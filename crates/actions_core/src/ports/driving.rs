@@ -1,8 +1,11 @@
+use crate::action::AttachedAction;
 pub use crate::action::CalculationAction;
 use crate::error::ActionError;
-use crate::ports::driven::{ActionPdfPort, SheetReferencePort, SheetStoragePort};
+use crate::ports::driven::{
+    ActionPdfPort, AttachedActionPort, SheetReferencePort, SheetStoragePort,
+};
 use std::sync::Arc;
-use tracing::{Span, debug, info, instrument};
+use tracing::{Span, debug, info, instrument, warn};
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -10,6 +13,7 @@ pub struct ActionService {
     sheet_reference_port: Arc<dyn SheetReferencePort>,
     sheet_storage_port: Arc<dyn SheetStoragePort>,
     action_pdf_port: Arc<dyn ActionPdfPort>,
+    attached_action_port: Arc<dyn AttachedActionPort>,
 }
 
 impl ActionService {
@@ -17,11 +21,13 @@ impl ActionService {
         sheet_reference_port: Arc<dyn SheetReferencePort>,
         sheet_storage_port: Arc<dyn SheetStoragePort>,
         action_pdf_port: Arc<dyn ActionPdfPort>,
+        attached_action_port: Arc<dyn AttachedActionPort>,
     ) -> Self {
         Self {
             sheet_reference_port,
             sheet_storage_port,
             action_pdf_port,
+            attached_action_port,
         }
     }
 
@@ -32,6 +38,11 @@ impl ActionService {
         action: CalculationAction,
     ) -> Result<(), ActionError> {
         debug!(%sheet_id, "attaching calculation script for sheet");
+
+        // Serialize action mapping for persistence before the match consumes it
+        let action_mapping = serde_json::to_value(&action).map_err(|e| {
+            ActionError::InvalidAction(format!("failed to serialize action: {}", e))
+        })?;
 
         let sheet_reference = self.sheet_reference_port.find_by_id(sheet_id).await?;
         debug!("sheet reference located");
@@ -133,9 +144,29 @@ impl ActionService {
 
         info!("modified PDF uploaded back to storage");
 
+        // Persist the attached action
+        let attached_action = AttachedAction {
+            id: Uuid::new_v4(),
+            sheet_id: *sheet_id,
+            action_type: action_label.to_string(),
+            target_field: target_field.clone(),
+            mapping: action_mapping,
+        };
+
+        if let Err(e) = self.attached_action_port.save(&attached_action).await {
+            warn!(error = %e, "failed to persist attached action — PDF was modified but action not saved");
+        }
+
         info!("attach_calculation_script completed successfully");
 
         Ok(())
+    }
+
+    pub async fn list_attached_actions(
+        &self,
+        sheet_id: &Uuid,
+    ) -> Result<Vec<AttachedAction>, ActionError> {
+        self.attached_action_port.list_by_sheet_id(sheet_id).await
     }
 
     fn serialize_field_name(field_name: &String) -> Result<String, ActionError> {
@@ -149,11 +180,18 @@ impl ActionService {
 mod tests {
     use super::*;
     use crate::ports::driven::{
-        MockActionPdfPort, MockSheetReferencePort, MockSheetStoragePort, SheetReference,
+        MockActionPdfPort, MockAttachedActionPort, MockSheetReferencePort, MockSheetStoragePort,
+        SheetReference,
     };
     use pretty_assertions::assert_eq;
     use std::path::PathBuf;
     use std::sync::Arc;
+
+    fn mock_attached_action_port() -> MockAttachedActionPort {
+        let mut port = MockAttachedActionPort::new();
+        port.expect_save().returning(|_| Ok(()));
+        port
+    }
 
     #[tokio::test]
     async fn test_should_attach_ability_modifier_calculation_script() {
@@ -199,6 +237,7 @@ mod tests {
             Arc::new(sheet_reference_port),
             Arc::new(sheet_storage_port),
             Arc::new(action_pdf_port),
+            Arc::new(mock_attached_action_port()),
         );
 
         let action = CalculationAction::ability_modifier("score", "modifier");
@@ -247,6 +286,7 @@ mod tests {
             Arc::new(sheet_reference_port),
             Arc::new(sheet_storage_port),
             Arc::new(action_pdf_port),
+            Arc::new(mock_attached_action_port()),
         );
 
         let action = CalculationAction::SavingThrowModifier {
@@ -302,6 +342,7 @@ mod tests {
             Arc::new(sheet_reference_port),
             Arc::new(sheet_storage_port),
             Arc::new(action_pdf_port),
+            Arc::new(mock_attached_action_port()),
         );
 
         let action = CalculationAction::SkillModifier {
@@ -360,6 +401,7 @@ mod tests {
             Arc::new(sheet_reference_port),
             Arc::new(sheet_storage_port),
             Arc::new(action_pdf_port),
+            Arc::new(mock_attached_action_port()),
         );
 
         let action = CalculationAction::SkillModifier {
@@ -396,6 +438,7 @@ mod tests {
             Arc::new(sheet_reference_port),
             Arc::new(sheet_storage_port),
             Arc::new(action_pdf_port),
+            Arc::new(mock_attached_action_port()),
         );
 
         let action = CalculationAction::ability_modifier("score", "modifier");
@@ -432,6 +475,7 @@ mod tests {
             Arc::new(sheet_reference_port),
             Arc::new(sheet_storage_port),
             Arc::new(action_pdf_port),
+            Arc::new(mock_attached_action_port()),
         );
 
         let action = CalculationAction::ability_modifier("score", "modifier");
@@ -472,6 +516,7 @@ mod tests {
             Arc::new(sheet_reference_port),
             Arc::new(sheet_storage_port),
             Arc::new(action_pdf_port),
+            Arc::new(mock_attached_action_port()),
         );
 
         let action = CalculationAction::ability_modifier("score", "modifier");

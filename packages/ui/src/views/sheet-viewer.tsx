@@ -83,14 +83,9 @@ interface ActionConfig {
   roles: FieldRole[];
 }
 
-type FieldMapping = Record<string, string>;
+import type { AttachedAction } from "@repo/ui/lib/api.ts";
 
-interface AttachedAction {
-  id: string;
-  name: string;
-  endpoint: string;
-  mapping: FieldMapping;
-}
+type FieldMapping = Record<string, string>;
 
 function useActions(): ActionConfig[] {
   const { t } = useTranslation("actions");
@@ -844,6 +839,31 @@ export default function SheetViewer({
     };
   }, []);
 
+  // Hydrate attached actions from backend
+  useEffect(() => {
+    if (!sheetId) {
+      return;
+    }
+
+    let cancelled = false;
+    apiClient.listAttachedActions(sheetId).then(
+      (actions) => {
+        if (!cancelled) {
+          setAttachedActions(actions);
+        }
+      },
+      (err) => {
+        if (!cancelled) {
+          console.error("Failed to load attached actions:", err);
+        }
+      }
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sheetId, apiClient]);
+
   // Fetch PDF URL (via strategy or default pre-signed URL fetch)
   useEffect(() => {
     if (!file) {
@@ -1018,7 +1038,6 @@ export default function SheetViewer({
   };
 
   const handleAttachAction = async (config: AttachedAction) => {
-    // TODO: Handle case where an action will overrides a previously attached action.
     if (!sheetId) {
       toast.error(t("viewer.noSheetIdAvailable"));
       return;
@@ -1033,7 +1052,9 @@ export default function SheetViewer({
 
       await apiClient.attachAction(sheetId, action);
 
-      setAttachedActions((prev) => [...prev, config]);
+      // Refresh from DB to get accurate state after backend upsert
+      const refreshed = await apiClient.listAttachedActions(sheetId);
+      setAttachedActions(refreshed);
       setShowActionModal(false);
       // Only unselect fields that were used in the action
       const usedFields = new Set(Object.values(config.mapping));

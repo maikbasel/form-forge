@@ -2,7 +2,7 @@ use actions_core::ports::driving::ActionService;
 use actions_pdf::adapter::PdfActionAdapter;
 use actions_web::handler::{
     attach_ability_modifier_calculation_script, attach_saving_throw_modifier_calculation_script,
-    attach_skill_modifier_calculation_script,
+    attach_skill_modifier_calculation_script, list_attached_actions,
 };
 use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
@@ -130,11 +130,17 @@ async fn main() -> Result<()> {
     let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
         sheet_s3_storage;
     let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
-        sheet_reference_db;
+        sheet_reference_db.clone();
     let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
         Arc::new(PdfActionAdapter);
-    let action_service =
-        ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
+    let attached_action_port: Arc<dyn actions_core::ports::driven::AttachedActionPort> =
+        sheet_reference_db;
+    let action_service = ActionService::new(
+        action_reference_port,
+        action_storage_port,
+        action_pdf_port,
+        attached_action_port,
+    );
 
     HttpServer::new(move || {
         let cors = Cors::permissive(); // FIXME: Configure for production.
@@ -152,6 +158,7 @@ async fn main() -> Result<()> {
             .service(attach_ability_modifier_calculation_script)
             .service(attach_saving_throw_modifier_calculation_script)
             .service(attach_skill_modifier_calculation_script)
+            .service(list_attached_actions)
             .openapi_service(|api| {
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api/openapi.json", api)
             })

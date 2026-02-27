@@ -1,7 +1,21 @@
+use uuid::Uuid;
+
+#[derive(Debug, Clone)]
+pub struct AttachedAction {
+    pub id: Uuid,
+    pub sheet_id: Uuid,
+    pub action_type: String,
+    pub target_field: String,
+    pub mapping: serde_json::Value,
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all_fields = "camelCase")]
 pub enum CalculationAction {
     AbilityModifier {
+        #[serde(rename = "abilityScoreFieldName")]
         score_field_name: String,
+        #[serde(rename = "abilityModifierFieldName")]
         modifier_field_name: String,
     },
     SavingThrowModifier {

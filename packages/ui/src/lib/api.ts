@@ -25,9 +25,17 @@ export type UploadSheetResult = UploadSheetResponse & { location?: string };
 
 export const API_BASE_URL = process.env.API_URL ?? "http://localhost:8081";
 
+export interface AttachedAction {
+  id: string;
+  name: string;
+  endpoint: string;
+  mapping: Record<string, string>;
+}
+
 export interface ApiClient {
   getSheetFields(sheetId: string): Promise<FormField[]>;
   attachAction(sheetId: string, action: AttachActionRequest): Promise<void>;
+  listAttachedActions(sheetId: string): Promise<AttachedAction[]>;
 }
 
 export interface FileApiClient extends ApiClient {

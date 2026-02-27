@@ -15,6 +15,7 @@ describe("useApiClient", () => {
     const mockClient: ApiClient = {
       getSheetFields: vi.fn(),
       attachAction: vi.fn(),
+      listAttachedActions: vi.fn(),
     };
 
     const wrapper = ({ children }: { children: ReactNode }) => (

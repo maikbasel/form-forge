@@ -115,4 +115,58 @@ export const apiClient: FileApiClient = {
       handleFetchError(response, data);
     }
   },
+
+  async listAttachedActions(sheetId: string) {
+    const response = await fetch(`/api/dnd5e/${sheetId}/actions`);
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({
+        type: "about:blank",
+        title: "Unknown error",
+        status: 0,
+      }));
+      handleFetchError(response, data);
+    }
+
+    const items = (await response.json()) as Array<{
+      id: string;
+      actionType: string;
+      targetField: string;
+      mapping: Record<string, unknown>;
+    }>;
+
+    const ACTION_TYPE_MAP: Record<string, { name: string; endpoint: string }> =
+      {
+        AbilityModifier: {
+          name: "Ability Modifier",
+          endpoint: "ability-modifier",
+        },
+        SavingThrowModifier: {
+          name: "Saving Throw Modifier",
+          endpoint: "saving-throw-modifier",
+        },
+        SkillModifier: { name: "Skill Modifier", endpoint: "skill-modifier" },
+      };
+
+    return items.map((item) => {
+      const meta = ACTION_TYPE_MAP[item.actionType] ?? {
+        name: item.actionType,
+        endpoint: item.actionType.toLowerCase(),
+      };
+      const variant = item.mapping[item.actionType] as
+        | Record<string, string>
+        | undefined;
+      const fieldMapping = variant
+        ? Object.fromEntries(
+            Object.entries(variant).filter(([, v]) => typeof v === "string")
+          )
+        : {};
+      return {
+        id: meta.endpoint,
+        name: meta.name,
+        endpoint: meta.endpoint,
+        mapping: fieldMapping,
+      };
+    });
+  },
 };

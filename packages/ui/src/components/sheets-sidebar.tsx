@@ -36,6 +36,7 @@ export interface SheetSummary {
   originalName: string;
   createdAt?: string;
   storedPath?: string;
+  actionCount?: number;
 }
 
 interface SheetsSidebarProps {
@@ -145,6 +146,11 @@ function SheetItem({
                 {sheet.originalName}
               </span>
             </div>
+            {(sheet.actionCount ?? 0) > 0 && (
+              <span className="ml-auto shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 font-medium text-primary text-xs">
+                {sheet.actionCount}
+              </span>
+            )}
             {sheet.createdAt && (
               <span className="pl-5 text-muted-foreground text-xs">
                 {formatDate(sheet.createdAt)}

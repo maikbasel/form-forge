@@ -52,6 +52,7 @@ export function AppSidebar() {
           originalName: ref.original_name,
           storedPath: selected,
           createdAt: new Date().toISOString(),
+          actionCount: 0,
         },
         ...prev,
       ]);
@@ -75,6 +76,7 @@ export function AppSidebar() {
           originalName: ref.original_name,
           storedPath: filePath,
           createdAt: new Date().toISOString(),
+          actionCount: 0,
         },
         ...prev,
       ]);

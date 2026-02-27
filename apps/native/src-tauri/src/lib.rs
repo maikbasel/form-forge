@@ -23,6 +23,7 @@ struct SheetSummaryResponse {
     original_name: String,
     path: String,
     created_at: String,
+    action_count: i64,
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -109,6 +110,37 @@ async fn attach_calculation_action(
         .map_err(|e| e.to_string())
 }
 
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AttachedActionResponse {
+    id: String,
+    action_type: String,
+    target_field: String,
+    mapping: serde_json::Value,
+}
+
+#[tauri::command]
+async fn list_attached_actions(
+    sheet_id: String,
+    action_service: tauri::State<'_, ActionService>,
+) -> Result<Vec<AttachedActionResponse>, String> {
+    let id = Uuid::parse_str(&sheet_id).map_err(|e| e.to_string())?;
+    let actions = action_service
+        .list_attached_actions(&id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(actions
+        .into_iter()
+        .map(|a| AttachedActionResponse {
+            id: a.id.to_string(),
+            action_type: a.action_type,
+            target_field: a.target_field,
+            mapping: a.mapping,
+        })
+        .collect())
+}
+
 #[tauri::command]
 async fn list_sheets(
     db: tauri::State<'_, Arc<SheetReferenceLibSql>>,
@@ -121,6 +153,7 @@ async fn list_sheets(
             original_name: r.reference.original_name,
             path: r.reference.path.display().to_string(),
             created_at: r.created_at,
+            action_count: r.action_count,
         })
         .collect())
 }
@@ -191,8 +224,14 @@ pub fn run() {
                 sheet_reference_db.clone();
             let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
                 Arc::new(PdfActionAdapter);
-            let action_service =
-                ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
+            let attached_action_port: Arc<dyn actions_core::ports::driven::AttachedActionPort> =
+                sheet_reference_db.clone();
+            let action_service = ActionService::new(
+                action_reference_port,
+                action_storage_port,
+                action_pdf_port,
+                attached_action_port,
+            );
 
             // Store in managed state — concrete Arc for list_sheets, trait objects for services
             app.manage(sheet_reference_db);
@@ -251,6 +290,7 @@ pub fn run() {
             get_sheet_form_fields,
             export_sheet,
             attach_calculation_action,
+            list_attached_actions,
             read_pdf_bytes,
             list_sheets,
             copy_file,

@@ -1,3 +1,4 @@
+use crate::action::AttachedAction;
 use crate::error::ActionError;
 use async_trait::async_trait;
 #[cfg(test)]
@@ -44,4 +45,11 @@ pub trait SheetStoragePort: Send + Sync {
 
     /// Uploads the modified local file back to the storage path.
     async fn write(&self, local_path: PathBuf, storage_path: PathBuf) -> Result<(), ActionError>;
+}
+
+#[cfg_attr(test, automock)]
+#[async_trait]
+pub trait AttachedActionPort: Send + Sync {
+    async fn save(&self, action: &AttachedAction) -> Result<(), ActionError>;
+    async fn list_by_sheet_id(&self, sheet_id: &Uuid) -> Result<Vec<AttachedAction>, ActionError>;
 }

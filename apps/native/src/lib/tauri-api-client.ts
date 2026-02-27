@@ -19,26 +19,26 @@ interface ExportSheetResponse {
 type CalculationActionPayload =
   | {
       AbilityModifier: {
-        score_field_name: string;
-        modifier_field_name: string;
+        abilityScoreFieldName: string;
+        abilityModifierFieldName: string;
       };
     }
   | {
       SkillModifier: {
-        ability_modifier_field_name: string;
-        proficiency_field_name: string;
-        expertise_field_name: string | null;
-        half_prof_field_name: string | null;
-        proficiency_bonus_field_name: string;
-        skill_modifier_field_name: string;
+        abilityModifierFieldName: string;
+        proficiencyFieldName: string;
+        expertiseFieldName: string | null;
+        halfProfFieldName: string | null;
+        proficiencyBonusFieldName: string;
+        skillModifierFieldName: string;
       };
     }
   | {
       SavingThrowModifier: {
-        ability_modifier_field_name: string;
-        proficiency_field_name: string;
-        proficiency_bonus_field_name: string;
-        saving_throw_modifier_field_name: string;
+        abilityModifierFieldName: string;
+        proficiencyFieldName: string;
+        proficiencyBonusFieldName: string;
+        savingThrowModifierFieldName: string;
       };
     };
 
@@ -49,30 +49,28 @@ function mapActionToPayload(
     case "ability-modifier":
       return {
         AbilityModifier: {
-          score_field_name: action.mapping.abilityScoreFieldName,
-          modifier_field_name: action.mapping.abilityModifierFieldName,
+          abilityScoreFieldName: action.mapping.abilityScoreFieldName,
+          abilityModifierFieldName: action.mapping.abilityModifierFieldName,
         },
       };
     case "skill-modifier":
       return {
         SkillModifier: {
-          ability_modifier_field_name: action.mapping.abilityModifierFieldName,
-          proficiency_field_name: action.mapping.proficiencyFieldName,
-          expertise_field_name: action.mapping.expertiseFieldName ?? null,
-          half_prof_field_name: action.mapping.halfProfFieldName ?? null,
-          proficiency_bonus_field_name:
-            action.mapping.proficiencyBonusFieldName,
-          skill_modifier_field_name: action.mapping.skillModifierFieldName,
+          abilityModifierFieldName: action.mapping.abilityModifierFieldName,
+          proficiencyFieldName: action.mapping.proficiencyFieldName,
+          expertiseFieldName: action.mapping.expertiseFieldName ?? null,
+          halfProfFieldName: action.mapping.halfProfFieldName ?? null,
+          proficiencyBonusFieldName: action.mapping.proficiencyBonusFieldName,
+          skillModifierFieldName: action.mapping.skillModifierFieldName,
         },
       };
     case "saving-throw-modifier":
       return {
         SavingThrowModifier: {
-          ability_modifier_field_name: action.mapping.abilityModifierFieldName,
-          proficiency_field_name: action.mapping.proficiencyFieldName,
-          proficiency_bonus_field_name:
-            action.mapping.proficiencyBonusFieldName,
-          saving_throw_modifier_field_name:
+          abilityModifierFieldName: action.mapping.abilityModifierFieldName,
+          proficiencyFieldName: action.mapping.proficiencyFieldName,
+          proficiencyBonusFieldName: action.mapping.proficiencyBonusFieldName,
+          savingThrowModifierFieldName:
             action.mapping.savingThrowModifierFieldName,
         },
       };
@@ -88,6 +86,7 @@ export interface SheetSummary {
   originalName: string;
   storedPath: string;
   createdAt: string;
+  actionCount: number;
 }
 
 export function listSheets(): Promise<SheetSummary[]> {
@@ -97,6 +96,7 @@ export function listSheets(): Promise<SheetSummary[]> {
       original_name: string;
       path: string;
       created_at: string;
+      action_count: number;
     }>
   >("list_sheets").then((items) =>
     items.map((i) => ({
@@ -104,6 +104,7 @@ export function listSheets(): Promise<SheetSummary[]> {
       originalName: i.original_name,
       storedPath: i.path,
       createdAt: i.created_at,
+      actionCount: i.action_count,
     }))
   );
 }
@@ -130,6 +131,35 @@ export function copyFile(src: string, dst: string): Promise<void> {
   return invoke<void>("copy_file", { src, dst });
 }
 
+interface AttachedActionCommandResponse {
+  id: string;
+  actionType: string;
+  targetField: string;
+  mapping: Record<string, unknown>;
+}
+
+const ACTION_TYPE_MAP: Record<string, { name: string; endpoint: string }> = {
+  AbilityModifier: { name: "Ability Modifier", endpoint: "ability-modifier" },
+  SavingThrowModifier: {
+    name: "Saving Throw Modifier",
+    endpoint: "saving-throw-modifier",
+  },
+  SkillModifier: { name: "Skill Modifier", endpoint: "skill-modifier" },
+};
+
+function extractFieldMapping(
+  actionType: string,
+  mapping: Record<string, unknown>
+): Record<string, string> {
+  const variant = mapping[actionType] as Record<string, string> | undefined;
+  if (variant) {
+    return Object.fromEntries(
+      Object.entries(variant).filter(([, v]) => typeof v === "string")
+    );
+  }
+  return {};
+}
+
 export const tauriApiClient: ApiClient = {
   async getSheetFields(sheetId: string): Promise<FormField[]> {
     const fields = await invoke<SheetFieldResponse[]>("get_sheet_form_fields", {
@@ -146,6 +176,25 @@ export const tauriApiClient: ApiClient = {
     await invoke("attach_calculation_action", {
       sheetId,
       action: payload,
+    });
+  },
+
+  async listAttachedActions(sheetId: string) {
+    const items = await invoke<AttachedActionCommandResponse[]>(
+      "list_attached_actions",
+      { sheetId }
+    );
+    return items.map((item) => {
+      const meta = ACTION_TYPE_MAP[item.actionType] ?? {
+        name: item.actionType,
+        endpoint: item.actionType.toLowerCase(),
+      };
+      return {
+        id: meta.endpoint,
+        name: meta.name,
+        endpoint: meta.endpoint,
+        mapping: extractFieldMapping(item.actionType, item.mapping),
+      };
     });
   },
 };

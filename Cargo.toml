@@ -80,7 +80,7 @@ async-trait = "0.1"
 tokio = { version = "1.49", features = ["rt", "macros"] }
 
 # Database (PostgreSQL)
-sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid", "macros"] }
+sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-native-tls", "migrate", "uuid", "macros", "json"] }
 
 # PDF
 lopdf = "0.39"

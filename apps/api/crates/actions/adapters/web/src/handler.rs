@@ -1,7 +1,7 @@
 use crate::error::ApiError;
 use actions_core::ports::driving::ActionService;
 use actions_core::ports::driving::CalculationAction;
-use actix_web::{HttpResponse, put, web};
+use actix_web::{HttpResponse, get, put, web};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -308,4 +308,48 @@ pub async fn attach_skill_modifier_calculation_script(
     request: web::Json<AttachSkillModifierCalculationScriptRequest>,
 ) -> Result<HttpResponse, ApiError> {
     attach_calculation_script(action_service, sheet_id, request).await
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct AttachedActionResponse {
+    pub id: String,
+    pub action_type: String,
+    pub target_field: String,
+    pub mapping: serde_json::Value,
+}
+
+#[utoipa::path(
+    get,
+    path = "/dnd5e/{sheet_id}/actions",
+    tag = "DnD 5e",
+    operation_id = "listAttachedActions",
+    summary = "List attached actions for a sheet",
+    description = "Returns all calculation actions that have been attached to form fields in this sheet.",
+    params(
+        ("sheet_id" = String, Path, description = "ID of the sheet", example = "123e4567-e89b-12d3-a456-426614174000")
+    ),
+    responses(
+        (status = 200, description = "List of attached actions", body = Vec<AttachedActionResponse>)
+    ),
+)]
+#[get("/dnd5e/{sheet_id}/actions")]
+pub async fn list_attached_actions(
+    action_service: web::Data<ActionService>,
+    sheet_id: web::Path<Uuid>,
+) -> Result<HttpResponse, ApiError> {
+    let sheet_id = sheet_id.into_inner();
+    let actions = action_service.list_attached_actions(&sheet_id).await?;
+
+    let response: Vec<AttachedActionResponse> = actions
+        .into_iter()
+        .map(|a| AttachedActionResponse {
+            id: a.id.to_string(),
+            action_type: a.action_type,
+            target_field: a.target_field,
+            mapping: a.mapping,
+        })
+        .collect();
+
+    Ok(HttpResponse::Ok().json(response))
 }

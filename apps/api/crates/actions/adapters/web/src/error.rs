@@ -59,6 +59,10 @@ impl From<ActionError> for ApiError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ProblemDetails::internal(),
             ),
+            ActionError::DatabaseError(_) => ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ProblemDetails::internal(),
+            ),
         }
     }
 }

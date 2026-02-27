@@ -22,6 +22,7 @@ function createMockApiClient(
     getSheetFields: vi.fn().mockResolvedValue([]),
     downloadSheet: vi.fn(),
     attachAction: vi.fn(),
+    listAttachedActions: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
 }

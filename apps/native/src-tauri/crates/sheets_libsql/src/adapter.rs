@@ -18,6 +18,16 @@ CREATE TABLE IF NOT EXISTS sheet_reference (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS attached_action (
+    id TEXT PRIMARY KEY,
+    sheet_id TEXT NOT NULL REFERENCES sheet_reference(id) ON DELETE CASCADE,
+    action_type TEXT NOT NULL,
+    target_field TEXT NOT NULL,
+    mapping TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(sheet_id, target_field)
+);
+
 CREATE TABLE IF NOT EXISTS failed_sheet_deletions (
     id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
     sheet_id TEXT NOT NULL,
@@ -32,6 +42,7 @@ CREATE TABLE IF NOT EXISTS failed_sheet_deletions (
 pub struct SheetListRow {
     pub reference: SheetReference,
     pub created_at: String,
+    pub action_count: i64,
 }
 
 pub struct SheetReferenceLibSql {
@@ -63,7 +74,7 @@ impl SheetReferenceLibSql {
 
         let mut rows = conn
             .query(
-                "SELECT id, original_name, name, extension, path, created_at FROM sheet_reference ORDER BY created_at DESC LIMIT 50",
+                "SELECT sr.id, sr.original_name, sr.name, sr.extension, sr.path, sr.created_at, COUNT(aa.id) as action_count FROM sheet_reference sr LEFT JOIN attached_action aa ON aa.sheet_id = sr.id GROUP BY sr.id ORDER BY sr.created_at DESC LIMIT 50",
                 libsql::params![],
             )
             .await
@@ -91,6 +102,7 @@ impl SheetReferenceLibSql {
             let created_at: String = row
                 .get(5)
                 .map_err(|e| SheetError::DatabaseError(e.into()))?;
+            let action_count: i64 = row.get(6).unwrap_or(0);
 
             let uuid = Uuid::parse_str(&id)
                 .map_err(|e| SheetError::DatabaseError(anyhow::anyhow!("invalid UUID: {}", e)))?;
@@ -104,6 +116,7 @@ impl SheetReferenceLibSql {
                     PathBuf::from(path),
                 ),
                 created_at,
+                action_count,
             });
         }
 
@@ -259,6 +272,97 @@ impl actions_core::ports::driven::SheetReferencePort for SheetReferenceLibSql {
             .await
             .map(|s| actions_core::ports::driven::SheetReference::new(s.id, s.path))
             .map_err(|_| actions_core::error::ActionError::NotFound(*id))
+    }
+}
+
+#[async_trait]
+impl actions_core::ports::driven::AttachedActionPort for SheetReferenceLibSql {
+    #[instrument(name = "libsql.save_attached_action", skip(self, action), level = "info", fields(sheet_id = %action.sheet_id, target_field = %action.target_field))]
+    async fn save(
+        &self,
+        action: &actions_core::action::AttachedAction,
+    ) -> Result<(), actions_core::error::ActionError> {
+        let conn = self
+            .db
+            .connect()
+            .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+        let mapping_str = serde_json::to_string(&action.mapping)
+            .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+        conn.execute(
+            "INSERT INTO attached_action (id, sheet_id, action_type, target_field, mapping) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(sheet_id, target_field) DO UPDATE SET action_type=excluded.action_type, mapping=excluded.mapping, id=excluded.id",
+            params![
+                action.id.to_string(),
+                action.sheet_id.to_string(),
+                action.action_type.clone(),
+                action.target_field.clone(),
+                mapping_str,
+            ],
+        )
+        .await
+        .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    #[instrument(name = "libsql.list_attached_actions", skip(self), level = "info", fields(%sheet_id))]
+    async fn list_by_sheet_id(
+        &self,
+        sheet_id: &Uuid,
+    ) -> Result<Vec<actions_core::action::AttachedAction>, actions_core::error::ActionError> {
+        let conn = self
+            .db
+            .connect()
+            .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+        let mut rows = conn
+            .query(
+                "SELECT id, sheet_id, action_type, target_field, mapping FROM attached_action WHERE sheet_id = ?1 ORDER BY created_at",
+                params![sheet_id.to_string()],
+            )
+            .await
+            .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+        let mut actions = Vec::new();
+        while let Some(row) = rows
+            .next()
+            .await
+            .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?
+        {
+            let id: String = row
+                .get(0)
+                .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+            let sid: String = row
+                .get(1)
+                .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+            let action_type: String = row
+                .get(2)
+                .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+            let target_field: String = row
+                .get(3)
+                .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+            let mapping_str: String = row
+                .get(4)
+                .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+            let uuid = Uuid::parse_str(&id)
+                .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+            let sheet_uuid = Uuid::parse_str(&sid)
+                .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+            let mapping: serde_json::Value = serde_json::from_str(&mapping_str)
+                .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+            actions.push(actions_core::action::AttachedAction {
+                id: uuid,
+                sheet_id: sheet_uuid,
+                action_type,
+                target_field,
+                mapping,
+            });
+        }
+
+        Ok(actions)
     }
 }
 

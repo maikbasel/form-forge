@@ -17,6 +17,8 @@ pub enum ActionError {
     FieldNotFound(String),
     #[error("invalid action: {0}")]
     InvalidAction(String),
+    #[error("database error: {0}")]
+    DatabaseError(String),
 }
 
 pub type SheetError = ActionError;

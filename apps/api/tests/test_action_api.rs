@@ -50,11 +50,17 @@ mod tests {
         let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
             s3_storage.clone();
         let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
-            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+            Arc::new(SheetReferenceDb::new(async_ctx.pool.clone()));
         let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
             Arc::new(PdfActionAdapter);
-        let action_service =
-            ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
+        let attached_action_port: Arc<dyn actions_core::ports::driven::AttachedActionPort> =
+            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+        let action_service = ActionService::new(
+            action_reference_port,
+            action_storage_port,
+            action_pdf_port,
+            attached_action_port,
+        );
         telemetry::initialize().expect("initialize telemetry");
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_ability_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(
@@ -135,11 +141,17 @@ mod tests {
         let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
             s3_storage.clone();
         let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
-            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+            Arc::new(SheetReferenceDb::new(async_ctx.pool.clone()));
         let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
             Arc::new(PdfActionAdapter);
-        let action_service =
-            ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
+        let attached_action_port: Arc<dyn actions_core::ports::driven::AttachedActionPort> =
+            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+        let action_service = ActionService::new(
+            action_reference_port,
+            action_storage_port,
+            action_pdf_port,
+            attached_action_port,
+        );
         telemetry::initialize().expect("initialize telemetry");
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_saving_throw_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(
@@ -225,11 +237,17 @@ mod tests {
         let action_storage_port: Arc<dyn actions_core::ports::driven::SheetStoragePort> =
             s3_storage.clone();
         let action_reference_port: Arc<dyn actions_core::ports::driven::SheetReferencePort> =
-            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+            Arc::new(SheetReferenceDb::new(async_ctx.pool.clone()));
         let action_pdf_port: Arc<dyn actions_core::ports::driven::ActionPdfPort> =
             Arc::new(PdfActionAdapter);
-        let action_service =
-            ActionService::new(action_reference_port, action_storage_port, action_pdf_port);
+        let attached_action_port: Arc<dyn actions_core::ports::driven::AttachedActionPort> =
+            Arc::new(SheetReferenceDb::new(async_ctx.pool));
+        let action_service = ActionService::new(
+            action_reference_port,
+            action_storage_port,
+            action_pdf_port,
+            attached_action_port,
+        );
         telemetry::initialize().expect("initialize telemetry");
         let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_skill_modifier_calculation_script, download_sheet]);
         let expected_js = include_str!(concat!(

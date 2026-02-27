@@ -137,6 +137,69 @@ impl actions_core::ports::driven::SheetReferencePort for SheetReferenceDb {
     }
 }
 
+#[async_trait]
+impl actions_core::ports::driven::AttachedActionPort for SheetReferenceDb {
+    #[instrument(name = "db.save_attached_action", skip(self, action), level = "info", fields(sheet_id = %action.sheet_id, target_field = %action.target_field))]
+    async fn save(
+        &self,
+        action: &actions_core::action::AttachedAction,
+    ) -> Result<(), actions_core::error::ActionError> {
+        sqlx::query(
+            r#"INSERT INTO attached_action (id, sheet_id, action_type, target_field, mapping)
+               VALUES ($1, $2, $3, $4, $5)
+               ON CONFLICT(sheet_id, target_field) DO UPDATE
+               SET action_type = EXCLUDED.action_type, mapping = EXCLUDED.mapping, id = EXCLUDED.id"#,
+        )
+        .bind(action.id)
+        .bind(action.sheet_id)
+        .bind(&action.action_type)
+        .bind(&action.target_field)
+        .bind(&action.mapping)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    #[instrument(name = "db.list_attached_actions", skip(self), level = "info", fields(%sheet_id))]
+    async fn list_by_sheet_id(
+        &self,
+        sheet_id: &Uuid,
+    ) -> Result<Vec<actions_core::action::AttachedAction>, actions_core::error::ActionError> {
+        let rows: Vec<AttachedActionRow> = sqlx::query_as(
+            r#"SELECT id, sheet_id, action_type, target_field, mapping
+               FROM attached_action
+               WHERE sheet_id = $1
+               ORDER BY created_at"#,
+        )
+        .bind(sheet_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| actions_core::error::ActionError::DatabaseError(e.to_string()))?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| actions_core::action::AttachedAction {
+                id: r.id,
+                sheet_id: r.sheet_id,
+                action_type: r.action_type,
+                target_field: r.target_field,
+                mapping: r.mapping,
+            })
+            .collect())
+    }
+}
+
+#[derive(FromRow)]
+struct AttachedActionRow {
+    id: Uuid,
+    sheet_id: Uuid,
+    action_type: String,
+    target_field: String,
+    mapping: serde_json::Value,
+}
+
 /// Database adapter for failed sheet deletion tracking (dead letter table).
 pub struct FailedSheetDeletionDb {
     pool: Pool<Postgres>,
