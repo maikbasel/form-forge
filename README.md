@@ -404,5 +404,5 @@ acceleration. Non-NVIDIA systems do not need this.
 - [x] implement ttl for uploaded files
 - [x] implement application/problem+json
 - [x] dockerize playwright tests
-- [ ] add translation
+- [x] add translation
 - [x] Recent sheets
