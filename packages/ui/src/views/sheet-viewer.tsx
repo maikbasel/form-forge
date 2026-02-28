@@ -676,6 +676,7 @@ export interface ExportStrategy {
 
 interface FieldOverlayProps {
   field: FieldPosition;
+  hasAction: boolean;
   isSelected: boolean;
   isHovered: boolean;
   isFlashing: boolean;
@@ -688,6 +689,7 @@ interface FieldOverlayProps {
 
 const FieldOverlay = memo(function FieldOverlay({
   field,
+  hasAction,
   isSelected,
   isHovered,
   isFlashing,
@@ -732,7 +734,11 @@ const FieldOverlay = memo(function FieldOverlay({
         width: `${field.bounds.width}px`,
         height: `${field.bounds.height}px`,
       }}
-    />
+    >
+      {hasAction && (
+        <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-yellow-400" />
+      )}
+    </Toggle>
   );
 });
 
@@ -786,6 +792,16 @@ export default function SheetViewer({
     }
     return new Set<string>(Object.values(action.mapping));
   }, [hoveredActionIndex, attachedActions]);
+
+  const fieldsWithActions = useMemo(() => {
+    const set = new Set<string>();
+    for (const attached of attachedActions) {
+      for (const fieldName of Object.values(attached.mapping)) {
+        set.add(fieldName);
+      }
+    }
+    return set;
+  }, [attachedActions]);
 
   // Ref to manage flash timeout (prevents memory leaks)
   const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1264,6 +1280,7 @@ export default function SheetViewer({
               {currentPageFields.map((field) => (
                 <FieldOverlay
                   field={field}
+                  hasAction={fieldsWithActions.has(field.name)}
                   isActionHighlighted={actionHighlightedFields.has(field.name)}
                   isFlashing={flashingFieldName === field.name}
                   isHovered={hoveredFieldName === field.name}
