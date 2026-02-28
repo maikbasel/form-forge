@@ -29,6 +29,7 @@ export interface AttachedAction {
   id: string;
   name: string;
   endpoint: string;
+  targetField: string;
   mapping: Record<string, string>;
 }
 

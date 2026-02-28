@@ -193,6 +193,7 @@ export const tauriApiClient: ApiClient = {
         id: meta.endpoint,
         name: meta.name,
         endpoint: meta.endpoint,
+        targetField: item.targetField,
         mapping: extractFieldMapping(item.actionType, item.mapping),
       };
     });

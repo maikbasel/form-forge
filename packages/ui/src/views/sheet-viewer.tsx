@@ -107,6 +107,7 @@ interface FieldRole {
   label: string;
   required: boolean;
   hint: string;
+  isTarget?: boolean;
 }
 
 interface ActionConfig {
@@ -143,6 +144,7 @@ function useActions(): ActionConfig[] {
             label: t("abilityModifier.roles.targetModifier.label"),
             required: true,
             hint: t("abilityModifier.roles.targetModifier.hint"),
+            isTarget: true,
           },
         ],
       },
@@ -175,6 +177,7 @@ function useActions(): ActionConfig[] {
             label: t("skillModifier.roles.targetSkill.label"),
             required: true,
             hint: t("skillModifier.roles.targetSkill.hint"),
+            isTarget: true,
           },
           {
             key: "expertiseFieldName",
@@ -219,6 +222,7 @@ function useActions(): ActionConfig[] {
             label: t("savingThrowModifier.roles.targetSavingThrow.label"),
             required: true,
             hint: t("savingThrowModifier.roles.targetSavingThrow.hint"),
+            isTarget: true,
           },
         ],
       },
@@ -506,12 +510,16 @@ function ActionConfigModal({
       return;
     }
 
+    const targetRole = currentAction.roles.find((r) => r.isTarget);
+    const targetField = targetRole ? (fieldMapping[targetRole.key] ?? "") : "";
+
     setIsAttaching(true);
     try {
       await onAttach({
         id: currentAction.id,
         name: currentAction.name,
         endpoint: currentAction.endpoint,
+        targetField,
         mapping: fieldMapping,
       });
     } finally {
@@ -831,9 +839,7 @@ export default function SheetViewer({
   const fieldsWithActions = useMemo(() => {
     const set = new Set<string>();
     for (const attached of attachedActions) {
-      for (const fieldName of Object.values(attached.mapping)) {
-        set.add(fieldName);
-      }
+      set.add(attached.targetField);
     }
     return set;
   }, [attachedActions]);
