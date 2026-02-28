@@ -2,8 +2,9 @@ import type {
   ExportStrategy,
   PdfLoadStrategy,
 } from "@repo/ui/views/sheet-viewer";
-import { downloadDir } from "@tauri-apps/api/path";
+import { dirname, downloadDir } from "@tauri-apps/api/path";
 import { save } from "@tauri-apps/plugin-dialog";
+import { openPath } from "@tauri-apps/plugin-opener";
 import { getExportDir, setExportDir } from "./settings";
 import { copyFile, exportSheet, readPdfBytes } from "./tauri-api-client";
 
@@ -16,7 +17,7 @@ export const tauriPdfLoader: PdfLoadStrategy = {
 };
 
 export const tauriExportStrategy: ExportStrategy = {
-  async export(sheetId: string): Promise<boolean> {
+  async export(sheetId: string): Promise<string | null> {
     const result = await exportSheet(sheetId);
     const lastDir = await getExportDir();
     const baseDir = lastDir ?? (await downloadDir());
@@ -28,13 +29,17 @@ export const tauriExportStrategy: ExportStrategy = {
     });
 
     if (!savePath) {
-      return false;
+      return null;
     }
 
     await copyFile(result.path, savePath);
 
     const chosenDir = savePath.substring(0, savePath.lastIndexOf("/"));
     setExportDir(chosenDir);
-    return true;
+    return savePath;
+  },
+  async revealInFolder(path: string): Promise<void> {
+    const folder = await dirname(path);
+    await openPath(folder);
   },
 };

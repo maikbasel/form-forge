@@ -42,9 +42,8 @@ import {
   useFieldSnippet,
 } from "@repo/ui/context/field-snippet-context.tsx";
 import { getSheetFieldsCacheKey } from "@repo/ui/lib/cache.ts";
-import { cn } from "@repo/ui/lib/utils.ts";
+import { cn, getErrorMessage } from "@repo/ui/lib/utils.ts";
 import type { AttachActionRequest } from "@repo/ui/types/action.ts";
-import { ApiClientError } from "@repo/ui/types/api.ts";
 import {
   AlertCircle,
   Check,
@@ -66,6 +65,41 @@ function triggerBrowserDownload(blob: Blob, filename: string) {
   link.click();
   link.remove();
   globalThis.URL.revokeObjectURL(url);
+}
+
+async function exportWithHandler(
+  handler: ExportStrategy,
+  sheetId: string,
+  t: (key: string) => string
+) {
+  const savedPath = await handler.export(sheetId);
+  if (!savedPath) {
+    return;
+  }
+  if (handler.revealInFolder) {
+    toast.success(t("viewer.sheetExportedSuccessfully"), {
+      action: {
+        label: t("sidebar.showInFolder"),
+        onClick: () => {
+          handler.revealInFolder?.(savedPath);
+        },
+      },
+    });
+  } else {
+    toast.success(t("viewer.sheetExportedSuccessfully"));
+  }
+}
+
+async function exportWithDownload(
+  apiClient: {
+    downloadSheet(id: string): Promise<{ blob: Blob; filename: string }>;
+  },
+  sheetId: string,
+  t: (key: string) => string
+) {
+  const { blob, filename } = await apiClient.downloadSheet(sheetId);
+  triggerBrowserDownload(blob, filename);
+  toast.success(t("viewer.sheetExportedSuccessfully"));
 }
 
 interface FieldRole {
@@ -671,7 +705,8 @@ export interface PdfLoadStrategy {
 }
 
 export interface ExportStrategy {
-  export(sheetId: string): Promise<boolean>;
+  export(sheetId: string): Promise<string | null>;
+  revealInFolder?(path: string): Promise<void>;
 }
 
 interface FieldOverlayProps {
@@ -1097,15 +1132,7 @@ export default function SheetViewer({
       );
       toast.success(t("viewer.attachedSuccessfully", { name: config.name }));
     } catch (err) {
-      let errorMessage: string;
-      if (err instanceof ApiClientError) {
-        errorMessage = err.problem.detail ?? err.problem.title;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = t("common:unknownError");
-      }
-
+      const errorMessage = getErrorMessage(err, t("common:unknownError"));
       console.error(errorMessage);
       toast.error(
         t("viewer.failedToAttach", {
@@ -1125,31 +1152,16 @@ export default function SheetViewer({
 
     try {
       if (exportHandler) {
-        const exported = await exportHandler.export(sheetId);
-        if (exported) {
-          toast.success(t("viewer.sheetExportedSuccessfully"));
-        }
+        await exportWithHandler(exportHandler, sheetId, t);
       } else if ("downloadSheet" in apiClient) {
-        const { blob, filename } = await (
-          apiClient as {
-            downloadSheet(
-              id: string
-            ): Promise<{ blob: Blob; filename: string }>;
-          }
-        ).downloadSheet(sheetId);
-        triggerBrowserDownload(blob, filename);
-        toast.success(t("viewer.sheetExportedSuccessfully"));
+        await exportWithDownload(
+          apiClient as Parameters<typeof exportWithDownload>[0],
+          sheetId,
+          t
+        );
       }
     } catch (err) {
-      let errorMessage: string;
-      if (err instanceof ApiClientError) {
-        errorMessage = err.problem.detail ?? err.problem.title;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = t("common:unknownError");
-      }
-
+      const errorMessage = getErrorMessage(err, t("common:unknownError"));
       toast.error(t("viewer.failedToExportSheet", { message: errorMessage }));
     } finally {
       setIsExporting(false);

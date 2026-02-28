@@ -15,7 +15,7 @@ import {
 import { Progress } from "@repo/ui/components/progress.tsx";
 import { useFileApiClient } from "@repo/ui/context/api-client-context.tsx";
 import { useSheet } from "@repo/ui/context/sheet-context.tsx";
-import { ApiClientError } from "@repo/ui/types/api.ts";
+import { getErrorMessage } from "@repo/ui/lib/utils.ts";
 import { Loader2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -40,19 +40,6 @@ export default function SheetUploader({
     useState<AbortController | null>(null);
   const { setSheetPath, setSheetId } = useSheet();
   const apiClient = useFileApiClient();
-
-  const getErrorMessage = useCallback(
-    (error: unknown): string => {
-      if (error instanceof ApiClientError) {
-        return error.problem.detail ?? error.problem.title;
-      }
-      if (error instanceof Error) {
-        return error.message;
-      }
-      return t("common:uploadFailed");
-    },
-    [t]
-  );
 
   const uploadSingleFile = useCallback(
     async (options: {
@@ -96,11 +83,11 @@ export default function SheetUploader({
           return;
         }
 
-        const errorMessage = getErrorMessage(error);
+        const errorMessage = getErrorMessage(error, t("common:uploadFailed"));
         onError(file, new Error(errorMessage));
       }
     },
-    [apiClient, setSheetPath, setSheetId, onUploadSuccess, getErrorMessage, t]
+    [apiClient, setSheetPath, setSheetId, onUploadSuccess, t]
   );
 
   const onUpload: NonNullable<FileUploadProps["onUpload"]> = useCallback(
