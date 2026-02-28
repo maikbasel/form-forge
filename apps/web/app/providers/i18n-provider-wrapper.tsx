@@ -12,7 +12,8 @@ export default function I18nProviderWrapper({
 }: Readonly<{ children: React.ReactNode }>) {
   useEffect(() => {
     const browserLang = navigator.language;
-    if (browserLang && !i18n.language.startsWith(browserLang.split("-")[0])) {
+    const langPrefix = browserLang?.split("-")[0];
+    if (langPrefix && !i18n.language.startsWith(langPrefix)) {
       i18n.changeLanguage(browserLang);
     }
   }, []);
