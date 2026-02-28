@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.1](https://github.com/maikbasel/form-forge/compare/v0.1.0...v0.1.1) (2026-02-28)
+
+
+### Features
+
+* **actions:** persist attached actions in database ([51e36dd](https://github.com/maikbasel/form-forge/commit/51e36dd89547642d5256c6376e58c4886bde2309))
+* **i18n:** add internationalization with English and German support ([dee75cb](https://github.com/maikbasel/form-forge/commit/dee75cbb71b7785909a5303f13f547c5dbb5860a))
+* **ui:** highlight PDF fields when hovering sidebar action cards ([e8a6ed7](https://github.com/maikbasel/form-forge/commit/e8a6ed7bdffe37e43ecd2c69b0e4638ed77ce87d))
+* **ui:** show dot indicator on PDF fields with attached actions ([9b411f9](https://github.com/maikbasel/form-forge/commit/9b411f9707f00a33cee18fa4493aa8605ed03d9e))
+* **ui:** show dot indicator on PDF fields with attached actions ([e825226](https://github.com/maikbasel/form-forge/commit/e825226781ed5b0ea31821a32751fa27181fd4e9))
+
+
+### Bug Fixes
+
+* **i18n:** resolve hydration mismatch by deferring browser language detection ([97a4f1b](https://github.com/maikbasel/form-forge/commit/97a4f1b91532ae5ae30b1589b46cfe15dca909a5))
+* **ui:** only show dot indicator on target fields, not source fields ([26d6158](https://github.com/maikbasel/form-forge/commit/26d6158586d7f765b2a943f21abd7d0c998de9aa))
+* **web:** resolve DOMMatrix SSR error by lazy-loading pdfjs-dist ([2a9ce40](https://github.com/maikbasel/form-forge/commit/2a9ce40b1c6b49998b2be7d36b820d0ada74e5e7))
+
 ## [0.1.0](https://github.com/maikbasel/form-forge/compare/v0.1.0...v0.1.0) (2026-02-23)
 
 
