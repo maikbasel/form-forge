@@ -679,6 +679,7 @@ interface FieldOverlayProps {
   isSelected: boolean;
   isHovered: boolean;
   isFlashing: boolean;
+  isActionHighlighted: boolean;
   onMouseEnter: (name: string) => void;
   onMouseLeave: () => void;
   onToggle: (name: string) => void;
@@ -690,6 +691,7 @@ const FieldOverlay = memo(function FieldOverlay({
   isSelected,
   isHovered,
   isFlashing,
+  isActionHighlighted,
   onMouseEnter,
   onMouseLeave,
   onToggle,
@@ -714,6 +716,8 @@ const FieldOverlay = memo(function FieldOverlay({
         "data-[state=off]:z-10 data-[state=off]:border-2 data-[state=off]:border-yellow-400/50 data-[state=off]:bg-yellow-400/10",
         "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30",
         isHovered &&
+          "!border-blue-500 !bg-blue-500/30 z-30 shadow-xl ring-2 ring-blue-400",
+        isActionHighlighted &&
           "!border-blue-500 !bg-blue-500/30 z-30 shadow-xl ring-2 ring-blue-400",
         isFlashing && "z-30 animate-flash"
       )}
@@ -768,6 +772,20 @@ export default function SheetViewer({
   const [flashingFieldName, setFlashingFieldName] = useState<string | null>(
     null
   );
+  const [hoveredActionIndex, setHoveredActionIndex] = useState<number | null>(
+    null
+  );
+
+  const actionHighlightedFields = useMemo(() => {
+    if (hoveredActionIndex === null) {
+      return new Set<string>();
+    }
+    const action = attachedActions[hoveredActionIndex];
+    if (!action) {
+      return new Set<string>();
+    }
+    return new Set<string>(Object.values(action.mapping));
+  }, [hoveredActionIndex, attachedActions]);
 
   // Ref to manage flash timeout (prevents memory leaks)
   const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1246,6 +1264,7 @@ export default function SheetViewer({
               {currentPageFields.map((field) => (
                 <FieldOverlay
                   field={field}
+                  isActionHighlighted={actionHighlightedFields.has(field.name)}
                   isFlashing={flashingFieldName === field.name}
                   isHovered={hoveredFieldName === field.name}
                   isSelected={selectedFields.includes(field.name)}
@@ -1355,8 +1374,14 @@ export default function SheetViewer({
 
                   return (
                     <Card
-                      className="bg-muted/50"
+                      className={cn(
+                        "bg-muted/50 transition-colors",
+                        hoveredActionIndex === index &&
+                          "border-blue-500 bg-blue-500/10"
+                      )}
                       key={`${attachedAction.id.toLowerCase()}-${index}`}
+                      onMouseEnter={() => setHoveredActionIndex(index)}
+                      onMouseLeave={() => setHoveredActionIndex(null)}
                     >
                       <CardHeader className="p-4 pb-3">
                         <div className="flex items-start justify-between">
