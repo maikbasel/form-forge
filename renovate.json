@@ -8,6 +8,7 @@
   ],
   "schedule": ["before 9am on monday"],
   "timezone": "Europe/Amsterdam",
+  "configMigration": true,
   "platformAutomerge": true,
   "packageRules": [
     {
