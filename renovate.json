@@ -1,0 +1,70 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "group:monorepos",
+    "group:recommended",
+    ":semanticCommits"
+  ],
+  "schedule": ["before 9am on monday"],
+  "timezone": "Europe/Amsterdam",
+  "platformAutomerge": true,
+  "packageRules": [
+    {
+      "description": "Automerge minor and patch",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true
+    },
+    {
+      "description": "Do not automerge major updates",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Group Rust minor/patch",
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "rust-dependencies"
+    },
+    {
+      "description": "Group React ecosystem",
+      "matchManagers": ["npm"],
+      "matchPackagePatterns": ["^react", "^@types/react"],
+      "groupName": "react"
+    },
+    {
+      "description": "Group Next.js ecosystem",
+      "matchManagers": ["npm"],
+      "matchPackagePatterns": ["^next"],
+      "groupName": "nextjs"
+    },
+    {
+      "description": "Group tooling",
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "turbo",
+        "@biomejs/biome",
+        "ultracite",
+        "typescript"
+      ],
+      "matchPackagePatterns": ["^turbo"],
+      "groupName": "tooling"
+    },
+    {
+      "description": "Group remaining npm minor/patch",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm-minor-patch"
+    },
+    {
+      "description": "Group Docker updates",
+      "matchManagers": ["dockerfile"],
+      "groupName": "docker"
+    },
+    {
+      "description": "Group GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    }
+  ]
+}
