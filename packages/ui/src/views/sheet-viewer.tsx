@@ -1386,7 +1386,7 @@ export default function SheetViewer({
                     return (
                       <Card
                         className="border-destructive bg-muted/50"
-                        key={`${attachedAction.id.toLowerCase()}-${index}`}
+                        key={`${attachedAction.id.toLowerCase()}-${attachedAction.targetField}`}
                       >
                         <CardHeader className="p-4 pb-3">
                           <div className="flex items-start justify-between">
@@ -1414,7 +1414,7 @@ export default function SheetViewer({
                         hoveredActionIndex === index &&
                           "border-blue-500 bg-blue-500/10"
                       )}
-                      key={`${attachedAction.id.toLowerCase()}-${index}`}
+                      key={`${attachedAction.id.toLowerCase()}-${attachedAction.targetField}`}
                       onMouseEnter={() => setHoveredActionIndex(index)}
                       onMouseLeave={() => setHoveredActionIndex(null)}
                     >
