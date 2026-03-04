@@ -2,7 +2,7 @@
 # Usage: docker compose -f compose.e2e.yml up --build --abort-on-container-exit --exit-code-from playwright
 services:
   db:
-    image: postgres:17
+    image: postgres:18
     restart: "no"
     tmpfs:
       - /var/lib/postgresql/data
