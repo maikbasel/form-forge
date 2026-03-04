@@ -12,8 +12,8 @@ interface SheetFieldResponse {
 }
 
 interface ExportSheetResponse {
-  path: string;
   filename: string;
+  path: string;
 }
 
 type CalculationActionPayload =
@@ -82,11 +82,11 @@ function mapActionToPayload(
 }
 
 export interface SheetSummary {
+  actionCount: number;
+  createdAt: string;
   id: string;
   originalName: string;
   storedPath: string;
-  createdAt: string;
-  actionCount: number;
 }
 
 export function listSheets(): Promise<SheetSummary[]> {
@@ -132,10 +132,10 @@ export function copyFile(src: string, dst: string): Promise<void> {
 }
 
 interface AttachedActionCommandResponse {
-  id: string;
   actionType: string;
-  targetField: string;
+  id: string;
   mapping: Record<string, unknown>;
+  targetField: string;
 }
 
 const ACTION_TYPE_MAP: Record<string, { name: string; endpoint: string }> = {

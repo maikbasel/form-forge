@@ -12,8 +12,8 @@ import {
 } from "../lib/settings";
 
 interface ThemeContextValue {
-  theme: Theme;
   setTheme: (theme: Theme) => void;
+  theme: Theme;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({

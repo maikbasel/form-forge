@@ -4,8 +4,8 @@ import { SheetViewerPage } from "./pages/sheet-viewer-page";
 import { UploadPage } from "./pages/upload-page";
 
 interface PageFixtures {
-  uploadPage: UploadPage;
   sheetViewerPage: SheetViewerPage;
+  uploadPage: UploadPage;
 }
 
 export const test = base.extend<PageFixtures>({

@@ -7,10 +7,10 @@ import {
 } from "react";
 
 interface SheetContextState {
-  sheetPath: string | null;
+  setSheetId: (id: string | null) => void;
   setSheetPath: (url: string | null) => void;
   sheetId: string | null;
-  setSheetId: (id: string | null) => void;
+  sheetPath: string | null;
 }
 
 const SheetContext = createContext<SheetContextState | undefined>(undefined);

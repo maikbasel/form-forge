@@ -13,6 +13,6 @@ export interface DownloadSheetResult {
 export type UploadProgressCallback = (progress: number) => void;
 
 export interface UploadOptions {
-  signal?: AbortSignal;
   onProgress?: UploadProgressCallback;
+  signal?: AbortSignal;
 }

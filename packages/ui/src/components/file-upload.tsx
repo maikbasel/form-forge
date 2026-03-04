@@ -44,15 +44,15 @@ function useDirection(dirProp?: Direction): Direction {
 }
 
 interface FileState {
+  error?: string;
   file: File;
   progress: number;
-  error?: string;
   status: "idle" | "uploading" | "error" | "success";
 }
 
 interface StoreState {
-  files: Map<File, FileState>;
   dragOver: boolean;
+  files: Map<File, FileState>;
   invalid: boolean;
 }
 
@@ -263,13 +263,13 @@ function useStore<T>(selector: (state: StoreState) => T): T {
 }
 
 interface FileUploadContextValue {
-  inputId: string;
-  dropzoneId: string;
-  listId: string;
-  labelId: string;
-  disabled: boolean;
   dir: Direction;
+  disabled: boolean;
+  dropzoneId: string;
+  inputId: string;
   inputRef: React.RefObject<HTMLInputElement | null>;
+  labelId: string;
+  listId: string;
   urlCache: WeakMap<File, string>;
 }
 
@@ -287,9 +287,17 @@ function useFileUploadContext(consumerName: string) {
 
 interface FileUploadRootProps
   extends Omit<React.ComponentProps<"div">, "defaultValue" | "onChange"> {
-  value?: File[];
+  accept?: string;
+  asChild?: boolean;
   defaultValue?: File[];
-  onValueChange?: (files: File[]) => void;
+  dir?: Direction;
+  disabled?: boolean;
+  invalid?: boolean;
+  label?: string;
+  maxFiles?: number;
+  maxSize?: number;
+  multiple?: boolean;
+  name?: string;
   onAccept?: (files: File[]) => void;
   onFileAccept?: (file: File) => void;
   onFileReject?: (file: File, message: string) => void;
@@ -302,17 +310,9 @@ interface FileUploadRootProps
       onError: (file: File, error: Error) => void;
     }
   ) => Promise<void> | void;
-  accept?: string;
-  maxFiles?: number;
-  maxSize?: number;
-  dir?: Direction;
-  label?: string;
-  name?: string;
-  asChild?: boolean;
-  disabled?: boolean;
-  invalid?: boolean;
-  multiple?: boolean;
+  onValueChange?: (files: File[]) => void;
   required?: boolean;
+  value?: File[];
 }
 
 function FileUploadRoot(props: FileUploadRootProps) {
@@ -903,9 +903,9 @@ function FileUploadTrigger(props: FileUploadTriggerProps) {
 }
 
 interface FileUploadListProps extends React.ComponentProps<"div"> {
-  orientation?: "horizontal" | "vertical";
   asChild?: boolean;
   forceMount?: boolean;
+  orientation?: "horizontal" | "vertical";
 }
 
 function FileUploadList(props: FileUploadListProps) {
@@ -947,12 +947,12 @@ function FileUploadList(props: FileUploadListProps) {
 }
 
 interface FileUploadItemContextValue {
-  id: string;
   fileState: FileState | undefined;
+  id: string;
+  messageId: string;
   nameId: string;
   sizeId: string;
   statusId: string;
-  messageId: string;
 }
 
 const FileUploadItemContext =
@@ -967,8 +967,8 @@ function useFileUploadItemContext(consumerName: string) {
 }
 
 interface FileUploadItemProps extends React.ComponentProps<"div"> {
-  value: File;
   asChild?: boolean;
+  value: File;
 }
 
 function FileUploadItem(props: FileUploadItemProps) {
@@ -1107,8 +1107,8 @@ function getFileIcon(file: File) {
 }
 
 interface FileUploadItemPreviewProps extends React.ComponentProps<"div"> {
-  render?: (file: File, fallback: () => React.ReactNode) => React.ReactNode;
   asChild?: boolean;
+  render?: (file: File, fallback: () => React.ReactNode) => React.ReactNode;
 }
 
 function FileUploadItemPreview(props: FileUploadItemPreviewProps) {
@@ -1234,10 +1234,10 @@ function FileUploadItemMetadata(props: FileUploadItemMetadataProps) {
   );
 }
 interface FileUploadItemProgressProps extends React.ComponentProps<"div"> {
-  variant?: "linear" | "circular" | "fill";
-  size?: number;
   asChild?: boolean;
   forceMount?: boolean;
+  size?: number;
+  variant?: "linear" | "circular" | "fill";
 }
 
 function FileUploadItemProgress(props: FileUploadItemProgressProps) {
@@ -1412,8 +1412,8 @@ function FileUploadItemDelete(props: FileUploadItemDeleteProps) {
 }
 
 interface FileUploadClearProps extends React.ComponentProps<"button"> {
-  forceMount?: boolean;
   asChild?: boolean;
+  forceMount?: boolean;
 }
 
 function FileUploadClear(props: FileUploadClearProps) {

@@ -103,18 +103,18 @@ async function exportWithDownload(
 }
 
 interface FieldRole {
+  hint: string;
+  isTarget?: boolean;
   key: string;
   label: string;
   required: boolean;
-  hint: string;
-  isTarget?: boolean;
 }
 
 interface ActionConfig {
-  id: string;
-  name: string;
   description: string;
   endpoint: string;
+  id: string;
+  name: string;
   roles: FieldRole[];
 }
 
@@ -301,12 +301,12 @@ function AvailableFieldsPool({ fields }: Readonly<{ fields: string[] }>) {
 
 // Role Drop Zone Component
 interface FieldRoleDropZoneProps {
-  role: FieldRole;
   assignedField: string | undefined;
+  isDragging: boolean;
   onRemove: () => void;
   onSelectField: (field: string) => void;
+  role: FieldRole;
   unassignedFields: string[];
-  isDragging: boolean;
 }
 
 function FieldRoleDropZone({
@@ -426,9 +426,9 @@ function FieldRoleDropZone({
 
 interface ActionConfigModalProps {
   actions: ActionConfig[];
-  selectedFields: string[];
-  onClose: () => void;
   onAttach: (action: AttachedAction) => Promise<void>;
+  onClose: () => void;
+  selectedFields: string[];
 }
 
 function ActionConfigModal({
@@ -720,10 +720,10 @@ export interface ExportStrategy {
 interface FieldOverlayProps {
   field: FieldPosition;
   hasAction: boolean;
-  isSelected: boolean;
-  isHovered: boolean;
-  isFlashing: boolean;
   isActionHighlighted: boolean;
+  isFlashing: boolean;
+  isHovered: boolean;
+  isSelected: boolean;
   onMouseEnter: (name: string) => void;
   onMouseLeave: () => void;
   onToggle: (name: string) => void;
@@ -786,10 +786,10 @@ const FieldOverlay = memo(function FieldOverlay({
 });
 
 interface SheetViewerProps {
-  file?: string;
-  sheetId?: string;
-  pdfLoader?: PdfLoadStrategy;
   exportHandler?: ExportStrategy;
+  file?: string;
+  pdfLoader?: PdfLoadStrategy;
+  sheetId?: string;
 }
 
 export default function SheetViewer({

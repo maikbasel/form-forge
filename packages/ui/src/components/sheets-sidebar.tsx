@@ -32,22 +32,22 @@ import {
 } from "./sidebar.tsx";
 
 export interface SheetSummary {
+  actionCount?: number;
+  createdAt?: string;
   id: string;
   originalName: string;
-  createdAt?: string;
   storedPath?: string;
-  actionCount?: number;
 }
 
 interface SheetsSidebarProps {
-  sheets: SheetSummary[];
   currentSheetId?: string;
-  onSelectSheet: (id: string) => void;
-  onOpenFolder?: () => void;
-  onOpenSettings?: () => void;
   onGoHome?: () => void;
+  onOpenFolder?: () => void;
   onOpenInFolder?: (id: string) => void;
   onOpenPdf?: (id: string) => void;
+  onOpenSettings?: () => void;
+  onSelectSheet: (id: string) => void;
+  sheets: SheetSummary[];
 }
 
 type DateGroupKey =

@@ -8,25 +8,25 @@ import {
 import type { pdfjs } from "react-pdf";
 
 interface FieldBounds {
-  left: number;
-  top: number;
-  right: number;
   bottom: number;
-  width: number;
   height: number;
+  left: number;
+  right: number;
+  top: number;
+  width: number;
 }
 
 export interface FieldPosition {
+  bounds: FieldBounds;
   name: string;
   page: number;
   rect?: [number, number, number, number]; // [x1, y1, x2, y2]
-  bounds: FieldBounds;
 }
 
 interface FieldSnippetContextState {
   fieldPositions: FieldPosition[];
-  setFieldPositions: (positions: FieldPosition[]) => void;
   pdfDocument: pdfjs.PDFDocumentProxy | null;
+  setFieldPositions: (positions: FieldPosition[]) => void;
   setPdfDocument: (doc: pdfjs.PDFDocumentProxy | null) => void;
 }
 
