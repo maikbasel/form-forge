@@ -206,7 +206,7 @@ jobs:
         run: pnpm build
 
       - name: Upload web build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: web-build
           path: apps/web/.next
