@@ -10,21 +10,20 @@ static TELEMETRY: OnceLock<()> = OnceLock::new();
 #[cfg(feature = "otel")]
 mod otel {
     use anyhow::{Context, Result};
-    use opentelemetry::{KeyValue, trace::TracerProvider as _};
+    use opentelemetry::trace::TracerProvider as _;
     use opentelemetry_otlp::{LogExporter, MetricExporter, SpanExporter};
     use opentelemetry_sdk::{
         Resource,
-        logs::LoggerProvider,
+        logs::SdkLoggerProvider,
         metrics::{PeriodicReader, SdkMeterProvider},
-        runtime,
-        trace::TracerProvider,
+        trace::SdkTracerProvider,
     };
     use std::{env, sync::OnceLock, time::Duration};
     use tracing::info;
 
-    static TRACER_PROVIDER: OnceLock<TracerProvider> = OnceLock::new();
+    static TRACER_PROVIDER: OnceLock<SdkTracerProvider> = OnceLock::new();
     static METER_PROVIDER: OnceLock<SdkMeterProvider> = OnceLock::new();
-    static LOGGER_PROVIDER: OnceLock<LoggerProvider> = OnceLock::new();
+    static LOGGER_PROVIDER: OnceLock<SdkLoggerProvider> = OnceLock::new();
 
     pub struct OtelConfig {
         pub endpoint: String,
@@ -47,17 +46,19 @@ mod otel {
     }
 
     fn build_resource(service_name: &str) -> Resource {
-        Resource::new([KeyValue::new("service.name", service_name.to_string())])
+        Resource::builder()
+            .with_service_name(service_name.to_string())
+            .build()
     }
 
-    fn init_tracer_provider(resource: Resource) -> Result<TracerProvider> {
+    fn init_tracer_provider(resource: Resource) -> Result<SdkTracerProvider> {
         let exporter = SpanExporter::builder()
             .with_http()
             .build()
             .context("failed to create OTLP span exporter")?;
 
-        let provider = TracerProvider::builder()
-            .with_batch_exporter(exporter, runtime::Tokio)
+        let provider = SdkTracerProvider::builder()
+            .with_batch_exporter(exporter)
             .with_resource(resource)
             .build();
 
@@ -70,7 +71,7 @@ mod otel {
             .build()
             .context("failed to create OTLP metric exporter")?;
 
-        let reader = PeriodicReader::builder(exporter, runtime::Tokio)
+        let reader = PeriodicReader::builder(exporter)
             .with_interval(Duration::from_secs(60))
             .build();
 
@@ -82,14 +83,14 @@ mod otel {
         Ok(provider)
     }
 
-    fn init_logger_provider(resource: Resource) -> Result<LoggerProvider> {
+    fn init_logger_provider(resource: Resource) -> Result<SdkLoggerProvider> {
         let exporter = LogExporter::builder()
             .with_http()
             .build()
             .context("failed to create OTLP log exporter")?;
 
-        let provider = LoggerProvider::builder()
-            .with_batch_exporter(exporter, runtime::Tokio)
+        let provider = SdkLoggerProvider::builder()
+            .with_batch_exporter(exporter)
             .with_resource(resource)
             .build();
 
@@ -99,10 +100,10 @@ mod otel {
     pub fn create_otel_layers<S>(
         config: &OtelConfig,
     ) -> Result<(
-        tracing_opentelemetry::OpenTelemetryLayer<S, opentelemetry_sdk::trace::Tracer>,
+        tracing_opentelemetry::OpenTelemetryLayer<S, opentelemetry_sdk::trace::SdkTracer>,
         opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge<
-            opentelemetry_sdk::logs::LoggerProvider,
-            opentelemetry_sdk::logs::Logger,
+            opentelemetry_sdk::logs::SdkLoggerProvider,
+            opentelemetry_sdk::logs::SdkLogger,
         >,
     )>
     where
@@ -145,17 +146,17 @@ mod otel {
 
     pub fn shutdown() {
         if let Some(tracer_provider) = TRACER_PROVIDER.get()
-            && let Err(e) = tracer_provider.shutdown()
+            && let Err(e) = SdkTracerProvider::shutdown(tracer_provider)
         {
             tracing::error!(error = %e, "failed to shutdown tracer provider");
         }
         if let Some(meter_provider) = METER_PROVIDER.get()
-            && let Err(e) = meter_provider.shutdown()
+            && let Err(e) = SdkMeterProvider::shutdown(meter_provider)
         {
             tracing::error!(error = %e, "failed to shutdown meter provider");
         }
         if let Some(logger_provider) = LOGGER_PROVIDER.get()
-            && let Err(e) = logger_provider.shutdown()
+            && let Err(e) = SdkLoggerProvider::shutdown(logger_provider)
         {
             tracing::error!(error = %e, "failed to shutdown logger provider");
         }
