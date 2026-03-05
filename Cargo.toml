@@ -100,8 +100,8 @@ url = "2"
 
 # Testing
 tempfile = "3.25"
-testcontainers = "0.26"
-testcontainers-modules = { version = "0.14", features = ["postgres", "minio", "blocking"] }
+testcontainers = "0.27"
+testcontainers-modules = { version = "0.15", features = ["postgres", "minio", "blocking"] }
 rstest = "0.26"
 pretty_assertions = "1.4"
 mockall = "0.14"
@@ -122,4 +122,4 @@ tauri-plugin-window-state = "2"
 tauri-plugin-store = "2"
 
 # Embedded database
-libsql = "0.6"
+libsql = "0.9"

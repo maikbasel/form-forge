@@ -6,66 +6,42 @@
     "group:recommended",
     ":semanticCommits"
   ],
-  "schedule": [
-    "before 9am on monday"
-  ],
+  "schedule": ["before 9am on monday"],
   "timezone": "Europe/Amsterdam",
   "configMigration": true,
   "platformAutomerge": true,
   "packageRules": [
     {
       "description": "Automerge minor and patch",
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "digest"
-      ],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
       "automerge": true
     },
     {
       "description": "Do not automerge major updates",
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "matchUpdateTypes": ["major"],
       "automerge": false
     },
     {
       "description": "Group Rust minor/patch",
-      "matchManagers": [
-        "cargo"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["minor", "patch"],
       "groupName": "rust-dependencies"
     },
     {
       "description": "Group React ecosystem",
-      "matchManagers": [
-        "npm"
-      ],
+      "matchManagers": ["npm"],
       "groupName": "react",
-      "matchPackageNames": [
-        "/^react/",
-        "/^@types/react/"
-      ]
+      "matchPackageNames": ["/^react/", "/^@types/react/"]
     },
     {
       "description": "Group Next.js ecosystem",
-      "matchManagers": [
-        "npm"
-      ],
+      "matchManagers": ["npm"],
       "groupName": "nextjs",
-      "matchPackageNames": [
-        "/^next/"
-      ]
+      "matchPackageNames": ["/^next/"]
     },
     {
       "description": "Group tooling",
-      "matchManagers": [
-        "npm"
-      ],
+      "matchManagers": ["npm"],
       "matchPackageNames": [
         "turbo",
         "@biomejs/biome",
@@ -77,27 +53,18 @@
     },
     {
       "description": "Group remaining npm minor/patch",
-      "matchManagers": [
-        "npm"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
       "groupName": "npm-minor-patch"
     },
     {
       "description": "Group Docker updates",
-      "matchManagers": [
-        "dockerfile"
-      ],
+      "matchManagers": ["dockerfile"],
       "groupName": "docker"
     },
     {
       "description": "Group GitHub Actions",
-      "matchManagers": [
-        "github-actions"
-      ],
+      "matchManagers": ["github-actions"],
       "groupName": "github-actions"
     }
   ]
