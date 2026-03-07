@@ -1,4 +1,4 @@
-import { AxiosError, type AxiosResponse } from "axios";
+import { AxiosError } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiClientError } from "@repo/ui/types/api.ts";
 

@@ -7,64 +7,54 @@
 A PDF form processing application that enables non-technical D&D 5e players to add dynamic calculations to their PDF
 character sheets without writing JavaScript or understanding PDF AcroForm internals.
 
-> [!NOTE]
-> The pre-built binaries provided on the [Releases](https://github.com/maikbasel/form-forge/releases) page are **not code-signed**. This means:
->
-> - **Windows**: Microsoft SmartScreen may show a "Windows protected your PC" warning. Click **"More info"** and then **"Run anyway"** to proceed.
-> - **macOS**: Gatekeeper will block the app with a message that it "can't be opened because it is from an unidentified developer." To bypass this, go to **System Settings > Privacy & Security**, find the blocked app, and click **"Open Anyway"**. Alternatively, right-click the app and select **"Open"**.
-> - **Linux**: No additional steps required.
->
-> The application is safe to use — code signing certificates are costly for an open-source project. You can verify the integrity of the binaries by building from source.
-
-### Building from Source
-Ensure you have the [prerequisites](#prerequisites) installed, including the
-[Tauri v2 system dependencies](https://v2.tauri.app/start/prerequisites/) for your platform.
-
-```bash
-git clone https://github.com/maikbasel/form-forge.git
-cd form-forge
-pnpm install
-cd apps/native
-pnpm tauri build
-```
-
-The compiled binaries will be in `apps/native/src-tauri/target/release/bundle/`.
-
 ## What It Does
 
 Users upload a PDF character sheet, the application extracts form fields, and provides a visual interface to map
 calculations between fields (e.g., `Strength modifier = (Strength score - 10) / 2`). The application generates the
 necessary JavaScript and embeds it into the PDF AcroForm structure.
 
+Form Forge ships in two distribution modes:
+
+- **Web**: A Next.js frontend paired with a Rust API server, deployed via Docker Compose. Uses PostgreSQL for persistence and S3-compatible storage for PDF files.
+- **Native**: A Tauri desktop application that bundles the Rust backend locally. Uses embedded libSQL and filesystem storage — no external services required.
+
 ## Tech Stack
 
-**Backend (Rust):**
+#### Shared
+
+- Rust core crates (domain logic, PDF processing via lopdf)
+- Hexagonal architecture with vertical slicing
+- Turborepo monorepo with pnpm workspaces
+- shadcn/ui components + Tailwind CSS
+- React 19
+
+#### Web
 
 - Actix-Web for HTTP API
 - SQLx with PostgreSQL for persistence
-- lopdf for PDF parsing and manipulation
-- Hexagonal architecture
+- S3-compatible object storage (RustFS)
+- Next.js (App Router)
 
-**Frontend (TypeScript):**
+#### Native
 
-- React 19 + Next.js (App Router) for web
-- Tauri for desktop application
-- Turborepo monorepo with pnpm workspaces
-- shadcn/ui components + Tailwind CSS
+- Tauri v2 desktop shell
+- Embedded libSQL for persistence
+- Filesystem storage for PDF files
 
 ## Prerequisites
 
-- [Rust](https://www.rust-lang.org/tools/install) (stable toolchain)- Docker + Docker Compose
-- **Native app only:** [Tauri v2 system dependencies](https://v2.tauri.app/start/prerequisites/) for your platform (Rust, system libraries, etc.)
+#### Shared
+
+- [Rust](https://www.rust-lang.org/tools/install) (stable toolchain)
 
 **Recommended: Install via asdf** (version manager)
 
 The following tools are managed via asdf (see `.tool-versions`):
-- Node.js 23.10.0
-- pnpm 9.15.5
-- just 1.43.1
-- Python 3.13.1 (required for pre-commit)
-- pre-commit 4.0.1
+- Node.js
+- pnpm
+- just
+- Python (required for pre-commit)
+- pre-commit
 
 ```bash
 # Install asdf plugins and tools
@@ -78,20 +68,29 @@ asdf plugin add pre-commit
 asdf install
 ```
 
+#### Web
+
+- Docker + Docker Compose
+
+#### Native
+
+- [Tauri v2 system dependencies](https://v2.tauri.app/start/prerequisites/) for your platform (system libraries, webview, etc.)
+
 ## Setup
 
+#### Web
+
 ```bash
-# Clone and install dependencies
 pnpm install
 
 # Configure environment
 cp .env.example .env
 # Edit .env if needed (defaults work for local development)
 
-# Start PostgreSQL
+# Start PostgreSQL + RustFS + Adminer
 just up
 
-# Run backend + web frontend
+# Run backend API + Next.js frontend
 just dev
 ```
 
@@ -102,30 +101,68 @@ Access points:
 - Swagger UI: http://localhost:8081/swagger-ui/
 - Adminer: http://localhost:8082
 
+#### Native
+
+```bash
+pnpm install
+cd apps/native
+pnpm tauri dev
+```
+
+### Building from Source
+
+Building from source produces the Tauri desktop binary. Ensure you have the
+[prerequisites](#prerequisites) installed, including the
+[Tauri v2 system dependencies](https://v2.tauri.app/start/prerequisites/) for your platform.
+
+```bash
+git clone https://github.com/maikbasel/form-forge.git
+cd form-forge
+pnpm install
+cd apps/native
+pnpm tauri build
+```
+
+The compiled binaries will be in `apps/native/src-tauri/target/release/bundle/`.
+
 ## Development
 
 ### Commands
 
+#### Shared / Monorepo
+
 ```bash
-# Full stack
-just dev              # Backend + web frontend
-just up               # Start Docker infrastructure only
-just down             # Stop Docker infrastructure
-
-# Backend only
-just be               # Run API server
-cd apps/api && cargo test
-cd apps/api && cargo fmt --all
-cd apps/api && cargo clippy --workspace --all-targets --all-features -- -D warnings
-
-# Frontend only
-just web              # Next.js web app
-just native           # Tauri desktop app
 pnpm build            # Build all packages
 pnpm lint             # Lint all packages
 pnpm check-types      # Type checking
 pnpm exec ultracite fix     # Format/fix (Biome-based)
 pnpm exec ultracite check   # Check for issues without fixing
+```
+
+#### Backend (used by both Web and Native)
+
+```bash
+cd apps/api && cargo test
+cd apps/api && cargo fmt --all
+cd apps/api && cargo clippy --workspace --all-targets --all-features -- -D warnings
+```
+
+#### Web
+
+```bash
+just dev              # Backend API + Next.js frontend
+just up               # Start Docker infrastructure only
+just down             # Stop Docker infrastructure
+just be               # Run API server only
+just web              # Next.js web app only
+```
+
+#### Native
+
+```bash
+just native                    # Run Tauri desktop app (dev mode)
+cd apps/native && pnpm tauri dev    # Alternative
+cd apps/native && pnpm tauri build  # Production build
 ```
 
 ### Code Quality
@@ -148,7 +185,7 @@ This installs git hooks that automatically run on every commit:
 ## Project Structure
 
 ```
-crates/                     # Shared Rust crates (used by both API and Tauri)
+crates/                     # Shared Rust crates (Shared)
   sheets_core/              # Sheets domain logic + ports
   sheets_pdf/               # PDF adapter for sheets
   actions_core/             # Actions domain logic + ports + JS helpers
@@ -157,18 +194,18 @@ crates/                     # Shared Rust crates (used by both API and Tauri)
   common_telemetry/         # Shared telemetry
 
 apps/
-  api/                      # Rust backend (Actix-Web)
+  api/                      # Rust backend — Actix-Web (Web)
     crates/
       common/               # API-specific utilities (DB config, errors)
       sheets/adapters/      # Sheets HTTP, S3, and DB adapters
       actions/adapters/     # Actions HTTP adapter
-  web/                      # Next.js web application
-  native/                   # Tauri desktop application
+  web/                      # Next.js web application (Web)
+  native/                   # Tauri desktop application (Native)
     src-tauri/crates/
-      sheets_fs/            # Filesystem adapter for sheets (Tauri)
-      sheets_libsql/        # libSQL adapter for sheets (Tauri)
+      sheets_fs/            # Filesystem adapter for sheets (Native)
+      sheets_libsql/        # libSQL adapter for sheets (Native)
 
-packages/
+packages/                   # Shared frontend packages (Shared)
   ui/                       # Shared React component library
   api-spec/                 # OpenAPI spec and generated API client
   typescript-config/        # Shared TypeScript configs
@@ -183,9 +220,68 @@ The backend uses hexagonal architecture with two bounded contexts:
 
 See [Development Guide](.claude/CLAUDE.md) for detailed architecture documentation.
 
+## Testing
+
+### Backend (Web and Native)
+
+```bash
+# Run all tests (includes testcontainers for integration tests)
+cd apps/api && cargo test
+
+# Run specific test
+cd apps/api && cargo test <test_name>
+
+# Run tests for specific crate
+cd apps/api && cargo test -p <crate_name>
+# Example: cd apps/api && cargo test -p sheets-core
+```
+
+**Testing stack:**
+
+- `rstest` for parameterized tests
+- `testcontainers` for PostgreSQL integration tests
+- `mockall` for mocking port traits (via `#[cfg_attr(test, automock)]`)
+- `pretty_assertions` for test assertions
+
+### Frontend (Web and Native)
+
+The monorepo uses Turborepo for orchestrating tests across packages.
+
+```bash
+# Run all tests across the monorepo (using Turborepo)
+pnpm test
+
+# Run tests for specific package
+pnpm --filter <package-name> test
+
+# Examples:
+# pnpm --filter web test
+# pnpm --filter ui test
+```
+
+### E2E Tests (Web only)
+
+E2E tests use Playwright across Chromium, Firefox, and WebKit.
+
+**Local** (headed browsers, requires Rust toolchain + Playwright browsers installed):
+
+```bash
+pnpm test:e2e
+```
+
+**Docker** (headless, requires only Docker):
+
+```bash
+pnpm test:e2e:docker    # Run tests
+pnpm test:e2e:docker:down  # Clean up containers/volumes
+
+# Or using just (runs + cleans up automatically):
+just test-e2e-docker
+```
+
 ## Deployment
 
-### Docker Compose
+### Web (Docker Compose)
 
 The repository includes three Docker Compose configurations:
 
@@ -248,6 +344,19 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://your-signoz:4318
 OTEL_SERVICE_NAME=form-forge-api  # default: form-forge-api
 ```
 
+### Native (Pre-built Binaries)
+
+Pre-built binaries are available on the [Releases](https://github.com/maikbasel/form-forge/releases) page.
+
+> [!NOTE]
+> The pre-built binaries are **not code-signed**. This means:
+>
+> - **Windows**: Microsoft SmartScreen may show a "Windows protected your PC" warning. Click **"More info"** and then **"Run anyway"** to proceed.
+> - **macOS**: Gatekeeper will block the app with a message that it "can't be opened because it is from an unidentified developer." To bypass this, go to **System Settings > Privacy & Security**, find the blocked app, and click **"Open Anyway"**. Alternatively, right-click the app and select **"Open"**.
+> - **Linux**: No additional steps required.
+>
+> The application is safe to use — code signing certificates are costly for an open-source project. You can verify the integrity of the binaries by [building from source](#building-from-source).
+
 ### OpenTelemetry / Observability
 
 The backend supports exporting traces and metrics via OpenTelemetry. This is **disabled by default** and can be enabled at runtime.
@@ -271,6 +380,8 @@ OTEL_SERVICE_NAME=my-form-forge-instance
 
 ## Database
 
+### Web
+
 PostgreSQL runs on port 5434 (local) or 5432 (Docker). Migrations auto-run on API startup via SQLx.
 
 Manual migration commands:
@@ -281,64 +392,9 @@ sqlx migrate run
 sqlx migrate revert
 ```
 
-## Testing
+### Native
 
-### Backend (Rust)
-
-```bash
-# Run all tests (includes testcontainers for integration tests)
-cd apps/api && cargo test
-
-# Run specific test
-cd apps/api && cargo test <test_name>
-
-# Run tests for specific crate
-cd apps/api && cargo test -p <crate_name>
-# Example: cd apps/api && cargo test -p sheets-core
-```
-
-**Testing stack:**
-
-- `rstest` for parameterized tests
-- `testcontainers` for PostgreSQL integration tests
-- `mockall` for mocking port traits (via `#[cfg_attr(test, automock)]`)
-- `pretty_assertions` for test assertions
-
-### Frontend (TypeScript)
-
-The monorepo uses Turborepo for orchestrating tests across packages.
-
-```bash
-# Run all tests across the monorepo (using Turborepo)
-pnpm test
-
-# Run tests for specific package
-pnpm --filter <package-name> test
-
-# Examples:
-# pnpm --filter web test
-# pnpm --filter ui test
-```
-
-### E2E Tests
-
-E2E tests use Playwright across Chromium, Firefox, and WebKit.
-
-**Local** (headed browsers, requires Rust toolchain + Playwright browsers installed):
-
-```bash
-pnpm test:e2e
-```
-
-**Docker** (headless, requires only Docker):
-
-```bash
-pnpm test:e2e:docker    # Run tests
-pnpm test:e2e:docker:down  # Clean up containers/volumes
-
-# Or using just (runs + cleans up automatically):
-just test-e2e-docker
-```
+Uses embedded libSQL — no database setup required.
 
 ## API Documentation
 
@@ -346,7 +402,7 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 
 ## FAQ
 
-### The native app crashes on startup with "Protocol error" or error 71
+### The native app crashes on startup with "Protocol error" or error 71 (Native)
 
 This affects NVIDIA GPUs on Wayland. WebKitGTK fails to negotiate the explicit sync protocol with
 the NVIDIA driver. Fix: set `__NV_DISABLE_EXPLICIT_SYNC=1` in your environment.
@@ -385,24 +441,105 @@ acceleration. Non-NVIDIA systems do not need this.
 4. Run tests and linting
 5. Submit a pull request
 
-## TO DO
+### Adding a New Calculation Action
 
-- [x] When mapping selected fields to roles in the calc, move fields down when they were mapped. This way the user
-  doesn't need to scroll down.
-- [x] ~~Show tooltips on hover for form fields.~~ (Fields are highlighted on hover now)
-- [x] Use S3-compatible storage for PDF files and update API.
-- [x] Loading indicator when clicking "Attach Calculation" button.
-- [x] Add some way to make it easier for users to identify which selected field contains what character information.
-- [x] ~~BE `GET /sheets/{id}/fields` should also return field type to use as additional hint/validation during field role
-  mapping.~~
-- [ ] Add product tour.
-- [x] Implement native application.
-- [x] Generate API client from OpenAPI specification.
-- [x] ~~Generate docker images in ci.~~
-- [x] Implement release workflow
-- [x] ~~Setup demo~~
-- [x] implement ttl for uploaded files
-- [x] implement application/problem+json
-- [x] dockerize playwright tests
-- [x] add translation
-- [x] Recent sheets
+The action system uses a **registry pattern** — all action metadata is centralized on the
+`CalculationAction` enum in Rust. The frontend fetches this metadata at runtime via
+`GET /dnd5e/action-types`, so **no frontend code changes are needed** when adding a new action.
+
+You only need to touch **4 files**:
+
+#### 1. Add the enum variant and implement methods
+
+**File:** `crates/actions_core/src/action.rs`
+
+Add a new variant to the `CalculationAction` enum with its field mappings:
+
+```rust
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all_fields = "camelCase")]
+pub enum CalculationAction {
+    // ... existing variants ...
+    InitiativeModifier {
+        dexterity_modifier_field_name: String,
+        initiative_field_name: String,
+    },
+}
+```
+
+Then implement the four required methods on the enum. Follow the pattern of existing variants:
+
+- **`action_label()`** — return the PascalCase variant name (e.g., `"InitiativeModifier"`). Used
+  for persistence.
+- **`target_field()`** — return a reference to the field that receives the calculated value (e.g.,
+  `&self.initiative_field_name`).
+- **`generate_js()`** — return the JavaScript expression that performs the calculation. Use
+  `serialize_field_name()` to safely quote field names for JS.
+- **`action_type_catalog()`** — add a new `ActionTypeMetadata` entry describing the action's id
+  (kebab-case), label (PascalCase), and field roles. Each role specifies its `key` (matching the
+  serde field name), whether it's `required`, and whether it's the `is_target` output field.
+
+Optionally add a convenience constructor (e.g., `CalculationAction::initiative_modifier(...)`).
+
+#### 2. Add the JS helper function (if needed)
+
+**File:** `crates/actions_core/js/dnd-helpers.js`
+
+If your action's `generate_js()` calls a helper function that doesn't exist yet, add it here. This
+file is embedded into every PDF as document-level JavaScript. Keep functions pure and
+self-contained — they run inside a PDF viewer's JS engine.
+
+#### 3. Add i18n translations
+
+**Files:** `packages/i18n/locales/en/actions.json` and `packages/i18n/locales/de/actions.json`
+
+Add translations keyed by the kebab-case action id from `action_type_catalog()`. The frontend looks
+up translations by convention:
+
+```json
+{
+  "initiative-modifier": {
+    "name": "Initiative Modifier",
+    "description": "Calculate initiative from dexterity modifier",
+    "roles": {
+      "dexterityModifierFieldName": {
+        "label": "Dexterity Modifier",
+        "hint": "The DEX modifier field"
+      },
+      "initiativeFieldName": {
+        "label": "Initiative",
+        "hint": "Where the initiative value will appear"
+      }
+    }
+  }
+}
+```
+
+The role keys **must match** the `key` values in your `FieldRoleMetadata` entries from the catalog.
+
+#### What you do NOT need to change
+
+The following are all handled automatically by the registry pattern:
+
+- Web handler / API endpoint — the single `PUT /dnd5e/{sheet_id}/actions` accepts all action types
+- `main.rs` / `openapi.rs` — no new service registrations needed
+- Frontend types (`AttachActionRequest`, etc.) — generic, not per-action
+- API client code (web or Tauri) — uses the action metadata dynamically
+- UI components (`useActions`, `ActionConfigModal`, etc.) — data-driven from backend metadata
+- OpenAPI spec / generated types — the `CalculationAction` schema covers all variants via `oneOf`
+- Tauri commands — the `list_action_types` command returns the catalog automatically
+
+#### Verification checklist
+
+```bash
+# Backend compiles and tests pass
+cd apps/api && cargo test
+cd apps/api && cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+# Frontend type-checks and tests pass
+pnpm check-types
+pnpm test
+
+# Lint passes
+pnpm exec ultracite check
+```
