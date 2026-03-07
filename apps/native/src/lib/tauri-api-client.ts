@@ -1,5 +1,8 @@
 import type { ApiClient, FormField } from "@repo/ui/lib/api.ts";
-import type { AttachActionRequest } from "@repo/ui/types/action.ts";
+import type {
+  ActionTypeMetadata,
+  AttachActionRequest,
+} from "@repo/ui/types/action.ts";
 import { invoke } from "@tauri-apps/api/core";
 
 interface SheetReferenceResponse {
@@ -14,71 +17,6 @@ interface SheetFieldResponse {
 interface ExportSheetResponse {
   filename: string;
   path: string;
-}
-
-type CalculationActionPayload =
-  | {
-      AbilityModifier: {
-        abilityScoreFieldName: string;
-        abilityModifierFieldName: string;
-      };
-    }
-  | {
-      SkillModifier: {
-        abilityModifierFieldName: string;
-        proficiencyFieldName: string;
-        expertiseFieldName: string | null;
-        halfProfFieldName: string | null;
-        proficiencyBonusFieldName: string;
-        skillModifierFieldName: string;
-      };
-    }
-  | {
-      SavingThrowModifier: {
-        abilityModifierFieldName: string;
-        proficiencyFieldName: string;
-        proficiencyBonusFieldName: string;
-        savingThrowModifierFieldName: string;
-      };
-    };
-
-function mapActionToPayload(
-  action: AttachActionRequest
-): CalculationActionPayload {
-  switch (action.type) {
-    case "ability-modifier":
-      return {
-        AbilityModifier: {
-          abilityScoreFieldName: action.mapping.abilityScoreFieldName,
-          abilityModifierFieldName: action.mapping.abilityModifierFieldName,
-        },
-      };
-    case "skill-modifier":
-      return {
-        SkillModifier: {
-          abilityModifierFieldName: action.mapping.abilityModifierFieldName,
-          proficiencyFieldName: action.mapping.proficiencyFieldName,
-          expertiseFieldName: action.mapping.expertiseFieldName ?? null,
-          halfProfFieldName: action.mapping.halfProfFieldName ?? null,
-          proficiencyBonusFieldName: action.mapping.proficiencyBonusFieldName,
-          skillModifierFieldName: action.mapping.skillModifierFieldName,
-        },
-      };
-    case "saving-throw-modifier":
-      return {
-        SavingThrowModifier: {
-          abilityModifierFieldName: action.mapping.abilityModifierFieldName,
-          proficiencyFieldName: action.mapping.proficiencyFieldName,
-          proficiencyBonusFieldName: action.mapping.proficiencyBonusFieldName,
-          savingThrowModifierFieldName:
-            action.mapping.savingThrowModifierFieldName,
-        },
-      };
-    default:
-      throw new Error(
-        `Unknown action type: ${(action as AttachActionRequest).type}`
-      );
-  }
 }
 
 export interface SheetSummary {
@@ -138,15 +76,6 @@ interface AttachedActionCommandResponse {
   targetField: string;
 }
 
-const ACTION_TYPE_MAP: Record<string, { name: string; endpoint: string }> = {
-  AbilityModifier: { name: "Ability Modifier", endpoint: "ability-modifier" },
-  SavingThrowModifier: {
-    name: "Saving Throw Modifier",
-    endpoint: "saving-throw-modifier",
-  },
-  SkillModifier: { name: "Skill Modifier", endpoint: "skill-modifier" },
-};
-
 function extractFieldMapping(
   actionType: string,
   mapping: Record<string, unknown>
@@ -168,11 +97,16 @@ export const tauriApiClient: ApiClient = {
     return fields.map((f) => ({ name: f.name }));
   },
 
+  async getActionTypes(): Promise<ActionTypeMetadata[]> {
+    return await invoke<ActionTypeMetadata[]>("list_action_types");
+  },
+
   async attachAction(
     sheetId: string,
     action: AttachActionRequest
   ): Promise<void> {
-    const payload = mapActionToPayload(action);
+    // Build the serde externally-tagged enum: { "ActionLabel": { field mappings } }
+    const payload = { [action.actionLabel]: action.mapping };
     await invoke("attach_calculation_action", {
       sheetId,
       action: payload,
@@ -184,15 +118,19 @@ export const tauriApiClient: ApiClient = {
       "list_attached_actions",
       { sheetId }
     );
+
+    // Fetch catalog to map PascalCase actionType to kebab-case id
+    const catalog = await this.getActionTypes();
+    const labelToId = new Map(
+      catalog.map((meta) => [meta.actionLabel, meta.id])
+    );
+
     return items.map((item) => {
-      const meta = ACTION_TYPE_MAP[item.actionType] ?? {
-        name: item.actionType,
-        endpoint: item.actionType.toLowerCase(),
-      };
+      const actionId = labelToId.get(item.actionType) ?? item.actionType;
       return {
-        id: meta.endpoint,
-        name: meta.name,
-        endpoint: meta.endpoint,
+        id: actionId,
+        name: item.actionType,
+        endpoint: "actions",
         targetField: item.targetField,
         mapping: extractFieldMapping(item.actionType, item.mapping),
       };

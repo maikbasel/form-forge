@@ -1,7 +1,4 @@
-use actions_web::handler::{
-    AttachAbilityModCalcScriptRequest, AttachSavingThrowModifierCalculationScriptRequest,
-    AttachSkillModifierCalculationScriptRequest,
-};
+use actions_web::handler::{ActionTypeMetadataDto, AttachedActionResponse, FieldRoleMetadataDto};
 use common::error::ProblemDetails;
 use sheets_web::handler::{
     DownloadSheetResponse, ListSheetFieldsResponse, SheetFieldDto, UploadSheetRequest,
@@ -18,9 +15,9 @@ use crate::health::HealthResponse;
         sheets_web::handler::upload_sheet,
         sheets_web::handler::download_sheet,
         sheets_web::handler::get_sheet_form_fields,
-        actions_web::handler::attach_ability_modifier_calculation_script,
-        actions_web::handler::attach_saving_throw_modifier_calculation_script,
-        actions_web::handler::attach_skill_modifier_calculation_script,
+        actions_web::handler::attach_calculation_action,
+        actions_web::handler::list_action_types,
+        actions_web::handler::list_attached_actions,
     ),
     components(schemas(
         HealthResponse,
@@ -30,9 +27,9 @@ use crate::health::HealthResponse;
         ListSheetFieldsResponse,
         SheetFieldDto,
         ProblemDetails,
-        AttachAbilityModCalcScriptRequest,
-        AttachSavingThrowModifierCalculationScriptRequest,
-        AttachSkillModifierCalculationScriptRequest,
+        AttachedActionResponse,
+        ActionTypeMetadataDto,
+        FieldRoleMetadataDto,
     )),
     tags(
         (name = "Health", description = "Health check endpoint"),

@@ -43,7 +43,10 @@ import {
 } from "@repo/ui/context/field-snippet-context.tsx";
 import { getSheetFieldsCacheKey } from "@repo/ui/lib/cache.ts";
 import { cn, getErrorMessage } from "@repo/ui/lib/utils.ts";
-import type { AttachActionRequest } from "@repo/ui/types/action.ts";
+import type {
+  ActionTypeMetadata,
+  AttachActionRequest,
+} from "@repo/ui/types/action.ts";
 import {
   AlertCircle,
   Check,
@@ -122,112 +125,27 @@ import type { AttachedAction } from "@repo/ui/lib/api.ts";
 
 type FieldMapping = Record<string, string>;
 
-function useActions(): ActionConfig[] {
+function useActions(actionTypes: ActionTypeMetadata[]): ActionConfig[] {
   const { t } = useTranslation("actions");
 
   return useMemo(
-    () => [
-      {
-        id: "ability-modifier",
-        name: t("abilityModifier.name"),
-        description: t("abilityModifier.description"),
-        endpoint: "ability-modifier",
-        roles: [
-          {
-            key: "abilityScoreFieldName",
-            label: t("abilityModifier.roles.abilityScore.label"),
-            required: true,
-            hint: t("abilityModifier.roles.abilityScore.hint"),
-          },
-          {
-            key: "abilityModifierFieldName",
-            label: t("abilityModifier.roles.targetModifier.label"),
-            required: true,
-            hint: t("abilityModifier.roles.targetModifier.hint"),
-            isTarget: true,
-          },
-        ],
-      },
-      {
-        id: "skill-modifier",
-        name: t("skillModifier.name"),
-        description: t("skillModifier.description"),
-        endpoint: "skill-modifier",
-        roles: [
-          {
-            key: "abilityModifierFieldName",
-            label: t("skillModifier.roles.abilityModifier.label"),
-            required: true,
-            hint: t("skillModifier.roles.abilityModifier.hint"),
-          },
-          {
-            key: "proficiencyBonusFieldName",
-            label: t("skillModifier.roles.proficiencyBonus.label"),
-            required: true,
-            hint: t("skillModifier.roles.proficiencyBonus.hint"),
-          },
-          {
-            key: "proficiencyFieldName",
-            label: t("skillModifier.roles.proficiency.label"),
-            required: true,
-            hint: t("skillModifier.roles.proficiency.hint"),
-          },
-          {
-            key: "skillModifierFieldName",
-            label: t("skillModifier.roles.targetSkill.label"),
-            required: true,
-            hint: t("skillModifier.roles.targetSkill.hint"),
-            isTarget: true,
-          },
-          {
-            key: "expertiseFieldName",
-            label: t("skillModifier.roles.expertise.label"),
-            required: false,
-            hint: t("skillModifier.roles.expertise.hint"),
-          },
-          {
-            key: "halfProfFieldName",
-            label: t("skillModifier.roles.halfProf.label"),
-            required: false,
-            hint: t("skillModifier.roles.halfProf.hint"),
-          },
-        ],
-      },
-      {
-        id: "saving-throw-modifier",
-        name: t("savingThrowModifier.name"),
-        description: t("savingThrowModifier.description"),
-        endpoint: "saving-throw-modifier",
-        roles: [
-          {
-            key: "abilityModifierFieldName",
-            label: t("savingThrowModifier.roles.abilityModifier.label"),
-            required: true,
-            hint: t("savingThrowModifier.roles.abilityModifier.hint"),
-          },
-          {
-            key: "proficiencyBonusFieldName",
-            label: t("savingThrowModifier.roles.proficiencyBonus.label"),
-            required: true,
-            hint: t("savingThrowModifier.roles.proficiencyBonus.hint"),
-          },
-          {
-            key: "proficiencyFieldName",
-            label: t("savingThrowModifier.roles.proficiency.label"),
-            required: true,
-            hint: t("savingThrowModifier.roles.proficiency.hint"),
-          },
-          {
-            key: "savingThrowModifierFieldName",
-            label: t("savingThrowModifier.roles.targetSavingThrow.label"),
-            required: true,
-            hint: t("savingThrowModifier.roles.targetSavingThrow.hint"),
-            isTarget: true,
-          },
-        ],
-      },
-    ],
-    [t]
+    () =>
+      actionTypes.map((meta) => ({
+        id: meta.id,
+        name: t(`${meta.id}.name`, { defaultValue: meta.id }),
+        description: t(`${meta.id}.description`, { defaultValue: "" }),
+        endpoint: "actions",
+        roles: meta.roles.map((role) => ({
+          key: role.key,
+          label: t(`${meta.id}.roles.${role.key}.label`, {
+            defaultValue: role.key,
+          }),
+          required: role.required,
+          hint: t(`${meta.id}.roles.${role.key}.hint`, { defaultValue: "" }),
+          isTarget: role.isTarget,
+        })),
+      })),
+    [actionTypes, t]
   );
 }
 
@@ -800,7 +718,13 @@ export default function SheetViewer({
 }: Readonly<SheetViewerProps>) {
   const { t } = useTranslation("sheets");
   const { t: tActions } = useTranslation("actions");
-  const actions = useActions();
+  const apiClient = useApiClient();
+  const [actionTypes, setActionTypes] = useState<ActionTypeMetadata[]>([]);
+  const actions = useActions(actionTypes);
+
+  useEffect(() => {
+    apiClient.getActionTypes().then(setActionTypes).catch(console.error);
+  }, [apiClient]);
   const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -876,7 +800,6 @@ export default function SheetViewer({
     }
   }, []);
 
-  const apiClient = useApiClient();
   const {
     setFieldPositions: setFieldSnippetPositions,
     setPdfDocument: setFieldSnippetPdfDocument,
@@ -1119,11 +1042,12 @@ export default function SheetViewer({
     }
 
     try {
-      // Transform AttachedAction to Action for the API
+      // Find the action type metadata to get the actionLabel for the API
+      const meta = actionTypes.find((at) => at.id === config.id);
       const action: AttachActionRequest = {
-        type: config.id as AttachActionRequest["type"],
+        actionLabel: meta?.actionLabel ?? config.id,
         mapping: config.mapping,
-      } as AttachActionRequest;
+      };
 
       await apiClient.attachAction(sheetId, action);
 

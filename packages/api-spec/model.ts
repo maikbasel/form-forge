@@ -4,9 +4,8 @@
 
 // Re-export types (inferred from Zod schemas)
 export type {
-  AttachAbilityModCalcScriptRequest,
-  AttachSavingThrowModifierCalculationScriptRequest,
-  AttachSkillModifierCalculationScriptRequest,
+  ActionTypeMetadataDto,
+  AttachedActionResponse,
   DownloadSheetResponse,
   HealthResponse,
   ListSheetFieldsResponse,
@@ -17,9 +16,8 @@ export type {
 } from "./generated.ts";
 // Re-export Zod schemas for runtime validation
 export {
-  AttachAbilityModCalcScriptRequest as AttachAbilityModCalcScriptRequestSchema,
-  AttachSavingThrowModifierCalculationScriptRequest as AttachSavingThrowModifierCalculationScriptRequestSchema,
-  AttachSkillModifierCalculationScriptRequest as AttachSkillModifierCalculationScriptRequestSchema,
+  ActionTypeMetadataDto as ActionTypeMetadataDtoSchema,
+  AttachedActionResponse as AttachedActionResponseSchema,
   DownloadSheetResponse as DownloadSheetResponseSchema,
   HealthResponse as HealthResponseSchema,
   ListSheetFieldsResponse as ListSheetFieldsResponseSchema,

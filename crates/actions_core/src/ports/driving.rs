@@ -59,71 +59,9 @@ impl ActionService {
 
         info!("document-level helper JS attached");
 
-        let (action_js, target_field, action_label) = match action {
-            CalculationAction::AbilityModifier {
-                score_field_name,
-                modifier_field_name,
-            } => {
-                let score_field_name = Self::serialize_field_name(&score_field_name)?; // turns a name into a quoted JS string
-                let action_js = format!("calculateModifierFromScore({});", score_field_name);
-                (action_js, modifier_field_name, "AbilityModifier")
-            }
-            CalculationAction::SavingThrowModifier {
-                ability_modifier_field_name,
-                proficiency_field_name,
-                proficiency_bonus_field_name,
-                saving_throw_modifier_field_name,
-            } => {
-                let ability_modifier_field_name =
-                    Self::serialize_field_name(&ability_modifier_field_name)?;
-                let proficiency_field_name = Self::serialize_field_name(&proficiency_field_name)?;
-                let proficiency_bonus_field_name =
-                    Self::serialize_field_name(&proficiency_bonus_field_name)?;
-                let action_js = format!(
-                    "calculateSaveFromFields({}, {}, {});",
-                    ability_modifier_field_name,
-                    proficiency_field_name,
-                    proficiency_bonus_field_name
-                );
-                (
-                    action_js,
-                    saving_throw_modifier_field_name,
-                    "SavingThrowModifier",
-                )
-            }
-            CalculationAction::SkillModifier {
-                ability_modifier_field_name,
-                proficiency_field_name,
-                expertise_field_name,
-                half_prof_field_name,
-                proficiency_bonus_field_name,
-                skill_modifier_field_name,
-            } => {
-                let ability_modifier_field_name =
-                    Self::serialize_field_name(&ability_modifier_field_name)?;
-                let proficiency_field_name = Self::serialize_field_name(&proficiency_field_name)?;
-                let expertise_field_name = match &expertise_field_name {
-                    Some(name) => Self::serialize_field_name(name)?,
-                    None => "undefined".to_string(),
-                };
-                let half_prof_field_name = match &half_prof_field_name {
-                    Some(name) => Self::serialize_field_name(name)?,
-                    None => "undefined".to_string(),
-                };
-                let proficiency_bonus_field_name =
-                    Self::serialize_field_name(&proficiency_bonus_field_name)?;
-                let action_js = format!(
-                    // calculateSkillFromFields(abilityModField, proficientField, expertiseField, halfProfField, proficiencyBonusField)
-                    "calculateSkillFromFields({}, {}, {}, {}, {});",
-                    ability_modifier_field_name,
-                    proficiency_field_name,
-                    expertise_field_name,
-                    half_prof_field_name,
-                    proficiency_bonus_field_name
-                );
-                (action_js, skill_modifier_field_name, "SkillModifier")
-            }
-        };
+        let action_label = action.action_label();
+        let target_field = action.target_field().to_string();
+        let action_js = action.generate_js()?;
 
         debug!(action = action_label, target_field = %target_field, action_js = %action_js, "applying calculation action");
 
@@ -167,12 +105,6 @@ impl ActionService {
         sheet_id: &Uuid,
     ) -> Result<Vec<AttachedAction>, ActionError> {
         self.attached_action_port.list_by_sheet_id(sheet_id).await
-    }
-
-    fn serialize_field_name(field_name: &String) -> Result<String, ActionError> {
-        serde_json::to_string(&field_name).map_err(|e| {
-            ActionError::InvalidAction(format!("failed to serialize field name: {}", e))
-        })
     }
 }
 

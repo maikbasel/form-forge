@@ -14,6 +14,7 @@ describe("useApiClient", () => {
   it("returns the provided client when inside provider", () => {
     const mockClient: ApiClient = {
       getSheetFields: vi.fn(),
+      getActionTypes: vi.fn(),
       attachAction: vi.fn(),
       listAttachedActions: vi.fn(),
     };

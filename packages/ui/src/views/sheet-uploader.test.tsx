@@ -15,6 +15,7 @@ function createMockApiClient(
     uploadSheet: vi.fn(),
     getSheetFields: vi.fn(),
     downloadSheet: vi.fn(),
+    getActionTypes: vi.fn().mockResolvedValue([]),
     attachAction: vi.fn(),
     listAttachedActions: vi.fn().mockResolvedValue([]),
     ...overrides,

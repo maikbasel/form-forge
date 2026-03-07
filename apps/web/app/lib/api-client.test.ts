@@ -148,13 +148,13 @@ describe("apiClient", () => {
   });
 
   describe("attachAction", () => {
-    it("sends PUT with JSON body to correct endpoint", async () => {
+    it("sends PUT with serde-tagged enum body to actions endpoint", async () => {
       globalThis.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
       });
 
       await apiClient.attachAction("sheet-123", {
-        type: "ability-modifier",
+        actionLabel: "AbilityModifier",
         mapping: {
           abilityScoreFieldName: "STR",
           abilityModifierFieldName: "STRmod",
@@ -162,13 +162,15 @@ describe("apiClient", () => {
       });
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
-        "/api/dnd5e/sheet-123/ability-modifier",
+        "/api/dnd5e/sheet-123/actions",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            abilityScoreFieldName: "STR",
-            abilityModifierFieldName: "STRmod",
+            AbilityModifier: {
+              abilityScoreFieldName: "STR",
+              abilityModifierFieldName: "STRmod",
+            },
           }),
         }
       );
@@ -183,7 +185,7 @@ describe("apiClient", () => {
 
       await expect(
         apiClient.attachAction("sheet-123", {
-          type: "ability-modifier",
+          actionLabel: "AbilityModifier",
           mapping: {
             abilityScoreFieldName: "STR",
             abilityModifierFieldName: "STRmod",

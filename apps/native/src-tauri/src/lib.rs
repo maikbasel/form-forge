@@ -1,4 +1,4 @@
-use actions_core::action::CalculationAction;
+use actions_core::action::{ActionTypeMetadata, CalculationAction};
 use actions_core::ports::driving::ActionService;
 use actions_pdf::adapter::PdfActionAdapter;
 use sheets_core::ports::driven::{SheetPdfPort, SheetReferencePort, SheetStoragePort};
@@ -117,6 +117,11 @@ struct AttachedActionResponse {
     action_type: String,
     target_field: String,
     mapping: serde_json::Value,
+}
+
+#[tauri::command]
+fn list_action_types() -> Vec<ActionTypeMetadata> {
+    CalculationAction::action_type_catalog()
 }
 
 #[tauri::command]
@@ -290,6 +295,7 @@ pub fn run() {
             get_sheet_form_fields,
             export_sheet,
             attach_calculation_action,
+            list_action_types,
             list_attached_actions,
             read_pdf_bytes,
             list_sheets,

@@ -1,9 +1,6 @@
 use actions_core::ports::driving::ActionService;
 use actions_pdf::adapter::PdfActionAdapter;
-use actions_web::handler::{
-    attach_ability_modifier_calculation_script, attach_saving_throw_modifier_calculation_script,
-    attach_skill_modifier_calculation_script, list_attached_actions,
-};
+use actions_web::handler::{attach_calculation_action, list_action_types, list_attached_actions};
 use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
 use anyhow::{Context, Result};
@@ -155,9 +152,8 @@ async fn main() -> Result<()> {
             .service(upload_sheet)
             .service(download_sheet)
             .service(get_sheet_form_fields)
-            .service(attach_ability_modifier_calculation_script)
-            .service(attach_saving_throw_modifier_calculation_script)
-            .service(attach_skill_modifier_calculation_script)
+            .service(attach_calculation_action)
+            .service(list_action_types)
             .service(list_attached_actions)
             .openapi_service(|api| {
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api/openapi.json", api)

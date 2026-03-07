@@ -6,7 +6,10 @@ import {
   handleFetchError,
   type UploadSheetResult,
 } from "@repo/ui/lib/api.ts";
-import type { AttachActionRequest } from "@repo/ui/types/action.ts";
+import type {
+  ActionTypeMetadata,
+  AttachActionRequest,
+} from "@repo/ui/types/action.ts";
 import { ApiClientError } from "@repo/ui/types/api.ts";
 import type {
   DownloadSheetResult,
@@ -94,16 +97,34 @@ export const apiClient: FileApiClient = {
     return { blob, filename };
   },
 
+  async getActionTypes(): Promise<ActionTypeMetadata[]> {
+    const response = await fetch("/api/dnd5e/action-types");
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({
+        type: "about:blank",
+        title: "Unknown error",
+        status: 0,
+      }));
+      handleFetchError(response, data);
+    }
+
+    return (await response.json()) as ActionTypeMetadata[];
+  },
+
   async attachAction(
     sheetId: string,
     action: AttachActionRequest
   ): Promise<void> {
-    const response = await fetch(`/api/dnd5e/${sheetId}/${action.type}`, {
+    // Build the serde externally-tagged enum: { "ActionLabel": { field mappings } }
+    const body = { [action.actionLabel]: action.mapping };
+
+    const response = await fetch(`/api/dnd5e/${sheetId}/actions`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(action.mapping),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -135,24 +156,14 @@ export const apiClient: FileApiClient = {
       mapping: Record<string, unknown>;
     }>;
 
-    const ACTION_TYPE_MAP: Record<string, { name: string; endpoint: string }> =
-      {
-        AbilityModifier: {
-          name: "Ability Modifier",
-          endpoint: "ability-modifier",
-        },
-        SavingThrowModifier: {
-          name: "Saving Throw Modifier",
-          endpoint: "saving-throw-modifier",
-        },
-        SkillModifier: { name: "Skill Modifier", endpoint: "skill-modifier" },
-      };
+    // Fetch action type catalog to map PascalCase actionType to kebab-case id
+    const catalog = await this.getActionTypes();
+    const labelToId = new Map(
+      catalog.map((meta) => [meta.actionLabel, meta.id])
+    );
 
     return items.map((item) => {
-      const meta = ACTION_TYPE_MAP[item.actionType] ?? {
-        name: item.actionType,
-        endpoint: item.actionType.toLowerCase(),
-      };
+      // The mapping is stored as the serde externally-tagged enum: { "ActionLabel": { fields } }
       const variant = item.mapping[item.actionType] as
         | Record<string, string>
         | undefined;
@@ -161,10 +172,11 @@ export const apiClient: FileApiClient = {
             Object.entries(variant).filter(([, v]) => typeof v === "string")
           )
         : {};
+      const actionId = labelToId.get(item.actionType) ?? item.actionType;
       return {
-        id: meta.endpoint,
-        name: meta.name,
-        endpoint: meta.endpoint,
+        id: actionId,
+        name: item.actionType,
+        endpoint: "actions",
         targetField: item.targetField,
         mapping: fieldMapping,
       };

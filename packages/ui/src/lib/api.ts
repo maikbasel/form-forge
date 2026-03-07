@@ -1,5 +1,8 @@
 import type { SheetFieldDto, UploadSheetResponse } from "@repo/api-spec/model";
-import type { AttachActionRequest } from "@repo/ui/types/action.ts";
+import type {
+  ActionTypeMetadata,
+  AttachActionRequest,
+} from "@repo/ui/types/action.ts";
 import { ApiClientError, parseApiError } from "@repo/ui/types/api.ts";
 import type {
   DownloadSheetResult,
@@ -12,9 +15,6 @@ export type FormField = SheetFieldDto;
 
 // Re-export types from generated OpenAPI spec
 export type {
-  AttachAbilityModCalcScriptRequest,
-  AttachSavingThrowModifierCalculationScriptRequest,
-  AttachSkillModifierCalculationScriptRequest,
   ListSheetFieldsResponse,
   ProblemDetails,
   UploadSheetResponse,
@@ -35,6 +35,7 @@ export interface AttachedAction {
 
 export interface ApiClient {
   attachAction(sheetId: string, action: AttachActionRequest): Promise<void>;
+  getActionTypes(): Promise<ActionTypeMetadata[]>;
   getSheetFields(sheetId: string): Promise<FormField[]>;
   listAttachedActions(sheetId: string): Promise<AttachedAction[]>;
 }

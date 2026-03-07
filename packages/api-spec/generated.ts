@@ -1,30 +1,54 @@
 import z from "zod";
 
-export type AttachAbilityModCalcScriptRequest = z.infer<typeof AttachAbilityModCalcScriptRequest>;
-export const AttachAbilityModCalcScriptRequest = z.object({
-  abilityModifierFieldName: z.string(),
-  abilityScoreFieldName: z.string(),
+export type FieldRoleMetadataDto = z.infer<typeof FieldRoleMetadataDto>;
+export const FieldRoleMetadataDto = z.object({
+  isTarget: z.boolean(),
+  key: z.string(),
+  required: z.boolean(),
 });
 
-export type AttachSavingThrowModifierCalculationScriptRequest = z.infer<
-  typeof AttachSavingThrowModifierCalculationScriptRequest
->;
-export const AttachSavingThrowModifierCalculationScriptRequest = z.object({
-  abilityModifierFieldName: z.string(),
-  proficiencyBonusFieldName: z.string(),
-  proficiencyFieldName: z.string(),
-  savingThrowModifierFieldName: z.string(),
+export type ActionTypeMetadataDto = z.infer<typeof ActionTypeMetadataDto>;
+export const ActionTypeMetadataDto = z.object({
+  actionLabel: z.string(),
+  id: z.string(),
+  roles: z.array(FieldRoleMetadataDto),
 });
 
-export type AttachSkillModifierCalculationScriptRequest = z.infer<typeof AttachSkillModifierCalculationScriptRequest>;
-export const AttachSkillModifierCalculationScriptRequest = z.object({
-  abilityModifierFieldName: z.string(),
-  expertiseFieldName: z.union([z.string(), z.null(), z.undefined()]).optional(),
-  halfProfFieldName: z.union([z.string(), z.null(), z.undefined()]).optional(),
-  proficiencyBonusFieldName: z.string(),
-  proficiencyFieldName: z.string(),
-  skillModifierFieldName: z.string(),
+export type AttachedActionResponse = z.infer<typeof AttachedActionResponse>;
+export const AttachedActionResponse = z.object({
+  actionType: z.string(),
+  id: z.string(),
+  mapping: z.unknown(),
+  targetField: z.string(),
 });
+
+export type CalculationActionSchema = z.infer<typeof CalculationActionSchema>;
+export const CalculationActionSchema = z.union([
+  z.object({
+    AbilityModifier: z.object({
+      abilityModifierFieldName: z.string(),
+      abilityScoreFieldName: z.string(),
+    }),
+  }),
+  z.object({
+    SavingThrowModifier: z.object({
+      abilityModifierFieldName: z.string(),
+      proficiencyBonusFieldName: z.string(),
+      proficiencyFieldName: z.string(),
+      savingThrowModifierFieldName: z.string(),
+    }),
+  }),
+  z.object({
+    SkillModifier: z.object({
+      abilityModifierFieldName: z.string(),
+      expertiseFieldName: z.union([z.string(), z.null(), z.undefined()]).optional(),
+      halfProfFieldName: z.union([z.string(), z.null(), z.undefined()]).optional(),
+      proficiencyBonusFieldName: z.string(),
+      proficiencyFieldName: z.string(),
+      skillModifierFieldName: z.string(),
+    }),
+  }),
+]);
 
 export type DownloadSheetResponse = z.infer<typeof DownloadSheetResponse>;
 export const DownloadSheetResponse = z.object({
@@ -67,41 +91,35 @@ export const UploadSheetResponse = z.object({
   id: z.string(),
 });
 
-export type put_AttachAbilityModifierCalculationScript = typeof put_AttachAbilityModifierCalculationScript;
-export const put_AttachAbilityModifierCalculationScript = {
-  method: z.literal("PUT"),
-  path: z.literal("/dnd5e/{sheet_id}/ability-modifier"),
-  parameters: z.object({
-    path: z.object({
-      sheet_id: z.string(),
-    }),
-    body: AttachAbilityModCalcScriptRequest,
-  }),
-  response: z.unknown(),
+export type get_ListActionTypes = typeof get_ListActionTypes;
+export const get_ListActionTypes = {
+  method: z.literal("GET"),
+  path: z.literal("/dnd5e/action-types"),
+  parameters: z.never(),
+  response: z.array(ActionTypeMetadataDto),
 };
 
-export type put_AttachSavingThrowModifierCalculationScript = typeof put_AttachSavingThrowModifierCalculationScript;
-export const put_AttachSavingThrowModifierCalculationScript = {
-  method: z.literal("PUT"),
-  path: z.literal("/dnd5e/{sheet_id}/saving-throw-modifier"),
+export type get_ListAttachedActions = typeof get_ListAttachedActions;
+export const get_ListAttachedActions = {
+  method: z.literal("GET"),
+  path: z.literal("/dnd5e/{sheet_id}/actions"),
   parameters: z.object({
     path: z.object({
       sheet_id: z.string(),
     }),
-    body: AttachSavingThrowModifierCalculationScriptRequest,
   }),
-  response: z.unknown(),
+  response: z.array(AttachedActionResponse),
 };
 
-export type put_AttachSkillModifierCalculationScript = typeof put_AttachSkillModifierCalculationScript;
-export const put_AttachSkillModifierCalculationScript = {
+export type put_AttachCalculationAction = typeof put_AttachCalculationAction;
+export const put_AttachCalculationAction = {
   method: z.literal("PUT"),
-  path: z.literal("/dnd5e/{sheet_id}/skill-modifier"),
+  path: z.literal("/dnd5e/{sheet_id}/actions"),
   parameters: z.object({
     path: z.object({
       sheet_id: z.string(),
     }),
-    body: AttachSkillModifierCalculationScriptRequest,
+    body: CalculationActionSchema,
   }),
   response: z.unknown(),
 };
@@ -150,15 +168,15 @@ export const get_GetSheetFormFields = {
 
 // <EndpointByMethod>
 export const EndpointByMethod = {
-  put: {
-    "/dnd5e/{sheet_id}/ability-modifier": put_AttachAbilityModifierCalculationScript,
-    "/dnd5e/{sheet_id}/saving-throw-modifier": put_AttachSavingThrowModifierCalculationScript,
-    "/dnd5e/{sheet_id}/skill-modifier": put_AttachSkillModifierCalculationScript,
-  },
   get: {
+    "/dnd5e/action-types": get_ListActionTypes,
+    "/dnd5e/{sheet_id}/actions": get_ListAttachedActions,
     "/health": get_Health_check,
     "/sheets/{sheet_id}": get_DownloadSheet,
     "/sheets/{sheet_id}/fields": get_GetSheetFormFields,
+  },
+  put: {
+    "/dnd5e/{sheet_id}/actions": put_AttachCalculationAction,
   },
   post: {
     "/sheets": post_UploadSheet,
@@ -168,8 +186,8 @@ export type EndpointByMethod = typeof EndpointByMethod;
 // </EndpointByMethod>
 
 // <EndpointByMethod.Shorthands>
-export type PutEndpoints = EndpointByMethod["put"];
 export type GetEndpoints = EndpointByMethod["get"];
+export type PutEndpoints = EndpointByMethod["put"];
 export type PostEndpoints = EndpointByMethod["post"];
 export type AllEndpoints = EndpointByMethod[keyof EndpointByMethod];
 // </EndpointByMethod.Shorthands>
@@ -228,15 +246,6 @@ export class ApiClient {
     return this;
   }
 
-  // <ApiClient.put>
-  put<Path extends keyof PutEndpoints, TEndpoint extends PutEndpoints[Path]>(
-    path: Path,
-    ...params: MaybeOptionalArg<z.infer<TEndpoint["parameters"]>>
-  ): Promise<z.infer<TEndpoint["response"]>> {
-    return this.fetcher("put", this.baseUrl + path, params[0]) as Promise<z.infer<TEndpoint["response"]>>;
-  }
-  // </ApiClient.put>
-
   // <ApiClient.get>
   get<Path extends keyof GetEndpoints, TEndpoint extends GetEndpoints[Path]>(
     path: Path,
@@ -245,6 +254,15 @@ export class ApiClient {
     return this.fetcher("get", this.baseUrl + path, params[0]) as Promise<z.infer<TEndpoint["response"]>>;
   }
   // </ApiClient.get>
+
+  // <ApiClient.put>
+  put<Path extends keyof PutEndpoints, TEndpoint extends PutEndpoints[Path]>(
+    path: Path,
+    ...params: MaybeOptionalArg<z.infer<TEndpoint["parameters"]>>
+  ): Promise<z.infer<TEndpoint["response"]>> {
+    return this.fetcher("put", this.baseUrl + path, params[0]) as Promise<z.infer<TEndpoint["response"]>>;
+  }
+  // </ApiClient.put>
 
   // <ApiClient.post>
   post<Path extends keyof PostEndpoints, TEndpoint extends PostEndpoints[Path]>(

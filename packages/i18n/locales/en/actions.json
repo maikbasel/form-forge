@@ -18,67 +18,67 @@
   "noActionsConfiguredYet": "No actions configured yet",
   "selectFieldsAndConfigure": "Select fields and configure an action",
   "unknownAction": "Unknown Action",
-  "abilityModifier": {
+  "ability-modifier": {
     "name": "Ability Modifier",
     "description": "Calculate ability modifier from ability score",
     "roles": {
-      "abilityScore": {
+      "abilityScoreFieldName": {
         "label": "Ability Score",
         "hint": "The base ability score (e.g., STR, DEX)"
       },
-      "targetModifier": {
+      "abilityModifierFieldName": {
         "label": "Target Modifier",
         "hint": "Where the calculated modifier will appear"
       }
     }
   },
-  "skillModifier": {
+  "skill-modifier": {
     "name": "Skill Modifier",
     "description": "Calculate skill modifier with proficiency",
     "roles": {
-      "abilityModifier": {
+      "abilityModifierFieldName": {
         "label": "Ability Modifier",
         "hint": "The relevant ability modifier (e.g., WIS_mod for Perception)"
       },
-      "proficiencyBonus": {
+      "proficiencyBonusFieldName": {
         "label": "Proficiency Bonus",
         "hint": "Character's proficiency bonus"
       },
-      "proficiency": {
+      "proficiencyFieldName": {
         "label": "Proficiency",
         "hint": "Checkbox indicating proficiency in this skill"
       },
-      "targetSkill": {
+      "skillModifierFieldName": {
         "label": "Target Skill",
         "hint": "Where the skill modifier will appear"
       },
-      "expertise": {
+      "expertiseFieldName": {
         "label": "Expertise",
         "hint": "Checkbox for double proficiency (expertise)"
       },
-      "halfProf": {
+      "halfProfFieldName": {
         "label": "Half-Prof",
         "hint": "Checkbox for half proficiency (Jack of All Trades)"
       }
     }
   },
-  "savingThrowModifier": {
+  "saving-throw-modifier": {
     "name": "Saving Throw Modifier",
     "description": "Calculate saving throw modifier",
     "roles": {
-      "abilityModifier": {
+      "abilityModifierFieldName": {
         "label": "Ability Modifier",
         "hint": "The relevant ability modifier"
       },
-      "proficiencyBonus": {
+      "proficiencyBonusFieldName": {
         "label": "Proficiency Bonus",
         "hint": "Character's proficiency bonus"
       },
-      "proficiency": {
+      "proficiencyFieldName": {
         "label": "Proficiency",
         "hint": "Checkbox indicating proficiency in this save"
       },
-      "targetSavingThrow": {
+      "savingThrowModifierFieldName": {
         "label": "Target Saving Throw",
         "hint": "Where the save modifier will appear"
       }

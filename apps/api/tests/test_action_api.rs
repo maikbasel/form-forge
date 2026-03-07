@@ -7,13 +7,10 @@ mod tests {
     use crate::test_utils::{
         AsyncTestContext, read_document_javascript, read_field_calculation_js,
     };
+    use actions_core::action::CalculationAction;
     use actions_core::ports::driving::ActionService;
     use actions_pdf::adapter::PdfActionAdapter;
-    use actions_web::handler::{
-        AttachAbilityModCalcScriptRequest, AttachSavingThrowModifierCalculationScriptRequest,
-        AttachSkillModifierCalculationScriptRequest, attach_ability_modifier_calculation_script,
-        attach_saving_throw_modifier_calculation_script, attach_skill_modifier_calculation_script,
-    };
+    use actions_web::handler::attach_calculation_action;
     use actix_web::http::StatusCode;
     use actix_web::test;
     use common_telemetry as telemetry;
@@ -62,7 +59,7 @@ mod tests {
             attached_action_port,
         );
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_ability_modifier_calculation_script, download_sheet]);
+        let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_calculation_action, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/../../crates/actions_core/js/dnd-helpers.js"
@@ -84,8 +81,8 @@ mod tests {
 
         //region Attach ability mod calc script
         let req = test::TestRequest::put()
-            .uri(&format!("/dnd5e/{}/ability-modifier", sheet_id))
-            .set_json(AttachAbilityModCalcScriptRequest::new("STR", "STRmod"))
+            .uri(&format!("/dnd5e/{}/actions", sheet_id))
+            .set_json(CalculationAction::ability_modifier("STR", "STRmod"))
             .to_request();
         let resp = test::call_service(&app, req).await;
         assert_eq!(resp.status(), StatusCode::NO_CONTENT);
@@ -153,7 +150,7 @@ mod tests {
             attached_action_port,
         );
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_saving_throw_modifier_calculation_script, download_sheet]);
+        let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_calculation_action, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/../../crates/actions_core/js/dnd-helpers.js"
@@ -175,8 +172,8 @@ mod tests {
 
         //region Attach saving throw mod calc script
         let req = test::TestRequest::put()
-            .uri(&format!("/dnd5e/{}/saving-throw-modifier", sheet_id))
-            .set_json(AttachSavingThrowModifierCalculationScriptRequest::new(
+            .uri(&format!("/dnd5e/{}/actions", sheet_id))
+            .set_json(CalculationAction::saving_throw_modifier(
                 "STRmod",
                 "Check Box 11",
                 "ProfBonus",
@@ -249,7 +246,7 @@ mod tests {
             attached_action_port,
         );
         telemetry::initialize().expect("initialize telemetry");
-        let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_skill_modifier_calculation_script, download_sheet]);
+        let app = test_utils::app!(app_data: [sheet_service, action_service], services: [upload_sheet, attach_calculation_action, download_sheet]);
         let expected_js = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/../../crates/actions_core/js/dnd-helpers.js"
@@ -269,18 +266,17 @@ mod tests {
         let sheet_id = upload_resp.id;
         //endregion
 
-        //region Attach saving throw mod calc script
+        //region Attach skill mod calc script
         let req = test::TestRequest::put()
-            .uri(&format!("/dnd5e/{}/skill-modifier", sheet_id))
-            .set_json(
-                AttachSkillModifierCalculationScriptRequest::builder(
-                    "STRmod",
-                    "Check Box 26",
-                    "ProfBonus",
-                    "Athletics",
-                )
-                .build(),
-            )
+            .uri(&format!("/dnd5e/{}/actions", sheet_id))
+            .set_json(CalculationAction::skill_modifier(
+                "STRmod",
+                "Check Box 26",
+                None::<String>,
+                None::<String>,
+                "ProfBonus",
+                "Athletics",
+            ))
             .to_request();
         let resp = test::call_service(&app, req).await;
         assert_eq!(resp.status(), StatusCode::NO_CONTENT);
