@@ -7,6 +7,30 @@
 A PDF form processing application that enables non-technical D&D 5e players to add dynamic calculations to their PDF
 character sheets without writing JavaScript or understanding PDF AcroForm internals.
 
+## Table of Contents
+
+- [What It Does](#what-it-does)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+  - [Building from Source](#building-from-source)
+- [Development](#development)
+  - [Commands](#commands)
+  - [Code Quality](#code-quality)
+- [Project Structure](#project-structure)
+  - [Architecture](#architecture)
+- [Testing](#testing)
+  - [E2E Tests](#e2e-tests-web-only)
+- [Deployment](#deployment)
+  - [Web (Docker Compose)](#web-docker-compose)
+  - [Native (Pre-built Binaries)](#native-pre-built-binaries)
+  - [OpenTelemetry / Observability](#opentelemetry--observability)
+- [Database](#database)
+- [API Documentation](#api-documentation)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+  - [Adding a New Calculation Action](#adding-a-new-calculation-action)
+
 ## What It Does
 
 Users upload a PDF character sheet, the application extracts form fields, and provides a visual interface to map
