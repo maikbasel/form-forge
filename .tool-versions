@@ -1,5 +1,5 @@
 pnpm 10.30.3
-nodejs 25.4.0
+nodejs 25.9.0
 just 1.43.1
 python 3.13.1
 pre-commit 4.0.1
