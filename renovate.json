@@ -6,7 +6,7 @@
     "group:recommended",
     ":semanticCommits"
   ],
-  "schedule": ["before 9am on monday"],
+  "schedule": ["before 9am on the first day of the month"],
   "timezone": "Europe/Amsterdam",
   "configMigration": true,
   "platformAutomerge": true,
