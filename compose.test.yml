@@ -19,7 +19,8 @@ services:
       retries: 5
 
   rustfs:
-    image: rustfs/rustfs:latest
+    # Pinned to the last e2e-verified version; see compose.e2e.yml for rationale.
+    image: rustfs/rustfs:1.0.0-beta.1
     restart: no
     environment:
       RUSTFS_ROOT_USER: rustfsadmin

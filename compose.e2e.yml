@@ -18,7 +18,11 @@ services:
       retries: 5
 
   rustfs:
-    image: rustfs/rustfs:latest
+    # Pinned: rustfs 1.0.0-beta.8 regressed the S3 path the e2e exercises
+    # (PDF upload -> sheet viewer render fails). beta.1 is the last version the
+    # e2e passed against (and what the green CI run on 2026-05-08 used). Bump
+    # deliberately after re-verifying the e2e, not via floating :latest.
+    image: rustfs/rustfs:1.0.0-beta.1
     restart: "no"
     environment:
       RUSTFS_ROOT_USER: rustfsadmin
