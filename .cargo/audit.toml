@@ -1,0 +1,69 @@
+# cargo-audit configuration
+# Read by `cargo audit` (and the rustsec/audit-check GitHub Action in
+# .github/workflows/security-audit.yml). The ignore list MUST be kept in sync
+# with the `[advisories].ignore` list in deny.toml (used by the cargo-deny job
+# in backend-ci.yml) — two tools, two config files, same policy.
+#
+# Everything listed here has been triaged as either (a) unfixable transitive
+# debt we don't control, or (b) an unmaintained/unsound crate pulled in via
+# Tauri/AWS/SDK internals with no drop-in replacement available. Patchable
+# advisories are fixed by bumping dependencies in Cargo.lock, NOT ignored.
+
+[advisories]
+ignore = [
+    # --- Unfixable vulnerabilities (no patched version reachable) ---
+
+    # rsa: Marvin Attack timing side-channel. No fixed upstream release exists.
+    # Only present as a Cargo.lock entry via sqlx-mysql's optional driver; this
+    # project uses Postgres only, so rsa is never compiled into any target.
+    "RUSTSEC-2023-0071",
+
+    # rustls-webpki 0.101.7 / 0.102.8: name-constraint and CRL-parsing issues.
+    # Fixes only exist in the 0.103.x line. These old versions are pulled by
+    # vestigial TLS stacks we don't control:
+    #   - 0.101.7 <- rustls 0.21 <- hyper-rustls 0.24 <- aws-smithy-http-client
+    #   - 0.102.8 <- rustls 0.22 <- hyper-rustls 0.25 <- libsql (native app)
+    # The active S3 TLS path (rustls 0.23 / rustls-webpki 0.103.13) IS patched.
+    # No semver-compatible update removes the duplicates; revisit when the AWS
+    # SDK / libsql drop their legacy rustls.
+    "RUSTSEC-2026-0049",
+    "RUSTSEC-2026-0098",
+    "RUSTSEC-2026-0099",
+    "RUSTSEC-2026-0104",
+
+    # --- Unmaintained / unsound transitive crates (no replacement available) ---
+
+    # rustls-pemfile is unmaintained but used only in dev deps via testcontainers.
+    "RUSTSEC-2025-0134",
+
+    # Tauri 2.x Linux WebView backend (webkit2gtk) pulls the unmaintained gtk-rs
+    # GTK3 bindings. Replaced upstream by gtk4-rs; not yet adopted by Tauri.
+    "RUSTSEC-2024-0411",
+    "RUSTSEC-2024-0412",
+    "RUSTSEC-2024-0413",
+    "RUSTSEC-2024-0414",
+    "RUSTSEC-2024-0415",
+    "RUSTSEC-2024-0416",
+    "RUSTSEC-2024-0417",
+    "RUSTSEC-2024-0418",
+    "RUSTSEC-2024-0419",
+    "RUSTSEC-2024-0420",
+    # glib VariantStrIter unsoundness — same GTK3 stack via Tauri.
+    "RUSTSEC-2024-0429",
+
+    # proc-macro-error is unmaintained, used by Tauri's macros.
+    "RUSTSEC-2024-0370",
+
+    # fxhash is unmaintained, used by Tauri transitive deps.
+    "RUSTSEC-2025-0057",
+
+    # unic-* crates are unmaintained, used by wry (Tauri's WebView).
+    "RUSTSEC-2025-0075",
+    "RUSTSEC-2025-0080",
+    "RUSTSEC-2025-0081",
+    "RUSTSEC-2025-0098",
+    "RUSTSEC-2025-0100",
+
+    # bincode is unmaintained, used by Tauri transitive deps.
+    "RUSTSEC-2025-0141",
+]

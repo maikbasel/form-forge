@@ -6,6 +6,24 @@ version = 2
 db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
 ignore = [
+    # NOTE: keep this list in sync with .cargo/audit.toml (read by the
+    # rustsec/audit-check job in security-audit.yml). Patchable advisories are
+    # fixed by bumping Cargo.lock, NOT ignored.
+
+    # rsa: Marvin Attack timing side-channel. No fixed upstream release exists.
+    # Only a Cargo.lock entry via sqlx-mysql's optional driver; we use Postgres
+    # only, so rsa is never compiled into any target.
+    "RUSTSEC-2023-0071",
+
+    # rustls-webpki 0.101.7 / 0.102.8: fixes only exist in the 0.103.x line.
+    # Pulled by vestigial TLS stacks we don't control (rustls 0.21 via the AWS
+    # SDK's hyper-rustls 0.24; rustls 0.22 via libsql's hyper-rustls 0.25). The
+    # active S3 TLS path (rustls 0.23 / rustls-webpki 0.103.13) is patched.
+    "RUSTSEC-2026-0049",
+    "RUSTSEC-2026-0098",
+    "RUSTSEC-2026-0099",
+    "RUSTSEC-2026-0104",
+
     # rustls-pemfile is unmaintained but used only in dev deps via testcontainers
     # Migration to rustls-pki-types would require updating testcontainers
     "RUSTSEC-2025-0134",
@@ -22,6 +40,8 @@ ignore = [
     "RUSTSEC-2024-0418",
     "RUSTSEC-2024-0419",
     "RUSTSEC-2024-0420",
+    # glib VariantStrIter unsoundness — same GTK3 stack via Tauri
+    "RUSTSEC-2024-0429",
 
     # proc-macro-error is unmaintained, used by Tauri's macros
     "RUSTSEC-2024-0370",
