@@ -3,6 +3,17 @@ name: Security Audit
 on:
   schedule:
     - cron: '0 0 * * *'
+  # Allow on-demand runs (e.g. to verify advisory fixes without waiting for the
+  # daily cron) and runs when the dependency graph or audit policy changes.
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths:
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - '.cargo/audit.toml'
+      - 'deny.toml'
+      - '.github/workflows/security-audit.yml'
 
 permissions:
   contents: read
