@@ -54,7 +54,8 @@ services:
 
   # Initialize bucket, lifecycle rules, and webhook events on startup
   createbuckets:
-    image: quay.io/minio/mc:latest
+    # Pinned (bucket-init helper) to avoid floating :latest drift.
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
     depends_on:
       rustfs:
         condition: service_healthy
