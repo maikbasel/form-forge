@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.2.0](https://github.com/maikbasel/form-forge/compare/v0.1.0...v0.2.0) (2026-06-14)
+
+
+### Features
+
+* **actions:** persist attached actions in database ([51e36dd](https://github.com/maikbasel/form-forge/commit/51e36dd89547642d5256c6376e58c4886bde2309))
+* **i18n:** add internationalization with English and German support ([dee75cb](https://github.com/maikbasel/form-forge/commit/dee75cbb71b7785909a5303f13f547c5dbb5860a))
+* **ui:** highlight PDF fields when hovering sidebar action cards ([e8a6ed7](https://github.com/maikbasel/form-forge/commit/e8a6ed7bdffe37e43ecd2c69b0e4638ed77ce87d))
+* **ui:** show dot indicator on PDF fields with attached actions ([9b411f9](https://github.com/maikbasel/form-forge/commit/9b411f9707f00a33cee18fa4493aa8605ed03d9e))
+* **ui:** show dot indicator on PDF fields with attached actions ([e825226](https://github.com/maikbasel/form-forge/commit/e825226781ed5b0ea31821a32751fa27181fd4e9))
+
+
+### Bug Fixes
+
+* **deps:** remediate npm advisories via pnpm overrides ([b94b94d](https://github.com/maikbasel/form-forge/commit/b94b94d163577a93655b0f8eb2e2702b20061e4a))
+* **deps:** update dependency androidx.appcompat:appcompat to v1.7.1 ([#126](https://github.com/maikbasel/form-forge/issues/126)) ([0dc36a1](https://github.com/maikbasel/form-forge/commit/0dc36a1eadedf185fb181b27e53e4f363ba47782))
+* **deps:** update dependency androidx.test.espresso:espresso-core to v3.7.0 ([#127](https://github.com/maikbasel/form-forge/issues/127)) ([f4bf578](https://github.com/maikbasel/form-forge/commit/f4bf5789541faf49505c8eccb9ca849917ce106c))
+* **deps:** update dependency androidx.test.ext:junit to v1.3.0 ([#128](https://github.com/maikbasel/form-forge/issues/128)) ([d6e734b](https://github.com/maikbasel/form-forge/commit/d6e734b84e79d1b937042006bdcabd5176b8aaa5))
+* **deps:** update dependency androidx.webkit:webkit to v1.15.0 ([#129](https://github.com/maikbasel/form-forge/issues/129)) ([9d01dd2](https://github.com/maikbasel/form-forge/commit/9d01dd2364377ae60d1730126786efe72825d7ba))
+* **deps:** update dependency com.android.tools.build:gradle to v8.13.2 ([#130](https://github.com/maikbasel/form-forge/issues/130)) ([77ef1f8](https://github.com/maikbasel/form-forge/commit/77ef1f84ff5f33f054de61f70f37b9db08d72674))
+* **deps:** update dependency com.google.android.material:material to v1.13.0 ([#131](https://github.com/maikbasel/form-forge/issues/131)) ([61e7a22](https://github.com/maikbasel/form-forge/commit/61e7a22c4abfdf7f62989370c3dff7002f44655c))
+* **deps:** update dependency org.jetbrains.kotlin:kotlin-gradle-plugin to v2 ([9b9c6ae](https://github.com/maikbasel/form-forge/commit/9b9c6ae22f784a32bdf4a192f0dc37698075e3b2))
+* **deps:** update dependency org.jetbrains.kotlin:kotlin-gradle-plugin to v2 ([e6ce2d5](https://github.com/maikbasel/form-forge/commit/e6ce2d5d83bb85431088719c5d847c866d4d4c70))
+* **deps:** update rust-dependencies ([32b425f](https://github.com/maikbasel/form-forge/commit/32b425f95cf39c3cc8497b4772f8f19944471d7d))
+* **deps:** update rust-dependencies ([6cfbea5](https://github.com/maikbasel/form-forge/commit/6cfbea5c04bb6c789d3f6a523494a9ba4367e85b))
+* **e2e:** pin rustfs to 1.0.0-beta.1 to fix Playwright CI ([fff277c](https://github.com/maikbasel/form-forge/commit/fff277c2558c43bfc5796d33ca0a56cbeb1df446))
+* **i18n:** resolve hydration mismatch by deferring browser language detection ([97a4f1b](https://github.com/maikbasel/form-forge/commit/97a4f1b91532ae5ae30b1589b46cfe15dca909a5))
+* **lint:** sort interface members for Biome 2.4.5 compatibility ([6a2a31d](https://github.com/maikbasel/form-forge/commit/6a2a31d050d4c084343292e2b48568e63ba986b9))
+* migrate common_telemetry to opentelemetry-sdk 0.31 API ([61f195d](https://github.com/maikbasel/form-forge/commit/61f195decc9ee6bdf71249e01864bf5e440d1dc5))
+* **native:** align [@tauri-apps](https://github.com/tauri-apps) npm packages with bumped Rust crates ([8fee46a](https://github.com/maikbasel/form-forge/commit/8fee46aba025533ecd5f066af11008b1c6c2e98f))
+* **prod:** pin rustfs to 1.0.0-beta.1 ([49321db](https://github.com/maikbasel/form-forge/commit/49321db88670d80c88a71d1c6f09bf49c08348c8))
+* **ui:** only show dot indicator on target fields, not source fields ([26d6158](https://github.com/maikbasel/form-forge/commit/26d6158586d7f765b2a943f21abd7d0c998de9aa))
+* **ui:** use stable keys for attached action list items ([a2c38b0](https://github.com/maikbasel/form-forge/commit/a2c38b01f69bfeb130188bf67fd88f443146e8ff))
+* **web:** resolve DOMMatrix SSR error by lazy-loading pdfjs-dist ([2a9ce40](https://github.com/maikbasel/form-forge/commit/2a9ce40b1c6b49998b2be7d36b820d0ada74e5e7))
+
 ## [0.1.0](https://github.com/maikbasel/form-forge/compare/v0.1.0...v0.1.0) (2026-02-23)
 
 
