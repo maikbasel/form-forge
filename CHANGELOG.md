@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/maikbasel/form-forge/compare/v0.2.0...v0.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **ci:** install GNU tar for Pages upload in Alpine docs container ([96dc8f2](https://github.com/maikbasel/form-forge/commit/96dc8f23bd010d6f0c712dc1782ea19fece8e3cc))
+* **deps:** remediate RustSec advisories in Cargo dependencies ([51baa63](https://github.com/maikbasel/form-forge/commit/51baa638eeed1947eb5714ff18a17af3c11ecc9a))
+
 ## [0.2.0](https://github.com/maikbasel/form-forge/compare/v0.1.0...v0.2.0) (2026-06-14)
 
 
