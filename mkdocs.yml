@@ -1,0 +1,57 @@
+site_name: Form Forge
+site_description: PDF form processing for D&D 5e character sheets
+site_url: https://maikbasel.github.io/form-forge
+repo_url: https://github.com/maikbasel/form-forge
+repo_name: maikbasel/form-forge
+docs_dir: docs
+exclude_docs: |
+  superpowers/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Players:
+      - players/index.md
+      - Saving throws & skill checks: players/calculations.md
+  - Self-Hosting: hosting.md
+  - Desktop App: desktop.md
+  - Reference:
+      - reference/index.md
+      - API: reference/api.md
+  - How it works: explanation/how-it-works.md

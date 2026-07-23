@@ -111,6 +111,10 @@ dev:
     # Wait for any process to exit
     wait
 
+# Generate usage-guide visuals (webm + screenshots) into docs/assets/usage
+docs-shots:
+    pnpm exec playwright test tests/docs-screenshots.spec.ts --project=chromium
+
 # Run E2E tests in Docker (headless, requires only Docker)
 e2e:
     #!/usr/bin/env bash

@@ -1,8 +1,10 @@
 # Form Forge
 
-[![Backend CI](https://github.com/maikbasel/form-forge/workflows/Backend%20CI/badge.svg)](https://github.com/maikbasel/form-forge/actions/workflows/backend-ci.yml)
-[![Frontend CI](https://github.com/maikbasel/form-forge/workflows/Frontend%20CI/badge.svg)](https://github.com/maikbasel/form-forge/actions/workflows/frontend-ci.yml)
-[![Playwright Tests](https://github.com/maikbasel/form-forge/workflows/Playwright%20Tests/badge.svg)](https://github.com/maikbasel/form-forge/actions/workflows/playwright.yml)
+[![Backend CI](https://github.com/maikbasel/form-forge/actions/workflows/backend-ci.yml/badge.svg?branch=master)](https://github.com/maikbasel/form-forge/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/maikbasel/form-forge/actions/workflows/frontend-ci.yml/badge.svg?branch=master)](https://github.com/maikbasel/form-forge/actions/workflows/frontend-ci.yml)
+[![Playwright Tests](https://github.com/maikbasel/form-forge/actions/workflows/playwright.yml/badge.svg?branch=master)](https://github.com/maikbasel/form-forge/actions/workflows/playwright.yml)
+[![Downloads](https://img.shields.io/github/downloads/maikbasel/form-forge/total)](https://github.com/maikbasel/form-forge/releases)
+[![Documentation](https://img.shields.io/badge/docs-read-526cfe?logo=materialformkdocs&logoColor=white)](https://maikbasel.github.io/form-forge)
 
 A PDF form processing application that enables non-technical D&D 5e players to add dynamic calculations to their PDF
 character sheets without writing JavaScript or understanding PDF AcroForm internals.
@@ -22,9 +24,6 @@ character sheets without writing JavaScript or understanding PDF AcroForm intern
 - [Testing](#testing)
   - [E2E Tests](#e2e-tests-web-only)
 - [Deployment](#deployment)
-  - [Web (Docker Compose)](#web-docker-compose)
-  - [Native (Pre-built Binaries)](#native-pre-built-binaries)
-  - [OpenTelemetry / Observability](#opentelemetry--observability)
 - [Database](#database)
 - [API Documentation](#api-documentation)
 - [FAQ](#faq)
@@ -41,6 +40,8 @@ Form Forge ships in two distribution modes:
 
 - **Web**: A Next.js frontend paired with a Rust API server, deployed via Docker Compose. Uses PostgreSQL for persistence and S3-compatible storage for PDF files.
 - **Native**: A Tauri desktop application that bundles the Rust backend locally. Uses embedded libSQL and filesystem storage — no external services required.
+
+<video src="https://github.com/maikbasel/form-forge/raw/master/docs/assets/usage/usage-flow.webm" controls></video>
 
 ## Tech Stack
 
@@ -305,102 +306,11 @@ just test-e2e-docker
 
 ## Deployment
 
-### Web (Docker Compose)
+Self-hosting, configuration, and the desktop app are documented on the
+docs site:
 
-The repository includes three Docker Compose configurations:
-
-- `compose.dev.yml` - Development (used by `just up`)
-- `compose.prod.yml` - Production (full stack with nginx reverse proxy)
-- `compose.e2e.yml` - E2E testing (full stack with Playwright runner)
-
-**Development** (infrastructure only):
-
-```bash
-just up    # Start PostgreSQL + RustFS + Adminer
-just down  # Stop infrastructure
-```
-
-**Production** (full stack):
-
-```bash
-# Configure environment (see .env.example)
-cp .env.example .env
-# Edit .env with production values
-
-# Build and start all services
-docker compose -f compose.prod.yml up --build -d
-
-# View logs
-docker compose -f compose.prod.yml logs -f
-
-# Stop services
-docker compose -f compose.prod.yml down
-```
-
-**Production access points** (behind nginx reverse proxy):
-
-- Web UI: `https://<domain>/`
-- API: `https://<domain>/sheets`, `https://<domain>/dnd5e`
-- Swagger UI: `https://<domain>/swagger-ui/`
-- S3 Console: `https://<domain>/s3-console` (redirects to RustFS admin UI, login with `S3_ACCESS_KEY` / `S3_SECRET_KEY`)
-
-**Required environment variables** for production:
-
-```bash
-# Database (required)
-POSTGRES_PASSWORD=your-secure-password
-
-# S3 Storage (required)
-S3_ACCESS_KEY=your-access-key
-S3_SECRET_KEY=your-secret-key
-S3_PUBLIC_ENDPOINT=https://yourdomain.com/s3  # Public URL for downloads
-
-# Optional
-POSTGRES_USER=postgres        # default: postgres
-POSTGRES_DB=form-forge        # default: form-forge
-S3_BUCKET=form-forge          # default: form-forge
-HTTP_PORT=80                  # default: 80
-RUST_LOG=info                 # default: info
-S3_LIFECYCLE_EXPIRATION_DAYS=7  # default: 7
-
-# OpenTelemetry (optional)
-OTEL_EXPORTER_OTLP_ENDPOINT=http://your-signoz:4318
-OTEL_SERVICE_NAME=form-forge-api  # default: form-forge-api
-```
-
-### Native (Pre-built Binaries)
-
-Pre-built binaries are available on the [Releases](https://github.com/maikbasel/form-forge/releases) page.
-
-> [!NOTE]
-> The pre-built binaries are **not code-signed**. This means:
->
-> - **Windows**: Microsoft SmartScreen may show a "Windows protected your PC" warning. Click **"More info"** and then **"Run anyway"** to proceed.
-> - **macOS**: Gatekeeper will block the app with a message that it "can't be opened because it is from an unidentified developer." To bypass this, go to **System Settings > Privacy & Security**, find the blocked app, and click **"Open Anyway"**. Alternatively, right-click the app and select **"Open"**.
-> - **Linux**: No additional steps required.
->
-> The application is safe to use — code signing certificates are costly for an open-source project. You can verify the integrity of the binaries by [building from source](#building-from-source).
-
-### OpenTelemetry / Observability
-
-The backend supports exporting traces and metrics via OpenTelemetry. This is **disabled by default** and can be enabled at runtime.
-
-**To enable:** Set `OTEL_EXPORTER_OTLP_ENDPOINT` in your `.env` file:
-
-```bash
-# For SigNoz
-OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4318
-
-# For Jaeger
-OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
-
-# Optionally customize service name (default: form-forge-api)
-OTEL_SERVICE_NAME=my-form-forge-instance
-```
-
-**To disable:** Leave `OTEL_EXPORTER_OTLP_ENDPOINT` unset or empty. No traces or metrics will be exported.
-
-**Document TTL**: Uploaded PDFs are automatically deleted after 1 day (configurable via `config/lifecycle.json`). Database records are cleaned up via S3 webhook notifications and hourly reconciliation.
+- [Self-Hosting guide](https://maikbasel.github.io/form-forge/hosting/): prerequisites, Docker Compose, configuration, observability
+- [Desktop app](https://maikbasel.github.io/form-forge/desktop/)
 
 ## Database
 
