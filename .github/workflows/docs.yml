@@ -25,6 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: mkdocs build --strict
+      # upload-pages-artifact calls GNU tar --hard-dereference, which the
+      # Alpine image's BusyBox tar does not support. Install GNU tar first.
+      - run: apk add --no-cache tar
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
