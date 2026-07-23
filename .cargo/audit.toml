@@ -66,4 +66,12 @@ ignore = [
 
     # bincode is unmaintained, used by Tauri transitive deps.
     "RUSTSEC-2025-0141",
+
+    # quick-xml 0.39.4 DoS advisories (unbounded namespace alloc / quadratic
+    # attribute check). Fix is 0.41.0 (breaking). Pulled by plist 1.9.0 <-
+    # tauri-utils <- Tauri 2.x, which pins the 0.39 line. Only used to parse
+    # trusted .plist files at Tauri build/config time, never untrusted remote
+    # XML, so neither DoS vector is reachable. Revisit when Tauri/plist bump.
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
 ]
