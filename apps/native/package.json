@@ -21,7 +21,7 @@
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "@tauri-apps/plugin-opener": "^2.5.3",
     "@tauri-apps/plugin-store": "^2.4.2",
-    "lucide-react": "^0.562.0",
+    "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.0",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:^",
     "@tauri-apps/cli": "^2.11.0",
-    "@types/react": "^19.2.14",
+    "@types/react": "^18.3.28",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "postcss": "^8.5.6",
