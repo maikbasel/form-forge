@@ -42,8 +42,9 @@ services:
       start_period: 10s
 
   createbuckets:
-    # Pinned (bucket-init helper) to avoid floating :latest drift.
-    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    # Pinned by digest (bucket-init helper). MinIO no longer publishes mc on
+    # Docker Hub or quay.io; Chainguard -dev variant ships /bin/sh.
+    image: cgr.dev/chainguard/minio-client:latest-dev@sha256:f1f1776a4d404566235ccfb14aae262cb6c509aa44a931055ad02000de682325
     depends_on:
       rustfs:
         condition: service_healthy
