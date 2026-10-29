@@ -74,18 +74,18 @@ RUN mkdir -p apps/api/src/bin && \
 # Build dependencies (cached layer) - uses default-members (API crates only)
 RUN cargo build --release --no-default-features --features ${CARGO_FEATURES}
 
-# Remove dummy sources and build artifacts for API crates
-RUN rm -rf apps/api/src apps/api/crates/common/src \
+# Remove build artifacts of the dummy workspace crates, then their sources.
+# `cargo clean -p` is independent of cargo's target-dir layout, which nightly
+# changes (deleting target/release/.fingerprint/* directly stopped working).
+RUN cargo clean --release \
+    -p form-forge-api -p common -p common_telemetry -p common_pdf \
+    -p sheets_web -p sheets_s3 -p sheets_db -p actions_web \
+    -p sheets_core -p actions_core -p sheets_pdf -p actions_pdf && \
+    rm -rf apps/api/src apps/api/crates/common/src \
     apps/api/crates/sheets apps/api/crates/actions \
     crates/common_telemetry/src crates/common_pdf/src \
     crates/sheets_core/src crates/actions_core/src \
-    crates/sheets_pdf/src crates/actions_pdf/src \
-    target/release/.fingerprint/form-forge-api-* \
-    target/release/.fingerprint/common-* \
-    target/release/.fingerprint/common_telemetry-* \
-    target/release/.fingerprint/common_pdf-* \
-    target/release/.fingerprint/sheets_* \
-    target/release/.fingerprint/actions_*
+    crates/sheets_pdf/src crates/actions_pdf/src
 
 # Copy actual source code
 COPY apps/api/ ./apps/api/

@@ -65,22 +65,23 @@ use aws_sdk_s3::Client;
 use aws_sdk_s3::config::{Credentials, Region};
 use common::db::DatabaseConfig;
 use sqlx::PgPool;
+use testcontainers::GenericImage;
 use testcontainers::ImageExt;
-use testcontainers_modules::minio::MinIO;
+use testcontainers::core::IntoContainerPort;
 use testcontainers_modules::postgres::Postgres;
 use testcontainers_modules::testcontainers::ContainerAsync;
 use testcontainers_modules::testcontainers::runners::AsyncRunner;
 
 const TEST_BUCKET: &str = "form-forge";
-const MINIO_ACCESS_KEY: &str = "minioadmin";
-const MINIO_SECRET_KEY: &str = "minioadmin";
+const S3_ACCESS_KEY: &str = "rustfsadmin";
+const S3_SECRET_KEY: &str = "rustfsadmin";
 
 pub struct AsyncTestContext {
     pub pool: PgPool,
     pub s3_storage: Arc<SheetS3Storage>,
     // Keep containers alive for the duration of the test by holding the handles.
     _pg_container: ContainerAsync<Postgres>,
-    _minio_container: ContainerAsync<MinIO>,
+    _s3_container: ContainerAsync<GenericImage>,
 }
 
 impl AsyncTestContext {
@@ -114,27 +115,36 @@ impl AsyncTestContext {
             .await
             .expect("run migrations");
 
-        // Start MinIO container
-        let minio_container = MinIO::default().start().await.expect("start minio");
+        // Start RustFS (S3-compatible) container, same image as compose.test.yml.
+        // RustFS logs nothing to stdout on startup, so readiness is detected by
+        // retrying bucket creation below instead of a log wait condition.
+        let s3_container = GenericImage::new("rustfs/rustfs", "1.0.0-beta.1")
+            .with_exposed_port(9000.tcp())
+            .with_env_var("RUSTFS_ROOT_USER", S3_ACCESS_KEY)
+            .with_env_var("RUSTFS_ROOT_PASSWORD", S3_SECRET_KEY)
+            .with_env_var("RUSTFS_VOLUMES", "/data/rustfs0")
+            .start()
+            .await
+            .expect("start rustfs");
 
-        let minio_host = minio_container.get_host().await.expect("get minio host");
-        let minio_port = minio_container
+        let s3_host = s3_container.get_host().await.expect("get rustfs host");
+        let s3_port = s3_container
             .get_host_port_ipv4(9000)
             .await
-            .expect("get minio port");
-        let minio_endpoint = format!("http://{}:{}", minio_host, minio_port);
+            .expect("get rustfs port");
+        let s3_endpoint = format!("http://{}:{}", s3_host, s3_port);
 
         // Create test bucket before initializing storage
-        Self::create_bucket(&minio_endpoint).await;
+        Self::create_bucket(&s3_endpoint).await;
 
-        // Create S3 config for MinIO
+        // Create S3 config for RustFS
         let s3_cfg = S3Config {
-            endpoint: minio_endpoint.clone(),
-            public_endpoint: minio_endpoint,
+            endpoint: s3_endpoint.clone(),
+            public_endpoint: s3_endpoint,
             public_path_prefix: String::new(),
             bucket: TEST_BUCKET.to_string(),
-            access_key: MINIO_ACCESS_KEY.to_string(),
-            secret_key: MINIO_SECRET_KEY.to_string(),
+            access_key: S3_ACCESS_KEY.to_string(),
+            secret_key: S3_SECRET_KEY.to_string(),
             region: "us-east-1".to_string(),
         };
 
@@ -147,12 +157,12 @@ impl AsyncTestContext {
             pool,
             s3_storage: Arc::new(s3_storage),
             _pg_container: pg_container,
-            _minio_container: minio_container,
+            _s3_container: s3_container,
         }
     }
 
     async fn create_bucket(endpoint: &str) {
-        let credentials = Credentials::new(MINIO_ACCESS_KEY, MINIO_SECRET_KEY, None, None, "test");
+        let credentials = Credentials::new(S3_ACCESS_KEY, S3_SECRET_KEY, None, None, "test");
 
         let s3_config = aws_sdk_s3::Config::builder()
             .behavior_version(BehaviorVersion::latest())
@@ -164,12 +174,19 @@ impl AsyncTestContext {
 
         let client = Client::from_conf(s3_config);
 
-        client
-            .create_bucket()
-            .bucket(TEST_BUCKET)
-            .send()
-            .await
-            .expect("create test bucket");
+        // ponytail: fixed 30s budget, poll an HTTP health endpoint if startup gets slower
+        let mut attempts = 0;
+        loop {
+            match client.create_bucket().bucket(TEST_BUCKET).send().await {
+                Ok(_) => break,
+                Err(err) if attempts < 60 => {
+                    attempts += 1;
+                    tracing::debug!("rustfs not ready yet: {err}");
+                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                }
+                Err(err) => panic!("create test bucket: {err:?}"),
+            }
+        }
     }
 }
 
