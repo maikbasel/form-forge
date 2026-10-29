@@ -5,6 +5,7 @@ import { SheetProvider } from "@repo/ui/context/sheet-context.tsx";
 import { I18nextProvider } from "react-i18next";
 import { RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
+import { UpdateChecker } from "./components/update-checker";
 import { i18n } from "./lib/i18n";
 import { tauriApiClient } from "./lib/tauri-api-client";
 import { router } from "./router";
@@ -18,6 +19,7 @@ function App() {
             <FieldSnippetProvider>
               <RouterProvider router={router} />
               <Toaster />
+              <UpdateChecker />
             </FieldSnippetProvider>
           </SheetProvider>
         </ApiClientProvider>

@@ -27,5 +27,16 @@
     "toggle": "Toggle language",
     "en": "English",
     "de": "Deutsch"
+  },
+  "updater": {
+    "available": "Form Forge {{version}} is available",
+    "install": "Install",
+    "later": "Later",
+    "downloading": "Downloading update\u2026",
+    "downloadingProgress": "Downloading update: {{progress}}%",
+    "ready": "Form Forge {{version}} is installed",
+    "readyDescription": "Restart to finish updating.",
+    "restart": "Restart",
+    "failed": "Update failed: {{message}}"
   }
 }

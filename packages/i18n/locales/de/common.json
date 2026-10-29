@@ -27,5 +27,16 @@
     "toggle": "Sprache umschalten",
     "en": "English",
     "de": "Deutsch"
+  },
+  "updater": {
+    "available": "Form Forge {{version}} ist verf\u00fcgbar",
+    "install": "Installieren",
+    "later": "Sp\u00e4ter",
+    "downloading": "Update wird heruntergeladen\u2026",
+    "downloadingProgress": "Update wird heruntergeladen: {{progress}}%",
+    "ready": "Form Forge {{version}} ist installiert",
+    "readyDescription": "Starten Sie neu, um das Update abzuschlie\u00dfen.",
+    "restart": "Neu starten",
+    "failed": "Update fehlgeschlagen: {{message}}"
   }
 }
