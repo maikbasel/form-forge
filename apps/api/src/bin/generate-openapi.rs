@@ -9,8 +9,9 @@ fn main() -> Result<()> {
     let openapi = ApiDoc::openapi();
 
     // Convert to YAML (more human-readable than JSON)
-    let yaml =
-        serde_yaml::to_string(&openapi).context("Failed to serialize OpenAPI spec to YAML")?;
+    let yaml = openapi
+        .to_yaml()
+        .context("Failed to serialize OpenAPI spec to YAML")?;
 
     // Determine output path
     // Default: workspace_root/packages/api-spec/openapi.yaml

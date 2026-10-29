@@ -32,7 +32,6 @@ utoipa.workspace = true
 utoipa-swagger-ui.workspace = true
 utoipa-actix-web.workspace = true
 serde.workspace = true
-serde_yaml.workspace = true
 tokio = { workspace = true, features = ["rt", "time"] }
 
 [dev-dependencies]
