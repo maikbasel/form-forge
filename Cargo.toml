@@ -54,7 +54,7 @@ sheets_fs = { path = "apps/native/src-tauri/crates/sheets_fs" }
 sheets_libsql = { path = "apps/native/src-tauri/crates/sheets_libsql" }
 
 # Web framework
-actix-web = "4"
+actix-web = { version = "4", default-features = false, features = ["macros", "compress-brotli", "compress-gzip", "compress-zstd", "cookies", "unicode", "compat"] }
 actix-multipart = "0.7"
 actix-cors = "0.7.1"
 
@@ -70,7 +70,6 @@ thiserror = "2.0"
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_yaml = "0.9"
 
 # Identifiers
 uuid = { version = "1.21.0", features = ["v4", "serde"] }
@@ -86,22 +85,22 @@ sqlx = { version = "0.8", default-features = false, features = ["postgres", "run
 lopdf = "0.44"
 
 # OpenAPI
-utoipa = { version = "5", features = ["actix_extras"] }
-utoipa-swagger-ui = { version = "9.0", features = ["actix-web"] }
-utoipa-actix-web = "0.1"
+utoipa = { version = "6", features = ["actix_extras", "yaml"] }
+utoipa-swagger-ui = { version = "10", features = ["actix-web"] }
+utoipa-actix-web = "0.2"
 
 # Validation
 validator = { version = "0.20", features = ["derive"] }
 
 # S3
-aws-config = { version = "1.8.14", features = ["behavior-version-latest"] }
-aws-sdk-s3 = "1.124.0"
+aws-config = { version = "1.8.14", default-features = false, features = ["behavior-version-latest", "default-https-client", "rt-tokio", "credentials-process", "sso"] }
+aws-sdk-s3 = { version = "1.124.0", default-features = false, features = ["sigv4a", "http-1x", "default-https-client", "rt-tokio"] }
 url = "2"
 
 # Testing
 tempfile = "3.25"
 testcontainers = "0.27"
-testcontainers-modules = { version = "0.15", features = ["postgres", "minio", "blocking"] }
+testcontainers-modules = { version = "0.15", features = ["postgres", "blocking"] }
 rstest = "0.26"
 pretty_assertions = "1.4"
 mockall = "0.14"
@@ -122,4 +121,4 @@ tauri-plugin-window-state = "2"
 tauri-plugin-store = "2"
 
 # Embedded database
-libsql = "0.9"
+libsql = { version = "0.9", default-features = false, features = ["core"] }
