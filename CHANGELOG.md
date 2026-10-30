@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/maikbasel/form-forge/compare/v0.2.1...v0.3.0) (2026-10-30)
+
+
+### Features
+
+* add Form Forge app icon ([018eca6](https://github.com/maikbasel/form-forge/commit/018eca6ad1c77151e8b32db0a85f3e35cb329722))
+* **native:** add auto-update with download progress toast ([#243](https://github.com/maikbasel/form-forge/issues/243)) ([aa24477](https://github.com/maikbasel/form-forge/commit/aa24477a99000cbd3a2ad6224469380b9f5b9853))
+
+
+### Bug Fixes
+
+* **deps:** remediate open RustSec and npm security advisories ([#242](https://github.com/maikbasel/form-forge/issues/242)) ([d5b291d](https://github.com/maikbasel/form-forge/commit/d5b291d797124d823d83f813941b98754c34366d))
+* **web:** reference app icon by URL so type check passes without next-env.d.ts ([0d9540a](https://github.com/maikbasel/form-forge/commit/0d9540a2ee64568fd00d18699e5b2838b7845cc0))
+
 ## [0.2.1](https://github.com/maikbasel/form-forge/compare/v0.2.0...v0.2.1) (2026-07-23)
 
 
