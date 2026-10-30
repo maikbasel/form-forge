@@ -6,11 +6,23 @@
 [![Downloads](https://img.shields.io/github/downloads/maikbasel/form-forge/total)](https://github.com/maikbasel/form-forge/releases)
 [![Documentation](https://img.shields.io/badge/docs-read-526cfe?logo=materialformkdocs&logoColor=white)](https://maikbasel.github.io/form-forge)
 
-A PDF form processing application that enables non-technical D&D 5e players to add dynamic calculations to their PDF
-character sheets without writing JavaScript or understanding PDF AcroForm internals.
+Form Forge adds automatic calculations to fillable D&D 5e character sheets. Enter a Strength score and the sheet
+fills in the modifier, saving throw, and Athletics check itself. You don't write any JavaScript or touch PDF internals.
+
+## Get Form Forge
+
+| I want to                                       | Start here                                                                                                                                         |
+|-------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Install the desktop app (Windows, macOS, Linux) | [Install guide](https://maikbasel.github.io/form-forge/desktop/), then [download the latest release](https://github.com/maikbasel/form-forge/releases/latest) |
+| Host it for my table with Docker                | [Self-hosting guide](https://maikbasel.github.io/form-forge/hosting/)                                                                             |
+| Learn how to use it                             | [Using Form Forge](https://maikbasel.github.io/form-forge/players/)                                                                                |
+
+Full documentation lives at **[maikbasel.github.io/form-forge](https://maikbasel.github.io/form-forge)**. The rest of
+this README is for contributors.
 
 ## Table of Contents
 
+- [Get Form Forge](#get-form-forge)
 - [What It Does](#what-it-does)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
@@ -23,7 +35,6 @@ character sheets without writing JavaScript or understanding PDF AcroForm intern
   - [Architecture](#architecture)
 - [Testing](#testing)
   - [E2E Tests](#e2e-tests-web-only)
-- [Deployment](#deployment)
 - [Database](#database)
 - [API Documentation](#api-documentation)
 - [FAQ](#faq)
@@ -32,14 +43,14 @@ character sheets without writing JavaScript or understanding PDF AcroForm intern
 
 ## What It Does
 
-Users upload a PDF character sheet, the application extracts form fields, and provides a visual interface to map
-calculations between fields (e.g., `Strength modifier = (Strength score - 10) / 2`). The application generates the
-necessary JavaScript and embeds it into the PDF AcroForm structure.
+You upload a PDF character sheet and Form Forge extracts its form fields. In the editor you map calculations between
+fields (e.g., `Strength modifier = (Strength score - 10) / 2`). Form Forge generates the JavaScript and embeds it in
+the PDF's AcroForm.
 
 Form Forge ships in two distribution modes:
 
 - **Web**: A Next.js frontend paired with a Rust API server, deployed via Docker Compose. Uses PostgreSQL for persistence and S3-compatible storage for PDF files.
-- **Native**: A Tauri desktop application that bundles the Rust backend locally. Uses embedded libSQL and filesystem storage — no external services required.
+- **Native**: A Tauri desktop application that bundles the Rust backend locally. Uses embedded libSQL and filesystem storage, so it needs no external services.
 
 <video src="https://github.com/maikbasel/form-forge/raw/master/docs/assets/usage/usage-flow.webm" controls></video>
 
@@ -197,13 +208,13 @@ cd apps/native && pnpm tauri build  # Production build
 
 **Pre-commit Hooks Setup:**
 
-If you installed via asdf (recommended), pre-commit is already available. Just run:
+If you installed the tools with asdf, pre-commit is already available:
 
 ```bash
 pre-commit install
 ```
 
-This installs git hooks that automatically run on every commit:
+The hooks run on every commit:
 - Backend: `cargo fmt --check`, `cargo clippy`, `cargo check`
 - Frontend: `pnpm exec ultracite fix`
 
@@ -219,7 +230,7 @@ crates/                     # Shared Rust crates (Shared)
   common_telemetry/         # Shared telemetry
 
 apps/
-  api/                      # Rust backend — Actix-Web (Web)
+  api/                      # Actix-Web API server (Web)
     crates/
       common/               # API-specific utilities (DB config, errors)
       sheets/adapters/      # Sheets HTTP, S3, and DB adapters
@@ -304,14 +315,6 @@ pnpm test:e2e:docker:down  # Clean up containers/volumes
 just test-e2e-docker
 ```
 
-## Deployment
-
-Self-hosting, configuration, and the desktop app are documented on the
-docs site:
-
-- [Self-Hosting guide](https://maikbasel.github.io/form-forge/hosting/): prerequisites, Docker Compose, configuration, observability
-- [Desktop app](https://maikbasel.github.io/form-forge/desktop/)
-
 ## Database
 
 ### Web
@@ -328,11 +331,11 @@ sqlx migrate revert
 
 ### Native
 
-Uses embedded libSQL — no database setup required.
+Uses embedded libSQL. There is no database to set up.
 
 ## API Documentation
 
-Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is running.
+The running backend serves Swagger UI at `/swagger-ui/`.
 
 ## FAQ
 
@@ -341,8 +344,8 @@ Interactive OpenAPI/Swagger UI available at `/swagger-ui/` when the backend is r
 This affects NVIDIA GPUs on Wayland. WebKitGTK fails to negotiate the explicit sync protocol with
 the NVIDIA driver. Fix: set `__NV_DISABLE_EXPLICIT_SYNC=1` in your environment.
 
-**Permanent fix (recommended)** — create a systemd environment drop-in, picked up on every login
-and visible to all apps including GUI launchers and IDEs:
+For a permanent fix, create a systemd environment drop-in. Every login picks it up, and all apps see it, including
+GUI launchers and IDEs:
 
 ```sh
 mkdir -p ~/.config/environment.d
@@ -351,8 +354,7 @@ echo '__NV_DISABLE_EXPLICIT_SYNC=1' >> ~/.config/environment.d/nvidia-wayland.co
 
 Log out and back in for it to take effect.
 
-**Terminal only** — if you only run the app from a terminal, adding it to your shell profile is
-sufficient:
+If you only start the app from a terminal, your shell profile is enough:
 
 ```sh
 # ~/.bashrc / ~/.zshrc
@@ -362,7 +364,7 @@ export __NV_DISABLE_EXPLICIT_SYNC=1
 set -gx __NV_DISABLE_EXPLICIT_SYNC 1
 ```
 
-Note: shell profile variables are not visible to GUI-launched apps (IDEs, app menu shortcuts).
+Apps started from a GUI (IDEs, app menu shortcuts) don't see shell profile variables.
 
 This flag disables explicit sync negotiation at the driver level without disabling DMA-BUF hardware
 acceleration. Non-NVIDIA systems do not need this.
@@ -377,11 +379,10 @@ acceleration. Non-NVIDIA systems do not need this.
 
 ### Adding a New Calculation Action
 
-The action system uses a **registry pattern** — all action metadata is centralized on the
-`CalculationAction` enum in Rust. The frontend fetches this metadata at runtime via
-`GET /dnd5e/action-types`, so **no frontend code changes are needed** when adding a new action.
+All action metadata lives on the `CalculationAction` enum in Rust. The frontend fetches it at runtime via
+`GET /dnd5e/action-types`, so a new action needs no frontend code changes.
 
-You only need to touch **4 files**:
+A new action touches 4 files:
 
 #### 1. Add the enum variant and implement methods
 
@@ -401,17 +402,16 @@ pub enum CalculationAction {
 }
 ```
 
-Then implement the four required methods on the enum. Follow the pattern of existing variants:
+Then extend the four methods on the enum, following the existing variants:
 
-- **`action_label()`** — return the PascalCase variant name (e.g., `"InitiativeModifier"`). Used
-  for persistence.
-- **`target_field()`** — return a reference to the field that receives the calculated value (e.g.,
+- `action_label()`: return the PascalCase variant name (e.g., `"InitiativeModifier"`). Used for persistence.
+- `target_field()`: return a reference to the field that receives the calculated value (e.g.,
   `&self.initiative_field_name`).
-- **`generate_js()`** — return the JavaScript expression that performs the calculation. Use
-  `serialize_field_name()` to safely quote field names for JS.
-- **`action_type_catalog()`** — add a new `ActionTypeMetadata` entry describing the action's id
-  (kebab-case), label (PascalCase), and field roles. Each role specifies its `key` (matching the
-  serde field name), whether it's `required`, and whether it's the `is_target` output field.
+- `generate_js()`: return the JavaScript expression that performs the calculation. Quote field names with
+  `serialize_field_name()`.
+- `action_type_catalog()`: add an `ActionTypeMetadata` entry with the action's id (kebab-case), label (PascalCase),
+  and field roles. Each role sets its `key` (the serde field name), whether it's `required`, and whether it's the
+  `is_target` output field.
 
 Optionally add a convenience constructor (e.g., `CalculationAction::initiative_modifier(...)`).
 
@@ -419,9 +419,9 @@ Optionally add a convenience constructor (e.g., `CalculationAction::initiative_m
 
 **File:** `crates/actions_core/js/dnd-helpers.js`
 
-If your action's `generate_js()` calls a helper function that doesn't exist yet, add it here. This
-file is embedded into every PDF as document-level JavaScript. Keep functions pure and
-self-contained — they run inside a PDF viewer's JS engine.
+If your action's `generate_js()` calls a helper function that doesn't exist yet, add it here. Form Forge embeds this
+file in every PDF as document-level JavaScript, where it runs in the PDF viewer's JS engine. Keep functions pure and
+self-contained.
 
 #### 3. Add i18n translations
 
@@ -449,19 +449,17 @@ up translations by convention:
 }
 ```
 
-The role keys **must match** the `key` values in your `FieldRoleMetadata` entries from the catalog.
+The role keys must match the `key` values in your `FieldRoleMetadata` entries from the catalog.
 
-#### What you do NOT need to change
+#### What stays unchanged
 
-The following are all handled automatically by the registry pattern:
-
-- Web handler / API endpoint — the single `PUT /dnd5e/{sheet_id}/actions` accepts all action types
-- `main.rs` / `openapi.rs` — no new service registrations needed
-- Frontend types (`AttachActionRequest`, etc.) — generic, not per-action
-- API client code (web or Tauri) — uses the action metadata dynamically
-- UI components (`useActions`, `ActionConfigModal`, etc.) — data-driven from backend metadata
-- OpenAPI spec / generated types — the `CalculationAction` schema covers all variants via `oneOf`
-- Tauri commands — the `list_action_types` command returns the catalog automatically
+- Web handler and API endpoint: `PUT /dnd5e/{sheet_id}/actions` accepts every action type.
+- `main.rs` and `openapi.rs`: no new service registrations.
+- Frontend types (`AttachActionRequest`, etc.): generic, not per action.
+- API client code (web and Tauri): reads the action metadata at runtime.
+- UI components (`useActions`, `ActionConfigModal`, etc.): render from the backend metadata.
+- OpenAPI spec and generated types: the `CalculationAction` schema covers all variants via `oneOf`.
+- Tauri commands: `list_action_types` returns the catalog.
 
 #### Verification checklist
 

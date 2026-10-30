@@ -164,3 +164,33 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+  # A lost runner once left a release without Linux assets while it showed as
+  # Latest. Fail loudly and open an issue instead of shipping a partial release.
+  verify-assets:
+    needs: [release-please, tauri]
+    if: always() && needs.tauri.result != 'skipped'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.release-please.outputs.tag_name || inputs.tag_name }}
+    steps:
+      - name: Check every platform's assets were uploaded
+        run: |
+          assets=$(gh release view "$TAG" --json assets -q '.assets[].name')
+          missing=""
+          for pattern in '\.AppImage$' '\.deb$' '\.rpm$' '\.dmg$' '\.app\.tar\.gz$' '\.msi$' '-setup\.exe$' '^latest\.json$'; do
+            grep -Eq "$pattern" <<< "$assets" || missing="$missing $pattern"
+          done
+          if [ -n "$missing" ]; then
+            gh issue create \
+              --title "Release $TAG is missing desktop assets" \
+              --body "Missing assets matching:$missing
+
+          Rebuild with: \`gh workflow run release.yml -f tag_name=$TAG -f build_docker=false\`
+
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "::error::Release $TAG is missing assets:$missing"
+            exit 1
+          fi
