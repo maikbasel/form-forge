@@ -1,7 +1,9 @@
 "use client";
 
 import { LanguageToggle } from "@repo/ui/components/language-toggle.tsx";
+import Image from "next/image";
 import { useTranslation } from "react-i18next";
+import appIcon from "@/app/icon.svg";
 import { ThemeToggle } from "./theme-toggle.tsx";
 
 export function Header() {
@@ -13,6 +15,7 @@ export function Header() {
         {/* Logo/Brand - Left side */}
         <div className="flex items-center gap-6">
           <a className="flex items-center space-x-2" href="/">
+            <Image alt="" height={24} src={appIcon} width={24} />
             <span className="font-bold">{t("appName")}</span>
           </a>
           {/* Future navigation menu will go here */}

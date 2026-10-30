@@ -1,4 +1,4 @@
-# Form Forge
+# <img src="apps/native/src-tauri/app-icon.svg" width="64" align="absmiddle" alt=""> Form Forge
 
 [![Backend CI](https://github.com/maikbasel/form-forge/actions/workflows/backend-ci.yml/badge.svg?branch=master)](https://github.com/maikbasel/form-forge/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/maikbasel/form-forge/actions/workflows/frontend-ci.yml/badge.svg?branch=master)](https://github.com/maikbasel/form-forge/actions/workflows/frontend-ci.yml)
