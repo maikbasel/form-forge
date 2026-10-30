@@ -90,6 +90,43 @@ async function installUpdate(update: Update, t: TFunction<"common">) {
   });
 }
 
+function offerUpdate(update: Update, t: TFunction<"common">) {
+  // Ask first so an update never restarts the app mid-edit.
+  toast(t("updater.available", { version: update.version }), {
+    id: UPDATE_TOAST_ID,
+    duration: Number.POSITIVE_INFINITY,
+    description: undefined,
+    action: {
+      label: t("updater.install"),
+      onClick: (event) => {
+        // Keep the toast open; it turns into the progress display.
+        event.preventDefault();
+        installUpdate(update, t).catch(console.error);
+      },
+    },
+    cancel: {
+      label: t("updater.later"),
+      onClick: () => toast.dismiss(UPDATE_TOAST_ID),
+    },
+  });
+}
+
+/** User-triggered check: unlike the startup check, it reports every outcome. */
+export async function checkForUpdateManually(t: TFunction<"common">) {
+  let update: Update | null;
+  try {
+    update = await check();
+  } catch (error) {
+    showFailure(t, error);
+    return;
+  }
+  if (update) {
+    offerUpdate(update, t);
+  } else {
+    toast.success(t("updater.upToDate"), { id: UPDATE_TOAST_ID });
+  }
+}
+
 /** Checks GitHub releases for a newer signed build and offers to install it. */
 export function UpdateChecker() {
   const { t } = useTranslation("common");
@@ -102,26 +139,9 @@ export function UpdateChecker() {
 
     check()
       .then((update) => {
-        if (cancelled || !update) {
-          return;
+        if (!(cancelled || update === null)) {
+          offerUpdate(update, t);
         }
-        // Ask first so an update never restarts the app mid-edit.
-        toast(t("updater.available", { version: update.version }), {
-          id: UPDATE_TOAST_ID,
-          duration: Number.POSITIVE_INFINITY,
-          action: {
-            label: t("updater.install"),
-            onClick: (event) => {
-              // Keep the toast open; it turns into the progress display.
-              event.preventDefault();
-              installUpdate(update, t).catch(console.error);
-            },
-          },
-          cancel: {
-            label: t("updater.later"),
-            onClick: () => toast.dismiss(UPDATE_TOAST_ID),
-          },
-        });
       })
       // Offline or GitHub unreachable: retry silently on next launch.
       .catch(console.error);

@@ -37,6 +37,9 @@
     "ready": "Form Forge {{version}} ist installiert",
     "readyDescription": "Starten Sie neu, um das Update abzuschlie\u00dfen.",
     "restart": "Neu starten",
-    "failed": "Update fehlgeschlagen: {{message}}"
+    "failed": "Update fehlgeschlagen: {{message}}",
+    "checkNow": "Nach Updates suchen",
+    "checking": "Wird gepr\u00fcft\u2026",
+    "upToDate": "Form Forge ist auf dem neuesten Stand"
   }
 }

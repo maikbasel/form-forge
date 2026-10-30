@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../components/theme-provider";
+import { checkForUpdateManually } from "../components/update-checker";
 import { getExportDir, setExportDir, type Theme } from "../lib/settings";
 
 const GITHUB_URL = "https://github.com/maikbasel/form-forge";
@@ -27,6 +28,7 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [exportDir, setExportDirState] = useState<string | null>(null);
   const [dataDir, setDataDir] = useState<string>("");
+  const [checkingForUpdate, setCheckingForUpdate] = useState(false);
 
   const themeOptions: { value: Theme; label: string }[] = [
     { value: "light", label: tCommon("theme.light") },
@@ -59,6 +61,15 @@ export default function SettingsPage() {
   const handleOpenDataDir = async () => {
     if (dataDir) {
       await openPath(dataDir).catch(console.error);
+    }
+  };
+
+  const handleCheckForUpdate = async () => {
+    setCheckingForUpdate(true);
+    try {
+      await checkForUpdateManually(tCommon);
+    } finally {
+      setCheckingForUpdate(false);
     }
   };
 
@@ -192,9 +203,21 @@ export default function SettingsPage() {
                 t("settingsNative.development")}
             </span>
           </p>
-          <Button onClick={handleViewOnGitHub} size="sm" variant="outline">
-            {t("settingsNative.viewOnGithub")}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              disabled={checkingForUpdate}
+              onClick={handleCheckForUpdate}
+              size="sm"
+              variant="outline"
+            >
+              {checkingForUpdate
+                ? tCommon("updater.checking")
+                : tCommon("updater.checkNow")}
+            </Button>
+            <Button onClick={handleViewOnGitHub} size="sm" variant="outline">
+              {t("settingsNative.viewOnGithub")}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

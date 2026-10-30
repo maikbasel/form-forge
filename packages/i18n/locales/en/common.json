@@ -37,6 +37,9 @@
     "ready": "Form Forge {{version}} is installed",
     "readyDescription": "Restart to finish updating.",
     "restart": "Restart",
-    "failed": "Update failed: {{message}}"
+    "failed": "Update failed: {{message}}",
+    "checkNow": "Check for updates",
+    "checking": "Checking\u2026",
+    "upToDate": "Form Forge is up to date"
   }
 }
