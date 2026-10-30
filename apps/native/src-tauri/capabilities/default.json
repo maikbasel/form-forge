@@ -14,6 +14,8 @@
     "dialog:default",
     "dialog:allow-save",
     "window-state:default",
-    "store:default"
+    "store:default",
+    "updater:default",
+    "process:allow-restart"
   ]
 }

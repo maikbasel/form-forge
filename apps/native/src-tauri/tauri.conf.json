@@ -30,6 +30,15 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRCQzU0NTU2RkNDMzM4QQpSV1NLTTh4dlZWUzhCUFNkTTNuZ3ZUTk96VjZkc3o2VTRkNzBlWHlOa2tzVm1tTTVlYWJHM2FSbgo=",
+      "endpoints": [
+        "https://github.com/maikbasel/form-forge/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

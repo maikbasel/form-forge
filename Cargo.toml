@@ -119,6 +119,8 @@ tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-window-state = "2"
 tauri-plugin-store = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
 
 # Embedded database
 libsql = { version = "0.9", default-features = false, features = ["core"] }
