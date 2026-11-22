@@ -14,6 +14,17 @@ vi.mock("swr", () => ({
   }),
 }));
 
+const ABILITY_MODIFIER_REGEX = /Ability Modifier/;
+
+const ABILITY_MODIFIER = {
+  id: "ability-modifier",
+  actionLabel: "AbilityModifier",
+  roles: [
+    { key: "abilityScoreFieldName", required: true, isTarget: false },
+    { key: "abilityModifierFieldName", required: true, isTarget: true },
+  ],
+};
+
 function createMockApiClient(
   overrides: Partial<FileApiClient> = {}
 ): FileApiClient {
@@ -50,11 +61,27 @@ describe("SheetViewer", () => {
     });
   });
 
-  it('"Configure Calculation" button is hidden when no fields selected', () => {
-    const client = createMockApiClient();
+  it("opens the calculation type list from New calculation", async () => {
+    const user = userEvent.setup();
+    const client = createMockApiClient({
+      getActionTypes: vi.fn().mockResolvedValue([ABILITY_MODIFIER]),
+    });
     renderViewer(client, { sheetId: "sheet-1" });
 
-    expect(screen.queryByText("Configure Calculation")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "New calculation" }));
+    await user.click(
+      await screen.findByRole("button", { name: ABILITY_MODIFIER_REGEX })
+    );
+
+    expect(
+      screen.getByText("Click the field on the sheet")
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Click the Target Modifier field")
+    ).not.toHaveLength(0);
+    expect(
+      screen.getByRole("button", { name: "Attach calculation" })
+    ).toBeDisabled();
   });
 
   it("export button calls apiClient.downloadSheet and shows success toast", async () => {
@@ -94,18 +121,15 @@ describe("SheetViewer", () => {
 
     await waitFor(() => {
       expect(client.downloadSheet).toHaveBeenCalledWith("sheet-1");
-      expect(toast.success).toHaveBeenCalledWith("Sheet exported successfully");
+      expect(toast.success).toHaveBeenCalledWith(
+        "Sheet exported successfully",
+        expect.objectContaining({
+          description: expect.stringContaining("Adobe Acrobat Reader"),
+        })
+      );
     });
 
     vi.restoreAllMocks();
-  });
-
-  it('"Clear" button is absent when no fields are selected', () => {
-    const client = createMockApiClient();
-    renderViewer(client, { sheetId: "sheet-1", file: "/api/sheets/sheet-1" });
-
-    expect(screen.getByText("Character Sheet Editor")).toBeInTheDocument();
-    expect(screen.queryByText("Clear")).not.toBeInTheDocument();
   });
 
   it("renders the page navigation controls", () => {
@@ -114,30 +138,5 @@ describe("SheetViewer", () => {
 
     expect(screen.getByText("Previous")).toBeInTheDocument();
     expect(screen.getByText("Next")).toBeInTheDocument();
-  });
-});
-
-describe("ActionConfigModal", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ url: "https://example.com/test.pdf" }),
-    });
-  });
-
-  it("modal is not shown initially", () => {
-    const client = createMockApiClient();
-    render(
-      <ApiClientProvider client={client}>
-        <FieldSnippetProvider>
-          <SheetViewer sheetId="sheet-1" />
-        </FieldSnippetProvider>
-      </ApiClientProvider>
-    );
-
-    expect(
-      screen.queryByText("Configure Calculation Action")
-    ).not.toBeInTheDocument();
   });
 });

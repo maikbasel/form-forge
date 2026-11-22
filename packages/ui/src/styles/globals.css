@@ -139,4 +139,13 @@
   .animate-flash {
     animation: flash 500ms ease-in-out 3;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* Keep the "here it is" cue without the pulse and scale. */
+    .animate-flash {
+      outline: 2px solid rgb(59 130 246);
+      outline-offset: 2px;
+      animation: none;
+    }
+  }
 }

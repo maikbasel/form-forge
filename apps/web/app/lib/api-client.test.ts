@@ -18,7 +18,7 @@ vi.mock("axios", async () => {
 
 // Mock server action
 vi.mock("./actions.ts", () => ({
-  getSheetFields: vi.fn().mockResolvedValue([]),
+  getSheetFields: vi.fn().mockResolvedValue({ ok: true, fields: [] }),
 }));
 
 // Must import after mocks are set up
@@ -36,6 +36,28 @@ describe("apiClient", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe("getSheetFields", () => {
+    it("rethrows a failed server action result as an ApiClientError with its status", async () => {
+      const { getSheetFields } = await import("./actions.ts");
+      vi.mocked(getSheetFields).mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        problem: {
+          type: "about:blank",
+          title: "Not Found",
+          status: 404,
+          detail: "sheet not found",
+        },
+      });
+
+      const error = await apiClient.getSheetFields("missing").catch((e) => e);
+
+      expect(error).toBeInstanceOf(ApiClientError);
+      expect(error.statusCode).toBe(404);
+      expect(error.message).toBe("sheet not found");
+    });
   });
 
   describe("uploadSheet", () => {

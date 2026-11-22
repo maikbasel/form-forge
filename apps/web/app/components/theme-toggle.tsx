@@ -4,7 +4,8 @@ import { Button } from "@repo/ui/components/button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@repo/ui/components/dropdown-menu.tsx";
 import { Moon, Sun } from "lucide-react";
@@ -13,7 +14,7 @@ import { useTranslation } from "react-i18next";
 
 export function ThemeToggle() {
   const { t } = useTranslation();
-  const { setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
     <DropdownMenu>
@@ -25,15 +26,17 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          {t("theme.light")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          {t("theme.dark")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          {t("theme.system")}
-        </DropdownMenuItem>
+        <DropdownMenuRadioGroup onValueChange={setTheme} value={theme}>
+          <DropdownMenuRadioItem value="light">
+            {t("theme.light")}
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">
+            {t("theme.dark")}
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="system">
+            {t("theme.system")}
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

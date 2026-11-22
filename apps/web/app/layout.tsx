@@ -1,5 +1,7 @@
+import { pickLanguage } from "@repo/i18n/languages";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "@repo/ui/globals.css";
 import { Toaster } from "@repo/ui/components/sonner.tsx";
 import type React from "react";
@@ -22,28 +24,31 @@ const fontMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Form Forge - PDF Form Processing",
-  description:
-    "Upload PDF forms, extract form fields, and attach JavaScript actions",
+  title: "Form Forge",
+  description: "Add automatic calculations to fillable PDF character sheets",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const lng = pickLanguage((await headers()).get("accept-language"));
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${fontSans.variable} ${fontMono.variable} min-h-screen bg-background text-foreground antialiased`}
-      >
+    <html
+      className={`${fontSans.variable} ${fontMono.variable}`}
+      lang={lng}
+      suppressHydrationWarning
+    >
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           disableTransitionOnChange
           enableSystem
         >
-          <I18nProviderWrapper>
+          <I18nProviderWrapper lng={lng}>
             <ApiClientProviderWrapper>
               <SheetProviderWrapper>
                 <FieldSnippetProviderWrapper>

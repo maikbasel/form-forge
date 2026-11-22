@@ -1,30 +1,20 @@
 {
-  "configureCalculationAction": "Configure Calculation Action",
-  "mapSelectedFieldsToRoles": "Map selected fields to their roles in the calculation",
-  "actionType": "Action Type",
-  "fieldRoles": "Field Roles",
-  "dropHere": "Drop here",
-  "dragFieldHere": "Drag a field here",
-  "orSelectFromList": "Or select from list...",
-  "readyToAttach": "Ready to attach",
-  "assignAllRequiredFields": "Assign all required fields",
-  "attaching": "Attaching...",
-  "attachCalculation": "Attach Calculation",
-  "selectActionToBegin": "Select an action type to begin",
-  "chooseFromOptions": "Choose from the options on the left",
-  "attachedActions": "Attached Actions",
-  "calculationsConfigured_one": "{{count}} calculation configured",
-  "calculationsConfigured_other": "{{count}} calculations configured",
-  "noActionsConfiguredYet": "No actions configured yet",
-  "selectFieldsAndConfigure": "Select fields and configure an action",
-  "unknownAction": "Unknown Action",
+  "attaching": "Attaching…",
+  "attachCalculation": "Attach calculation",
+  "calculationsConfigured_one": "{{count}} calculation attached",
+  "calculationsConfigured_other": "{{count}} calculations attached",
+  "noActionsConfiguredYet": "No calculations attached yet",
+  "unsupportedCalculation": "Unsupported calculation",
+  "unsupportedCalculationDescription": "This version of Form Forge doesn't recognize this calculation type. It still runs in the exported PDF.",
+  "failedToLoadCalculationTypes": "Couldn't load the calculation types: {{message}}",
+  "failedToLoadAttachedCalculations": "Couldn't load the attached calculations: {{message}}",
   "ability-modifier": {
     "name": "Ability Modifier",
     "description": "Calculate ability modifier from ability score",
     "roles": {
       "abilityScoreFieldName": {
         "label": "Ability Score",
-        "hint": "The base ability score (e.g., STR, DEX)"
+        "hint": "The ability score (e.g., Strength)"
       },
       "abilityModifierFieldName": {
         "label": "Target Modifier",
@@ -38,7 +28,7 @@
     "roles": {
       "abilityModifierFieldName": {
         "label": "Ability Modifier",
-        "hint": "The relevant ability modifier (e.g., WIS_mod for Perception)"
+        "hint": "The modifier of the skill's ability (e.g., Wisdom for Perception)"
       },
       "proficiencyBonusFieldName": {
         "label": "Proficiency Bonus",
@@ -85,7 +75,7 @@
     }
   },
   "settingsNative": {
-    "windowTitle": "Settings \u2013 Form Forge",
+    "windowTitle": "Settings – Form Forge",
     "heading": "Settings",
     "description": "Manage your Form Forge preferences.",
     "appearance": "Appearance",
@@ -94,7 +84,7 @@
     "exportDescription": "Default location suggested when saving exported PDFs.",
     "currentDirectory": "Current directory:",
     "defaultAppDataFolder": "Default (app data folder)",
-    "change": "Change\u2026",
+    "change": "Change…",
     "resetToDefault": "Reset to default",
     "data": "Data",
     "dataDescription": "Location of the app database and stored sheets.",
@@ -104,5 +94,31 @@
     "version": "Version:",
     "development": "development",
     "viewOnGithub": "View on GitHub"
-  }
+  },
+  "panelTitle": "Calculations",
+  "newCalculation": "New calculation",
+  "emptyHint": "Choose New calculation, then click the fields on the sheet.",
+  "whatToCalculate": "What should this calculate?",
+  "attachedOnSheet_one": "{{count}} attached on this sheet",
+  "attachedOnSheet_other": "{{count}} attached on this sheet",
+  "noneAttachedYet": "None attached yet",
+  "typesUnavailable": "The calculation types couldn't be loaded. Reload the page to try again.",
+  "changeType": "Change type",
+  "editingResult": "Result field: {{field}}",
+  "stepOf": "Step {{current}} of {{total}}",
+  "clickTheField": "Click the {{role}} field",
+  "clickOnSheet": "Click the field on the sheet",
+  "skipped": "Skipped",
+  "skip": "Skip",
+  "stopPicking": "Stop picking",
+  "keep": "Keep",
+  "keepHint": "Keep this field for the next calculation",
+  "lockedWhileEditing": "The result field can't change while editing",
+  "replacesExisting": "{{field}} already has a {{name}} calculation. Attaching replaces it.",
+  "footHint": "Click a step to pick its field again. Fields marked Keep stay filled for the next calculation.",
+  "footHintEditing": "Click a step to pick a different field. The result field stays the same.",
+  "done": "Done",
+  "saveChanges": "Save changes",
+  "edit": "Edit",
+  "editCalculation": "Edit {{name}} in {{field}}"
 }

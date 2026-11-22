@@ -16,8 +16,8 @@ const config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
-        mono: ["var(--font-mono)", ...fontFamily.mono],
+        sans: ["var(--font-sans, ui-sans-serif)", ...fontFamily.sans],
+        mono: ["var(--font-mono, ui-monospace)", ...fontFamily.mono],
       },
       colors: {
         border: "hsl(var(--border))",

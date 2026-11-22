@@ -4,7 +4,8 @@ import { Button } from "@repo/ui/components/button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@repo/ui/components/dropdown-menu.tsx";
 import { Languages } from "lucide-react";
@@ -17,6 +18,9 @@ const LANGUAGES = [
 
 export function LanguageToggle() {
   const { t, i18n } = useTranslation();
+  // i18n.language can be a region variant such as "de-DE"
+  const current =
+    LANGUAGES.find((lang) => i18n.language.startsWith(lang.code))?.code ?? "en";
 
   return (
     <DropdownMenu>
@@ -27,17 +31,16 @@ export function LanguageToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {LANGUAGES.map((lang) => (
-          <DropdownMenuItem
-            key={lang.code}
-            onClick={() => i18n.changeLanguage(lang.code)}
-          >
-            {t(lang.nameKey)}
-            {i18n.language.startsWith(lang.code) && (
-              <span className="ml-auto text-xs">&#10003;</span>
-            )}
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuRadioGroup
+          onValueChange={(code) => i18n.changeLanguage(code)}
+          value={current}
+        >
+          {LANGUAGES.map((lang) => (
+            <DropdownMenuRadioItem key={lang.code} value={lang.code}>
+              {t(lang.nameKey)}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

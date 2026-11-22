@@ -26,70 +26,45 @@ test.describe("Sheet Workflow - Happy Path", () => {
       await sheetViewerPage.verifyPageLoaded();
     });
 
-    await test.step("Select fields for ability modifier action", async () => {
-      // For the D&D character sheet, we'll use STR (Strength) as an example
-      await sheetViewerPage.selectField("STRmod");
-      await sheetViewerPage.selectField("STR");
+    await test.step("Attach an ability modifier", async () => {
+      await sheetViewerPage.startCalculation("Ability Modifier");
+      await sheetViewerPage.pickFields(["STRmod", "STR"]);
+      await sheetViewerPage.attachCalculation();
+      await sheetViewerPage.verifySuccessToast("Ability Modifier attached to STRmod");
+      await sheetViewerPage.finishBuilding();
+      await sheetViewerPage.verifyCalculationListed("Ability Modifier");
     });
 
-    await test.step("Configure ability modifier action", async () => {
-      await sheetViewerPage.openActionModal();
-      await sheetViewerPage.selectActionType("Ability Modifier");
-      await sheetViewerPage.assignFieldToRole("STR", "Ability Score");
-      await sheetViewerPage.assignFieldToRole("STRmod", "Target Modifier");
-      await sheetViewerPage.attachAction();
-    });
-
-    await test.step("Verify ability modifier action attached", async () => {
-      await sheetViewerPage.verifySuccessToast("attached successfully");
-      await sheetViewerPage.verifyActionAttached("Ability Modifier");
-    });
-
-    await test.step("Select fields for saving throw modifier action", async () => {
-      await sheetViewerPage.selectField("ST Strength");
-      await sheetViewerPage.selectField("STRmod");
-      await sheetViewerPage.selectField("Check Box 11");
-      await sheetViewerPage.selectField("ProfBonus");
-    });
-
-    await test.step("Configure saving throw modifier action", async () => {
-      await sheetViewerPage.openActionModal();
-      await sheetViewerPage.selectActionType("Saving Throw Modifier");
-      await sheetViewerPage.assignFieldToRole("STRmod", "Ability Modifier");
-      await sheetViewerPage.assignFieldToRole("Check Box 11", "Proficiency");
-      await sheetViewerPage.assignFieldToRole("ProfBonus", "Proficiency Bonus");
-      await sheetViewerPage.assignFieldToRole(
+    await test.step("Attach a saving throw modifier", async () => {
+      await sheetViewerPage.startCalculation("Saving Throw Modifier");
+      await sheetViewerPage.pickFields([
         "ST Strength",
-        "Target Saving Throw"
+        "STRmod",
+        "ProfBonus",
+        "Check Box 11",
+      ]);
+      await sheetViewerPage.attachCalculation();
+      await sheetViewerPage.verifySuccessToast(
+        "Saving Throw Modifier attached to ST Strength"
       );
-      await sheetViewerPage.attachAction();
+      await sheetViewerPage.finishBuilding();
+      await sheetViewerPage.verifyCalculationListed("Saving Throw Modifier");
     });
 
-    await test.step("Verify saving throw modifier action attached", async () => {
-      await sheetViewerPage.verifySuccessToast("attached successfully");
-      await sheetViewerPage.verifyActionAttached("Saving Throw Modifier");
-    });
-
-    await test.step("Select fields for skill modifier action", async () => {
-      await sheetViewerPage.selectField("Athletics");
-      await sheetViewerPage.selectField("STRmod");
-      await sheetViewerPage.selectField("Check Box 26");
-      await sheetViewerPage.selectField("ProfBonus");
-    });
-
-    await test.step("Configure skill modifier action", async () => {
-      await sheetViewerPage.openActionModal();
-      await sheetViewerPage.selectActionType("Skill Modifier");
-      await sheetViewerPage.assignFieldToRole("STRmod", "Ability Modifier");
-      await sheetViewerPage.assignFieldToRole("Check Box 26", "Proficiency");
-      await sheetViewerPage.assignFieldToRole("ProfBonus", "Proficiency Bonus");
-      await sheetViewerPage.assignFieldToRole("Athletics", "Target Skill");
-      await sheetViewerPage.attachAction();
-    });
-
-    await test.step("Verify skill modifier action attached", async () => {
-      await sheetViewerPage.verifySuccessToast("attached successfully");
-      await sheetViewerPage.verifyActionAttached("Skill Modifier");
+    await test.step("Attach a skill modifier", async () => {
+      await sheetViewerPage.startCalculation("Skill Modifier");
+      await sheetViewerPage.pickFields([
+        "Athletics",
+        "STRmod",
+        "ProfBonus",
+        "Check Box 26",
+      ]);
+      await sheetViewerPage.attachCalculation();
+      await sheetViewerPage.verifySuccessToast(
+        "Skill Modifier attached to Athletics"
+      );
+      await sheetViewerPage.finishBuilding();
+      await sheetViewerPage.verifyCalculationListed("Skill Modifier");
     });
 
     await test.step("Download and verify sheet", async () => {

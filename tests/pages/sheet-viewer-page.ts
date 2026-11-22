@@ -1,8 +1,9 @@
 import type { Download, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-const CONFIGURE_ACTION_REGEX = /configure calculation/i;
+const NEW_CALCULATION_REGEX = /new calculation/i;
 const ATTACH_CALCULATION_REGEX = /attach calculation/i;
+const DONE_REGEX = /^done$/i;
 const EXPORT_REGEX = /export/i;
 const PDF_FILENAME_REGEX = /\.pdf$/;
 
@@ -13,50 +14,43 @@ export class SheetViewerPage {
     this.page = page;
   }
 
-  async selectField(fieldName: string) {
-    // Fields are rendered as Toggle elements with aria-label
-    const fieldToggle = this.page.locator(
-      `button[aria-label="Select field ${fieldName}"]`
-    );
-    await fieldToggle.click();
-  }
-
-  async openActionModal() {
+  /** Opens the builder and chooses a calculation type. */
+  async startCalculation(typeName: string) {
     await this.page
-      .getByRole("button", { name: CONFIGURE_ACTION_REGEX })
+      .getByRole("button", { name: NEW_CALCULATION_REGEX })
+      .click();
+    await this.page
+      .getByRole("button", { name: new RegExp(`^${typeName}`, "i") })
       .click();
   }
 
-  async selectActionType(actionName: string) {
+  /** Clicks a field on the sheet while a step waits for one. */
+  async pickField(fieldName: string) {
     await this.page
-      .getByRole("button", { name: new RegExp(actionName, "i") })
+      .locator(`button[aria-label="Pick field ${fieldName}"]`)
       .click();
   }
 
-  async assignFieldToRole(fieldName: string, roleLabel: string) {
-    // Find the select trigger by test ID (unique per role)
-    const selectTrigger = this.page.getByTestId(
-      `role-select-trigger-${roleLabel.toLowerCase().replace(/\s+/g, "-")}`
-    );
-    await selectTrigger.scrollIntoViewIfNeeded();
-    await selectTrigger.click();
-
-    // Select the field from dropdown
-    await this.page
-      .getByRole("option", { name: fieldName, exact: true })
-      .click();
+  /** Picks fields in step order: result field first, then the inputs. */
+  async pickFields(fieldNames: string[]) {
+    for (const name of fieldNames) {
+      await this.pickField(name);
+    }
   }
 
-  async attachAction() {
+  async attachCalculation() {
     await this.page
       .getByRole("button", { name: ATTACH_CALCULATION_REGEX })
       .click();
   }
 
-  async verifyActionAttached(actionName: string) {
-    // The attached action should appear in the sidebar
+  async finishBuilding() {
+    await this.page.getByRole("button", { name: DONE_REGEX }).click();
+  }
+
+  async verifyCalculationListed(name: string) {
     await expect(
-      this.page.locator(".space-y-3").getByText(actionName, { exact: true })
+      this.page.getByRole("heading", { level: 3, name, exact: true })
     ).toBeVisible();
   }
 
@@ -74,14 +68,16 @@ export class SheetViewerPage {
   }
 
   async verifyPageLoaded() {
-    // Wait for PDF to render - check for canvas element or field toggles
-    await expect(
-      this.page.locator('canvas, button[aria-label^="Select field"]').first()
-    ).toBeVisible({ timeout: 15_000 });
+    // Field overlays appear once the PDF has rendered and fields are mapped
+    await expect(this.page.locator("[data-field-name]").first()).toBeVisible({
+      timeout: 15_000,
+    });
   }
 
   async verifySuccessToast(message: string) {
-    await expect(this.page.getByText(message, { exact: false })).toBeVisible({
+    await expect(
+      this.page.getByText(message, { exact: false }).first()
+    ).toBeVisible({
       timeout: 10_000,
     });
   }

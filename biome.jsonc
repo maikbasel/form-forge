@@ -17,7 +17,8 @@
       "!**/*.spec.ts",
       "!**/pdf.worker.min.mjs",
       "!packages/api-spec/generated.ts",
-      "!packages/api-spec/model.ts"
+      "!packages/api-spec/model.ts",
+      "!.claude"
     ]
   },
   "overrides": [

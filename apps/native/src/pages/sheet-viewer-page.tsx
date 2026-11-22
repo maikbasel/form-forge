@@ -42,7 +42,7 @@ export default function SheetViewerPage() {
           {t("common:back")}
         </Button>
       </header>
-      <div className="flex-1 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
         <SheetViewer
           exportHandler={tauriExportStrategy}
           file={sheetPath ?? undefined}

@@ -62,7 +62,11 @@ export const apiClient: FileApiClient = {
   },
 
   async getSheetFields(sheetId: string): Promise<FormField[]> {
-    return await getSheetFieldsServer(sheetId);
+    const result = await getSheetFieldsServer(sheetId);
+    if (!result.ok) {
+      throw new ApiClientError(result.status, result.problem);
+    }
+    return result.fields;
   },
 
   async downloadSheet(sheetId: string): Promise<DownloadSheetResult> {
