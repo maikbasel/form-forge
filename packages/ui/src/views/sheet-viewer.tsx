@@ -91,6 +91,7 @@ async function exportWithHandler(
   }
   if (handler.revealInFolder) {
     toast.success(t("viewer.sheetExportedSuccessfully"), {
+      description: t("viewer.exportViewerHint"),
       action: {
         label: t("sidebar.showInFolder"),
         onClick: () => {
@@ -99,7 +100,9 @@ async function exportWithHandler(
       },
     });
   } else {
-    toast.success(t("viewer.sheetExportedSuccessfully"));
+    toast.success(t("viewer.sheetExportedSuccessfully"), {
+      description: t("viewer.exportViewerHint"),
+    });
   }
 }
 
@@ -112,7 +115,9 @@ async function exportWithDownload(
 ) {
   const { blob, filename } = await apiClient.downloadSheet(sheetId);
   triggerBrowserDownload(blob, filename);
-  toast.success(t("viewer.sheetExportedSuccessfully"));
+  toast.success(t("viewer.sheetExportedSuccessfully"), {
+    description: t("viewer.exportViewerHint"),
+  });
 }
 
 interface FieldRole {
@@ -1344,7 +1349,7 @@ export default function SheetViewer({
             <span className="font-medium text-sm">
               {t("viewer.pageOf", {
                 current: currentPage,
-                total: numPages || "...",
+                total: numPages || "…",
               })}
             </span>
             <Button
@@ -1456,9 +1461,6 @@ export default function SheetViewer({
                           <div>
                             <div className="font-semibold text-sm">
                               {action.name}
-                            </div>
-                            <div className="mt-0.5 text-muted-foreground text-xs">
-                              /{action.endpoint}
                             </div>
                           </div>
                         </div>

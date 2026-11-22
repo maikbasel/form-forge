@@ -22,9 +22,8 @@ const fontMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Form Forge - PDF Form Processing",
-  description:
-    "Upload PDF forms, extract form fields, and attach JavaScript actions",
+  title: "Form Forge",
+  description: "Add automatic calculations to fillable PDF character sheets",
 };
 
 export default function RootLayout({

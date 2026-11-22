@@ -17,7 +17,7 @@
     "browseSheets": "Browse Sheets",
     "processingSheet": "Processing Sheet",
     "uploadingSheet": "Uploading Sheet",
-    "extractingFormFields": "Extracting form fields from your PDF...",
+    "extractingFormFields": "Extracting form fields from your PDF…",
     "pleaseWaitUploading": "Please wait while we upload your PDF sheet",
     "uploadCancelled": "Upload cancelled",
     "fileRejected": "\"{{fileName}}\" has been rejected"
@@ -25,7 +25,7 @@
   "viewer": {
     "characterSheetEditor": "Character Sheet Editor",
     "selectFieldsToConfigureCalculations": "Select fields to configure calculations",
-    "exporting": "Exporting...",
+    "exporting": "Exporting…",
     "export": "Export",
     "configureCalculation": "Configure Calculation",
     "previous": "Previous",
@@ -47,9 +47,11 @@
     "failedToExportSheet": "Failed to export sheet: {{message}}",
     "failedToFetchPdfUrl": "Failed to fetch PDF URL",
     "failedToLoadPdf": "Failed to load PDF",
-    "fieldsCount": "{{count}} fields",
     "allFieldsAssigned": "All fields assigned",
-    "availableFields": "Available Fields"
+    "availableFields": "Available Fields",
+    "exportViewerHint": "Open it in Adobe Acrobat Reader or another viewer that runs PDF JavaScript. Browser PDF viewers don't run the calculations.",
+    "fieldsCount_one": "{{count}} field",
+    "fieldsCount_other": "{{count}} fields"
   },
   "web": {
     "uploadTitle": "Upload PDF Character Sheet",
@@ -60,7 +62,7 @@
     "uploadDescription": "Drop a PDF file or select one from your computer",
     "uploadStarted": "Upload a PDF character sheet to get started",
     "failedToImportSheet": "Failed to import sheet: {{message}}",
-    "importingAndExtracting": "Importing and extracting form fields from your PDF...",
+    "importingAndExtracting": "Importing and extracting form fields from your PDF…",
     "pleaseDropPdf": "Please drop a PDF file"
   }
 }

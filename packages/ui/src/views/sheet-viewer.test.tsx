@@ -94,7 +94,12 @@ describe("SheetViewer", () => {
 
     await waitFor(() => {
       expect(client.downloadSheet).toHaveBeenCalledWith("sheet-1");
-      expect(toast.success).toHaveBeenCalledWith("Sheet exported successfully");
+      expect(toast.success).toHaveBeenCalledWith(
+        "Sheet exported successfully",
+        expect.objectContaining({
+          description: expect.stringContaining("Adobe Acrobat Reader"),
+        })
+      );
     });
 
     vi.restoreAllMocks();
@@ -136,8 +141,6 @@ describe("ActionConfigModal", () => {
       </ApiClientProvider>
     );
 
-    expect(
-      screen.queryByText("Configure Calculation Action")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

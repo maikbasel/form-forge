@@ -1,25 +1,25 @@
 {
-  "configureCalculationAction": "Berechnungsaktion konfigurieren",
+  "configureCalculationAction": "Berechnung konfigurieren",
   "mapSelectedFieldsToRoles": "Ausgewählte Felder ihren Rollen in der Berechnung zuordnen",
-  "actionType": "Aktionstyp",
+  "actionType": "Berechnungstyp",
   "fieldRoles": "Feldrollen",
   "dropHere": "Hier ablegen",
   "dragFieldHere": "Feld hierher ziehen",
-  "orSelectFromList": "Oder aus Liste auswählen...",
+  "orSelectFromList": "Oder aus Liste auswählen…",
   "readyToAttach": "Bereit zum Anhängen",
   "assignAllRequiredFields": "Alle erforderlichen Felder zuweisen",
-  "attaching": "Wird angehängt...",
+  "attaching": "Wird angehängt…",
   "attachCalculation": "Berechnung anhängen",
-  "selectActionToBegin": "Wählen Sie einen Aktionstyp aus, um zu beginnen",
+  "selectActionToBegin": "Wählen Sie einen Berechnungstyp aus, um zu beginnen",
   "chooseFromOptions": "Wählen Sie aus den Optionen links",
-  "attachedActions": "Angehängte Aktionen",
-  "calculationsConfigured_one": "{{count}} Berechnung konfiguriert",
-  "calculationsConfigured_other": "{{count}} Berechnungen konfiguriert",
-  "noActionsConfiguredYet": "Noch keine Aktionen konfiguriert",
-  "selectFieldsAndConfigure": "Felder auswählen und Aktion konfigurieren",
+  "attachedActions": "Angehängte Berechnungen",
+  "calculationsConfigured_one": "{{count}} Berechnung angehängt",
+  "calculationsConfigured_other": "{{count}} Berechnungen angehängt",
+  "noActionsConfiguredYet": "Noch keine Berechnungen angehängt",
+  "selectFieldsAndConfigure": "Wählen Sie Felder auf dem Blatt aus und klicken Sie dann auf „Berechnung konfigurieren“.",
   "removeFieldFromRole": "{{field}} aus {{role}} entfernen",
   "unsupportedCalculation": "Nicht unterstützte Berechnung",
-  "unsupportedCalculationDescription": "Diese Version von Form Forge kennt diesen Berechnungstyp nicht. In der exportierten PDF funktioniert er trotzdem.",
+  "unsupportedCalculationDescription": "Diese Version von Form Forge kennt diesen Berechnungstyp nicht. Im exportierten PDF funktioniert die Berechnung trotzdem.",
   "failedToLoadCalculationTypes": "Berechnungstypen konnten nicht geladen werden: {{message}}",
   "failedToLoadAttachedCalculations": "Angehängte Berechnungen konnten nicht geladen werden: {{message}}",
   "ability-modifier": {
@@ -28,7 +28,7 @@
     "roles": {
       "abilityScoreFieldName": {
         "label": "Fähigkeitswert",
-        "hint": "Der Fähigkeits-Grundwert (z.B. STR, DEX)"
+        "hint": "Der Fähigkeitswert (z. B. Stärke)"
       },
       "abilityModifierFieldName": {
         "label": "Zielmodifikator",
@@ -42,7 +42,7 @@
     "roles": {
       "abilityModifierFieldName": {
         "label": "Fähigkeitsmodifikator",
-        "hint": "Der relevante Fähigkeitsmodifikator (z.B. WIS_mod für Wahrnehmung)"
+        "hint": "Der Modifikator der zugehörigen Fähigkeit (z. B. Weisheit für Wahrnehmung)"
       },
       "proficiencyBonusFieldName": {
         "label": "Übungsbonus",
@@ -89,7 +89,7 @@
     }
   },
   "settingsNative": {
-    "windowTitle": "Einstellungen \u2013 Form Forge",
+    "windowTitle": "Einstellungen – Form Forge",
     "heading": "Einstellungen",
     "description": "Form Forge Einstellungen verwalten.",
     "appearance": "Erscheinungsbild",
@@ -98,7 +98,7 @@
     "exportDescription": "Standardspeicherort beim Speichern exportierter PDFs.",
     "currentDirectory": "Aktuelles Verzeichnis:",
     "defaultAppDataFolder": "Standard (App-Datenordner)",
-    "change": "Ändern\u2026",
+    "change": "Ändern…",
     "resetToDefault": "Auf Standard zurücksetzen",
     "data": "Daten",
     "dataDescription": "Speicherort der App-Datenbank und gespeicherten Blätter.",
