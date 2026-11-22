@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.0](https://github.com/maikbasel/form-forge/compare/v0.3.0...v0.4.0) (2026-11-22)
+
+
+### Features
+
+* **ui:** build calculations by clicking fields on the sheet ([689b80c](https://github.com/maikbasel/form-forge/commit/689b80c7fe2df66a4c67934184013330b9a6137d))
+
+
+### Bug Fixes
+
+* **deps:** remediate actix-http, url, glob and minimatch advisories ([#262](https://github.com/maikbasel/form-forge/issues/262)) ([c34c783](https://github.com/maikbasel/form-forge/commit/c34c7830a3569f438e782a6bf771447f0a86272a))
+* **ui:** fit the sheet editor to the window and fix dark-mode hover ([689b80c](https://github.com/maikbasel/form-forge/commit/689b80c7fe2df66a4c67934184013330b9a6137d))
+* **ui:** harden the sheet editor's dialog, error and loading states ([689b80c](https://github.com/maikbasel/form-forge/commit/689b80c7fe2df66a4c67934184013330b9a6137d))
+* **ui:** load Geist instead of falling back to the browser serif ([689b80c](https://github.com/maikbasel/form-forge/commit/689b80c7fe2df66a4c67934184013330b9a6137d))
+* **ui:** polish the editor's loading state, menus and PDF sharpness ([689b80c](https://github.com/maikbasel/form-forge/commit/689b80c7fe2df66a4c67934184013330b9a6137d))
+* **ui:** use "calculation" consistently and explain where calculations run ([689b80c](https://github.com/maikbasel/form-forge/commit/689b80c7fe2df66a4c67934184013330b9a6137d))
+* **web:** render the browser's language from the first paint ([689b80c](https://github.com/maikbasel/form-forge/commit/689b80c7fe2df66a4c67934184013330b9a6137d))
+
 ## [0.3.0](https://github.com/maikbasel/form-forge/compare/v0.2.1...v0.3.0) (2026-10-30)
 
 
