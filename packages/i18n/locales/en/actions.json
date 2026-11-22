@@ -17,7 +17,11 @@
   "calculationsConfigured_other": "{{count}} calculations configured",
   "noActionsConfiguredYet": "No actions configured yet",
   "selectFieldsAndConfigure": "Select fields and configure an action",
-  "unknownAction": "Unknown Action",
+  "removeFieldFromRole": "Remove {{field}} from {{role}}",
+  "unsupportedCalculation": "Unsupported calculation",
+  "unsupportedCalculationDescription": "This version of Form Forge doesn't recognize this calculation type. It still runs in the exported PDF.",
+  "failedToLoadCalculationTypes": "Couldn't load the calculation types: {{message}}",
+  "failedToLoadAttachedCalculations": "Couldn't load the attached calculations: {{message}}",
   "ability-modifier": {
     "name": "Ability Modifier",
     "description": "Calculate ability modifier from ability score",

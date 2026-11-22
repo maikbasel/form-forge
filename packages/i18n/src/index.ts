@@ -18,5 +18,14 @@ export function initI18n(lng?: string) {
     },
   });
 
+  // Keep <html lang> in sync so screen readers and hyphenation use the UI language.
+  if (typeof document !== "undefined") {
+    const syncDocumentLanguage = (language: string) => {
+      document.documentElement.lang = language.split("-")[0] ?? "en";
+    };
+    syncDocumentLanguage(i18next.language ?? lng ?? "en");
+    i18next.on("languageChanged", syncDocumentLanguage);
+  }
+
   return i18next;
 }

@@ -1,22 +1,26 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useFieldSnippet } from "../context/field-snippet-context.tsx";
 
 interface FieldSnippetProps {
   fieldName: string;
 }
 
+type PreviewError = "unavailable" | "failed";
+
 export function FieldSnippet({ fieldName }: Readonly<FieldSnippetProps>) {
+  const { t } = useTranslation("sheets");
   const { fieldPositions, pdfDocument } = useFieldSnippet();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<PreviewError | null>(null);
 
   const field = fieldPositions.find((f) => f.name === fieldName);
 
   useEffect(() => {
     if (!(field && pdfDocument && canvasRef.current)) {
       if (!field) {
-        setError("Field not found");
+        setError("unavailable");
       }
       return;
     }
@@ -38,7 +42,7 @@ export function FieldSnippet({ fieldName }: Readonly<FieldSnippetProps>) {
         const padding = 140; // pixels of context around the field
 
         if (!field.rect) {
-          setError("Field position unavailable");
+          setError("unavailable");
           setIsLoading(false);
           return;
         }
@@ -62,7 +66,8 @@ export function FieldSnippet({ fieldName }: Readonly<FieldSnippetProps>) {
 
         const context = canvas.getContext("2d");
         if (!context) {
-          setError("Canvas context not available");
+          setError("failed");
+          setIsLoading(false);
           return;
         }
 
@@ -73,7 +78,8 @@ export function FieldSnippet({ fieldName }: Readonly<FieldSnippetProps>) {
         const tempContext = tempCanvas.getContext("2d");
 
         if (!tempContext) {
-          setError("Temp canvas context not available");
+          setError("failed");
+          setIsLoading(false);
           return;
         }
 
@@ -102,10 +108,8 @@ export function FieldSnippet({ fieldName }: Readonly<FieldSnippetProps>) {
         context.restore();
 
         setIsLoading(false);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to render preview"
-        );
+      } catch {
+        setError("failed");
         setIsLoading(false);
       }
     };
@@ -116,14 +120,18 @@ export function FieldSnippet({ fieldName }: Readonly<FieldSnippetProps>) {
   if (!field) {
     return (
       <div className="p-4 text-center text-muted-foreground text-sm">
-        Field preview not available
+        {t("viewer.previewUnavailable")}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 text-center text-destructive text-sm">{error}</div>
+      <div className="p-4 text-center text-destructive text-sm" role="alert">
+        {error === "unavailable"
+          ? t("viewer.previewUnavailable")
+          : t("viewer.previewFailed")}
+      </div>
     );
   }
 

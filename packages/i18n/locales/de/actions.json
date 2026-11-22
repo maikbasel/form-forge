@@ -17,7 +17,11 @@
   "calculationsConfigured_other": "{{count}} Berechnungen konfiguriert",
   "noActionsConfiguredYet": "Noch keine Aktionen konfiguriert",
   "selectFieldsAndConfigure": "Felder auswählen und Aktion konfigurieren",
-  "unknownAction": "Unbekannte Aktion",
+  "removeFieldFromRole": "{{field}} aus {{role}} entfernen",
+  "unsupportedCalculation": "Nicht unterstützte Berechnung",
+  "unsupportedCalculationDescription": "Diese Version von Form Forge kennt diesen Berechnungstyp nicht. In der exportierten PDF funktioniert er trotzdem.",
+  "failedToLoadCalculationTypes": "Berechnungstypen konnten nicht geladen werden: {{message}}",
+  "failedToLoadAttachedCalculations": "Angehängte Berechnungen konnten nicht geladen werden: {{message}}",
   "ability-modifier": {
     "name": "Fähigkeitsmodifikator",
     "description": "Fähigkeitsmodifikator aus Fähigkeitswert berechnen",

@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Document, Page, type pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -20,6 +21,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/card.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@repo/ui/components/dialog.tsx";
 import { FieldSnippet } from "@repo/ui/components/field-snippet.tsx";
 import {
   HoverCard,
@@ -35,6 +43,7 @@ import {
   SelectValue,
 } from "@repo/ui/components/select.tsx";
 import { Separator } from "@repo/ui/components/separator.tsx";
+import { Skeleton } from "@repo/ui/components/skeleton.tsx";
 import { Spinner } from "@repo/ui/components/spinner.tsx";
 import { useApiClient } from "@repo/ui/context/api-client-context.tsx";
 import {
@@ -53,6 +62,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileDown,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -292,6 +302,10 @@ function FieldRoleDropZone({
         </div>
         {assignedField && (
           <Button
+            aria-label={t("removeFieldFromRole", {
+              field: assignedField,
+              role: role.label,
+            })}
             className="h-8 w-8"
             onClick={onRemove}
             size="icon"
@@ -483,23 +497,26 @@ function ActionConfigModal({
     setActiveId(null);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <Card className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden">
-        {/* Header */}
-        <CardHeader className="border-b">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>{t("configureCalculationAction")}</CardTitle>
-              <CardDescription>{t("mapSelectedFieldsToRoles")}</CardDescription>
-            </div>
-            <Button onClick={onClose} size="icon" variant="ghost">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
+  const handleOpenChange = (open: boolean) => {
+    // Closing mid-request would drop the result of the attach call.
+    if (!(open || isAttaching)) {
+      onClose();
+    }
+  };
 
-        <div className="flex flex-1 overflow-hidden">
+  return (
+    <Dialog onOpenChange={handleOpenChange} open>
+      <DialogContent
+        className="flex max-h-[90vh] max-w-5xl flex-col gap-0 overflow-hidden p-0"
+        // A stray click outside must not throw away a half-built mapping.
+        onInteractOutside={(event) => event.preventDefault()}
+      >
+        <DialogHeader className="border-b p-6 pr-12 text-left">
+          <DialogTitle>{t("configureCalculationAction")}</DialogTitle>
+          <DialogDescription>{t("mapSelectedFieldsToRoles")}</DialogDescription>
+        </DialogHeader>
+
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           {/* Action Selection Sidebar */}
           <div className="w-80 border-r bg-muted/30">
             <ScrollArea className="h-full p-6">
@@ -573,14 +590,17 @@ function ActionConfigModal({
                     </div>
                   </div>
 
-                  {/* Drag Overlay */}
-                  <DragOverlay>
-                    {activeId ? (
-                      <div className="cursor-move rounded-md border-2 border-primary bg-card px-3 py-2 font-mono text-sm shadow-lg">
-                        {activeId}
-                      </div>
-                    ) : null}
-                  </DragOverlay>
+                  {/* Portaled: the dialog's centering transform would offset a fixed overlay */}
+                  {createPortal(
+                    <DragOverlay>
+                      {activeId ? (
+                        <div className="cursor-move rounded-md border-2 border-primary bg-card px-3 py-2 font-mono text-sm shadow-lg">
+                          {activeId}
+                        </div>
+                      ) : null}
+                    </DragOverlay>,
+                    document.body
+                  )}
                 </DndContext>
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -621,7 +641,40 @@ function ActionConfigModal({
             </Button>
           </div>
         </div>
-      </Card>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface SheetErrorStateProps {
+  description: string;
+  onRetry?: () => void;
+  title: string;
+}
+
+function SheetErrorState({
+  title,
+  description,
+  onRetry,
+}: Readonly<SheetErrorStateProps>) {
+  const { t } = useTranslation("common");
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center p-6">
+      <div className="max-w-md text-center" role="alert">
+        <AlertCircle
+          aria-hidden="true"
+          className="mx-auto mb-4 h-10 w-10 text-destructive"
+        />
+        <h2 className="font-semibold text-lg">{title}</h2>
+        <p className="mt-2 text-muted-foreground text-sm">{description}</p>
+        {onRetry && (
+          <Button className="mt-6" onClick={onRetry} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            {t("tryAgain")}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -720,11 +773,36 @@ export default function SheetViewer({
   const { t: tActions } = useTranslation("actions");
   const apiClient = useApiClient();
   const [actionTypes, setActionTypes] = useState<ActionTypeMetadata[]>([]);
+  const [actionTypesStatus, setActionTypesStatus] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
   const actions = useActions(actionTypes);
 
   useEffect(() => {
-    apiClient.getActionTypes().then(setActionTypes).catch(console.error);
-  }, [apiClient]);
+    let cancelled = false;
+    apiClient.getActionTypes().then(
+      (types) => {
+        if (!cancelled) {
+          setActionTypes(types);
+          setActionTypesStatus("ready");
+        }
+      },
+      (err) => {
+        if (!cancelled) {
+          setActionTypesStatus("error");
+          toast.error(
+            tActions("failedToLoadCalculationTypes", {
+              message: getErrorMessage(err, t("common:unknownError")),
+            })
+          );
+        }
+      }
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiClient, t, tActions]);
   const scale = 1;
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -808,7 +886,7 @@ export default function SheetViewer({
   // Fetch sheet fields data
   const cacheKey = sheetId ? getSheetFieldsCacheKey(sheetId) : null;
 
-  const { data, error } = useSWR(
+  const { data, error, mutate } = useSWR(
     cacheKey,
     () => (sheetId ? apiClient.getSheetFields(sheetId) : Promise.resolve([])),
     {
@@ -852,7 +930,11 @@ export default function SheetViewer({
       },
       (err) => {
         if (!cancelled) {
-          console.error("Failed to load attached actions:", err);
+          toast.error(
+            tActions("failedToLoadAttachedCalculations", {
+              message: getErrorMessage(err, t("common:unknownError")),
+            })
+          );
         }
       }
     );
@@ -860,7 +942,7 @@ export default function SheetViewer({
     return () => {
       cancelled = true;
     };
-  }, [sheetId, apiClient]);
+  }, [sheetId, apiClient, t, tActions]);
 
   // Fetch PDF URL (via strategy or default pre-signed URL fetch)
   useEffect(() => {
@@ -894,8 +976,8 @@ export default function SheetViewer({
       } catch (error) {
         const message =
           error instanceof Error ? error.message : t("viewer.failedToLoadPdf");
+        // Shown inline in the viewer; a toast would report the same failure twice.
         setPdfUrlError(message);
-        toast.error(message);
       } finally {
         setIsPdfUrlLoading(false);
       }
@@ -973,8 +1055,11 @@ export default function SheetViewer({
 
       if (fieldElement) {
         // Use scrollIntoView for smooth, browser-native scrolling
+        const prefersReducedMotion = globalThis.matchMedia?.(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
         fieldElement.scrollIntoView({
-          behavior: "smooth",
+          behavior: prefersReducedMotion ? "auto" : "smooth",
           block: "center",
           inline: "center",
         });
@@ -1012,17 +1097,23 @@ export default function SheetViewer({
   };
 
   if (error) {
-    // FIXME: Handle error better
     if (error.statusCode === 404) {
-      return <div>{t("viewer.sheetNotFound")}</div>;
+      return (
+        <SheetErrorState
+          description={t("viewer.sheetNotFoundDescription")}
+          title={t("viewer.sheetNotFound")}
+        />
+      );
     }
     return (
-      <div>
-        {t("viewer.errorWithCode", {
-          code: error.statusCode,
-          message: error.message,
+      <SheetErrorState
+        description={t("viewer.errorWithCode", {
+          code: error.statusCode ?? "?",
+          message: getErrorMessage(error, t("common:unknownError")),
         })}
-      </div>
+        onRetry={() => mutate()}
+        title={t("viewer.couldNotLoadSheet")}
+      />
     );
   }
 
@@ -1153,7 +1244,7 @@ export default function SheetViewer({
                       className={cn(
                         "inline-flex items-center rounded-md border",
                         "border-transparent bg-secondary text-secondary-foreground",
-                        "transition-all duration-200",
+                        "transition-all duration-200 motion-reduce:transform-none motion-reduce:transition-none",
                         isHovered &&
                           "scale-105 transform shadow-lg ring-2 ring-blue-500",
                         isFlashing && "animate-flash"
@@ -1305,25 +1396,43 @@ export default function SheetViewer({
                     (a) => a.id === attachedAction.id
                   );
 
+                  const cardKey = `${attachedAction.id.toLowerCase()}-${attachedAction.targetField}`;
+
+                  if (!action && actionTypesStatus === "loading") {
+                    return (
+                      <Skeleton
+                        aria-busy="true"
+                        className="h-24 w-full"
+                        key={cardKey}
+                      />
+                    );
+                  }
+
                   if (!action) {
-                    // TODO: Improve error handling
                     return (
                       <Card
-                        className="border-destructive bg-muted/50"
-                        key={`${attachedAction.id.toLowerCase()}-${attachedAction.targetField}`}
+                        className="border-destructive/50 bg-muted/50"
+                        key={cardKey}
                       >
-                        <CardHeader className="p-4 pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-start gap-2">
-                              <AlertCircle className="mt-0.5 h-4 w-4 text-destructive" />
-                              <div>
-                                <div className="font-semibold text-destructive text-sm">
-                                  {tActions("unknownAction")}
-                                </div>
-                                <div className="mt-0.5 text-muted-foreground text-xs">
-                                  {attachedAction.id}
-                                </div>
+                        <CardHeader className="p-4">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle
+                              aria-hidden="true"
+                              className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
+                            />
+                            <div className="min-w-0 space-y-1">
+                              <div className="font-semibold text-sm">
+                                {tActions("unsupportedCalculation")}
                               </div>
+                              <p className="text-muted-foreground text-xs">
+                                {tActions("unsupportedCalculationDescription")}
+                              </p>
+                              <Badge
+                                className="font-mono text-xs"
+                                variant="outline"
+                              >
+                                {attachedAction.targetField}
+                              </Badge>
                             </div>
                           </div>
                         </CardHeader>
@@ -1338,7 +1447,7 @@ export default function SheetViewer({
                         hoveredActionIndex === index &&
                           "border-blue-500 bg-blue-500/10"
                       )}
-                      key={`${attachedAction.id.toLowerCase()}-${attachedAction.targetField}`}
+                      key={cardKey}
                       onMouseEnter={() => setHoveredActionIndex(index)}
                       onMouseLeave={() => setHoveredActionIndex(null)}
                     >
