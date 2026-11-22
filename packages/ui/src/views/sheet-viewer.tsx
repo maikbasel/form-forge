@@ -516,9 +516,9 @@ function ActionConfigModal({
           <DialogDescription>{t("mapSelectedFieldsToRoles")}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
           {/* Action Selection Sidebar */}
-          <div className="w-80 border-r bg-muted/30">
+          <div className="shrink-0 border-b bg-muted/30 md:w-80 md:border-r md:border-b-0">
             <ScrollArea className="h-full p-6">
               <h3 className="mb-4 font-semibold text-sm">{t("actionType")}</h3>
               <div className="space-y-3">
@@ -527,7 +527,7 @@ function ActionConfigModal({
                     className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
                       selectedAction === action.id
                         ? "border-primary bg-primary/5 shadow-sm"
-                        : "border-border bg-card hover:border-primary/50 hover:bg-accent"
+                        : "border-border bg-card hover:border-primary/50 hover:bg-muted"
                     }`}
                     key={action.id}
                     onClick={() => {
@@ -549,7 +549,7 @@ function ActionConfigModal({
           </div>
 
           {/* Mapping Area */}
-          <div className="flex-1" ref={scrollAreaRef}>
+          <div className="min-h-0 flex-1" ref={scrollAreaRef}>
             <ScrollArea className="h-full p-6">
               {currentAction ? (
                 <DndContext
@@ -616,7 +616,7 @@ function ActionConfigModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t bg-muted/30 p-6">
+        <div className="flex flex-col gap-4 border-t bg-muted/30 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm">
             {currentAction &&
               (isValid() ? (
@@ -1190,12 +1190,12 @@ export default function SheetViewer({
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex flex-col bg-background lg:h-full lg:min-h-0 lg:flex-row">
       {/* PDF viewer with overlays */}
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex min-h-0 flex-1 flex-col p-6">
         <Card className="flex flex-1 flex-col overflow-hidden">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-xl">
                   {t("viewer.characterSheetEditor")}
@@ -1204,7 +1204,7 @@ export default function SheetViewer({
                   {t("viewer.selectFieldsToConfigureCalculations")}
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   disabled={isExporting || !sheetId}
                   onClick={handleExportSheet}
@@ -1361,7 +1361,7 @@ export default function SheetViewer({
       </div>
 
       {/* Sidebar - Attached Actions */}
-      <div className="w-96 p-6 pl-0">
+      <div className="h-72 shrink-0 p-6 pt-0 lg:h-auto lg:w-96 lg:pt-6 lg:pl-0">
         <Card className="flex h-full flex-col">
           <CardHeader>
             <CardTitle className="text-lg">

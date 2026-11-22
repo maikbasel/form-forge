@@ -45,7 +45,10 @@ export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
   const fileUrl = `/api/sheets/${sheetId}`;
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    // From lg up, fill the window below the sticky header (h-14 + 1px border)
+    // and the layout's py-8 so the editor scrolls inside itself and its page
+    // controls stay on screen. Narrower windows stack and scroll the page.
+    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-3.5rem-1px-4rem)] lg:min-h-[32rem]">
       <div className="flex items-center gap-4">
         <Button asChild size="sm" variant="outline">
           <Link href="/">
@@ -56,7 +59,7 @@ export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
       </div>
 
       <Suspense fallback={<SheetViewerSkeleton />}>
-        <div className="flex-1">
+        <div className="min-h-0 flex-1">
           <SheetViewer file={fileUrl} sheetId={sheetId} />
         </div>
       </Suspense>
