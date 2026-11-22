@@ -5,6 +5,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
+    "./languages": "./src/languages.ts",
     "./locales/*": "./locales/*"
   },
   "dependencies": {

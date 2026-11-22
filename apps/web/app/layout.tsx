@@ -1,5 +1,7 @@
+import { pickLanguage } from "@repo/i18n/languages";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "@repo/ui/globals.css";
 import { Toaster } from "@repo/ui/components/sonner.tsx";
 import type React from "react";
@@ -26,15 +28,17 @@ export const metadata: Metadata = {
   description: "Add automatic calculations to fillable PDF character sheets",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const lng = pickLanguage((await headers()).get("accept-language"));
+
   return (
     <html
       className={`${fontSans.variable} ${fontMono.variable}`}
-      lang="en"
+      lang={lng}
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
@@ -44,7 +48,7 @@ export default function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <I18nProviderWrapper>
+          <I18nProviderWrapper lng={lng}>
             <ApiClientProviderWrapper>
               <SheetProviderWrapper>
                 <FieldSnippetProviderWrapper>
