@@ -18,6 +18,12 @@ ignore = [
     # project uses Postgres only, so rsa is never compiled into any target.
     "RUSTSEC-2023-0071",
 
+    # libsqlite3-sys bundles SQLite < 3.54.0 (CVE-2026-119375). Same as rsa:
+    # only a Cargo.lock entry via sqlx 0.8's weak `sqlx-sqlite?` feature;
+    # `cargo tree -i libsqlite3-sys --all-features --target all` is empty.
+    # Goes away with sqlx 0.9.
+    "RUSTSEC-2026-0459",
+
     # --- Unmaintained / unsound transitive crates (no replacement available) ---
 
     # Tauri 2.x Linux WebView backend (webkit2gtk) pulls the unmaintained gtk-rs
@@ -45,4 +51,12 @@ ignore = [
     "RUSTSEC-2026-0370",
     "RUSTSEC-2026-0371",
     "RUSTSEC-2026-0372",
+
+    # chrono is unmaintained. lopdf depends on it, so it stays until lopdf
+    # drops it, even if sheets_core moves to jiff/time.
+    "RUSTSEC-2026-0543",
+
+    # astral-tokio-tar is unmaintained. Dev-only, via testcontainers (0.28
+    # still depends on it). Revisit when testcontainers switches tar crates.
+    "RUSTSEC-2026-0440",
 ]
