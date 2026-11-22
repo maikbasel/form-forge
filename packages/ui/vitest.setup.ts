@@ -44,3 +44,16 @@ vi.mock("sonner", () => ({
   toast: toastFn,
   Toaster: () => null,
 }));
+
+// jsdom has no ResizeObserver; Radix ScrollArea needs one.
+globalThis.ResizeObserver ??= class {
+  observe() {
+    // no layout in jsdom
+  }
+  unobserve() {
+    // no layout in jsdom
+  }
+  disconnect() {
+    // no layout in jsdom
+  }
+};

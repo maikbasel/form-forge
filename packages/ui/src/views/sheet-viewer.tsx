@@ -1,18 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Document, Page, type pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import {
-  DndContext,
-  type DragEndEvent,
-  DragOverlay,
-  type DragStartEvent,
-  useDraggable,
-  useDroppable,
-} from "@dnd-kit/core";
-import { Toggle } from "@radix-ui/react-toggle";
-import { Badge } from "@repo/ui/components/badge.tsx";
 import { Button } from "@repo/ui/components/button.tsx";
 import {
   Card,
@@ -21,35 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/card.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@repo/ui/components/dialog.tsx";
-import { FieldSnippet } from "@repo/ui/components/field-snippet.tsx";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@repo/ui/components/hover-card.tsx";
-import { ScrollArea } from "@repo/ui/components/scroll-area.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/ui/components/select.tsx";
 import { Separator } from "@repo/ui/components/separator.tsx";
-import { Skeleton } from "@repo/ui/components/skeleton.tsx";
 import { Spinner } from "@repo/ui/components/spinner.tsx";
 import { useApiClient } from "@repo/ui/context/api-client-context.tsx";
 import {
   type FieldPosition,
   useFieldSnippet,
 } from "@repo/ui/context/field-snippet-context.tsx";
+import type { AttachedAction } from "@repo/ui/lib/api.ts";
 import { getSheetFieldsCacheKey } from "@repo/ui/lib/cache.ts";
 import { cn, getErrorMessage } from "@repo/ui/lib/utils.ts";
 import type {
@@ -57,13 +25,16 @@ import type {
   AttachActionRequest,
 } from "@repo/ui/types/action.ts";
 import {
+  CalculationPanel,
+  useActions,
+  useCalculationBuilder,
+} from "@repo/ui/views/calculation-panel.tsx";
+import {
   AlertCircle,
-  Check,
   ChevronLeft,
   ChevronRight,
   FileDown,
   RefreshCw,
-  X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -120,537 +91,6 @@ async function exportWithDownload(
   });
 }
 
-interface FieldRole {
-  hint: string;
-  isTarget?: boolean;
-  key: string;
-  label: string;
-  required: boolean;
-}
-
-interface ActionConfig {
-  description: string;
-  endpoint: string;
-  id: string;
-  name: string;
-  roles: FieldRole[];
-}
-
-import type { AttachedAction } from "@repo/ui/lib/api.ts";
-
-type FieldMapping = Record<string, string>;
-
-function useActions(actionTypes: ActionTypeMetadata[]): ActionConfig[] {
-  const { t } = useTranslation("actions");
-
-  return useMemo(
-    () =>
-      actionTypes.map((meta) => ({
-        id: meta.id,
-        name: t(`${meta.id}.name`, { defaultValue: meta.id }),
-        description: t(`${meta.id}.description`, { defaultValue: "" }),
-        endpoint: "actions",
-        roles: meta.roles.map((role) => ({
-          key: role.key,
-          label: t(`${meta.id}.roles.${role.key}.label`, {
-            defaultValue: role.key,
-          }),
-          required: role.required,
-          hint: t(`${meta.id}.roles.${role.key}.hint`, { defaultValue: "" }),
-          isTarget: role.isTarget,
-        })),
-      })),
-    [actionTypes, t]
-  );
-}
-
-function DraggableField({ field }: Readonly<{ field: string }>) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: field,
-    });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
-
-  return (
-    <HoverCard open={!isDragging && undefined} openDelay={700}>
-      <HoverCardTrigger asChild>
-        <div
-          ref={setNodeRef}
-          style={style}
-          {...listeners}
-          {...attributes}
-          className={`cursor-move rounded-md border-2 border-border bg-card px-3 py-2 font-mono text-sm shadow-sm transition-all hover:border-primary/50 hover:shadow-md ${
-            isDragging ? "opacity-50" : ""
-          }`}
-        >
-          {field}
-        </div>
-      </HoverCardTrigger>
-      <HoverCardContent align="start" className="w-80" side="right">
-        <FieldSnippet fieldName={field} />
-      </HoverCardContent>
-    </HoverCard>
-  );
-}
-
-function AvailableFieldsPool({ fields }: Readonly<{ fields: string[] }>) {
-  const { t } = useTranslation("sheets");
-  const { setNodeRef, isOver } = useDroppable({
-    id: "available-fields",
-  });
-
-  return (
-    <div>
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold text-sm">{t("viewer.availableFields")}</h3>
-        <Badge variant="secondary">
-          {t("viewer.fieldsCount", { count: fields.length })}
-        </Badge>
-      </div>
-      <div
-        className={`flex min-h-[80px] flex-wrap gap-2 rounded-lg border-2 border-dashed p-4 transition-colors ${
-          isOver
-            ? "border-primary bg-primary/5"
-            : "border-muted-foreground/25 bg-muted/30"
-        }`}
-        ref={setNodeRef}
-      >
-        {fields.length === 0 ? (
-          <span className="text-muted-foreground text-sm italic">
-            {t("viewer.allFieldsAssigned")}
-          </span>
-        ) : (
-          fields.map((field) => <DraggableField field={field} key={field} />)
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Role Drop Zone Component
-interface FieldRoleDropZoneProps {
-  assignedField: string | undefined;
-  isDragging: boolean;
-  onRemove: () => void;
-  onSelectField: (field: string) => void;
-  role: FieldRole;
-  unassignedFields: string[];
-}
-
-function FieldRoleDropZone({
-  role,
-  assignedField,
-  onRemove,
-  onSelectField,
-  unassignedFields,
-  isDragging,
-}: Readonly<FieldRoleDropZoneProps>) {
-  const { t } = useTranslation("actions");
-  const { setNodeRef, isOver } = useDroppable({
-    id: `role-${role.key}`,
-  });
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef: setDragRef,
-    transform,
-  } = useDraggable({
-    id: assignedField || `empty-${role.key}`,
-    disabled: !assignedField,
-  });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
-
-  return (
-    <div
-      className={cn(
-        "rounded-lg border-2 p-4 transition-all",
-
-        assignedField && "border-green-500 bg-green-500/5",
-
-        !assignedField &&
-          role.required &&
-          "border-primary border-dashed bg-primary/5",
-
-        !(assignedField || role.required) &&
-          "border-muted-foreground/25 border-dashed bg-muted/20",
-
-        isOver && !assignedField && "ring-2 ring-primary/50"
-      )}
-      ref={setNodeRef}
-    >
-      <div className="mb-3 flex items-start justify-between">
-        <div>
-          <div className="mb-1 flex items-center gap-2">
-            <span className="font-semibold text-sm">{role.label}</span>
-            {role.required ? (
-              <Badge className="text-xs" variant="default">
-                {t("common:required")}
-              </Badge>
-            ) : (
-              <Badge className="text-xs" variant="secondary">
-                {t("common:optional")}
-              </Badge>
-            )}
-          </div>
-          <p className="text-muted-foreground text-xs">{role.hint}</p>
-        </div>
-        {assignedField && (
-          <Button
-            aria-label={t("removeFieldFromRole", {
-              field: assignedField,
-              role: role.label,
-            })}
-            className="h-8 w-8"
-            onClick={onRemove}
-            size="icon"
-            variant="ghost"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      {assignedField ? (
-        <div
-          ref={setDragRef}
-          style={style}
-          {...listeners}
-          {...attributes}
-          className="flex cursor-move items-center gap-2 rounded-md border-2 border-green-500 bg-card px-3 py-2.5"
-        >
-          <Check className="h-4 w-4 text-green-600" />
-          <span className="font-medium font-mono text-sm">{assignedField}</span>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="rounded-md border-2 border-dashed p-3 text-center text-muted-foreground text-sm italic">
-            {isDragging ? t("dropHere") : t("dragFieldHere")}
-          </div>
-
-          {/* Dropdown as alternative */}
-          {unassignedFields.length > 0 && (
-            <Select onValueChange={onSelectField} value="">
-              <SelectTrigger
-                data-testid={`role-select-trigger-${role.label.toLowerCase().replaceAll(/\s+/g, "-")}`}
-              >
-                <SelectValue placeholder={t("orSelectFromList")} />
-              </SelectTrigger>
-              <SelectContent>
-                {unassignedFields.map((field) => (
-                  <SelectItem key={field} value={field}>
-                    {field}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface ActionConfigModalProps {
-  actions: ActionConfig[];
-  onAttach: (action: AttachedAction) => Promise<void>;
-  onClose: () => void;
-  selectedFields: string[];
-}
-
-function ActionConfigModal({
-  actions,
-  selectedFields,
-  onClose,
-  onAttach,
-}: Readonly<ActionConfigModalProps>) {
-  const { t } = useTranslation("actions");
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
-  const [fieldMapping, setFieldMapping] = useState<FieldMapping>({});
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [isAttaching, setIsAttaching] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  const currentAction = actions.find((a) => a.id === selectedAction);
-
-  const assignField = (roleKey: string, fieldName: string) => {
-    // Capture scroll position before state change
-    const viewport = scrollAreaRef.current?.querySelector(
-      "[data-radix-scroll-area-viewport]"
-    ) as HTMLElement | null;
-    const scrollTop = viewport?.scrollTop ?? 0;
-
-    setFieldMapping((prev) => ({
-      ...prev,
-      [roleKey]: fieldName,
-    }));
-
-    // Restore scroll position after React re-renders
-    requestAnimationFrame(() => {
-      if (viewport) {
-        viewport.scrollTop = scrollTop;
-      }
-    });
-  };
-
-  const removeAssignment = (roleKey: string) => {
-    setFieldMapping((prev) => {
-      const next = { ...prev };
-      delete next[roleKey];
-      return next;
-    });
-  };
-
-  const unassignedFields = useMemo(() => {
-    const assigned = new Set(Object.values(fieldMapping));
-    return selectedFields.filter((f) => !assigned.has(f));
-  }, [fieldMapping, selectedFields]);
-
-  const sortedRoles = useMemo(() => {
-    if (!currentAction) {
-      return [];
-    }
-    return [...currentAction.roles].sort((a, b) => {
-      const aHasField = !!fieldMapping[a.key];
-      const bHasField = !!fieldMapping[b.key];
-      if (aHasField !== bHasField) {
-        return aHasField ? 1 : -1;
-      }
-      return 0;
-    });
-  }, [currentAction, fieldMapping]);
-
-  const isValid = () => {
-    if (!currentAction) {
-      return false;
-    }
-    const requiredRoles = currentAction.roles.filter((r) => r.required);
-    return requiredRoles.every((role) => fieldMapping[role.key]);
-  };
-
-  const handleAttach = async () => {
-    if (!currentAction) {
-      return;
-    }
-
-    if (!isValid()) {
-      return;
-    }
-
-    const targetRole = currentAction.roles.find((r) => r.isTarget);
-    const targetField = targetRole ? (fieldMapping[targetRole.key] ?? "") : "";
-
-    setIsAttaching(true);
-    try {
-      await onAttach({
-        id: currentAction.id,
-        name: currentAction.name,
-        endpoint: currentAction.endpoint,
-        targetField,
-        mapping: fieldMapping,
-      });
-    } finally {
-      setIsAttaching(false);
-    }
-  };
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) {
-      return;
-    }
-
-    const fieldName = active.id as string;
-    const targetId = over.id as string;
-
-    // Dropping back to available pool
-    if (targetId === "available-fields") {
-      // Find which role has this field and remove it
-      const roleKey = Object.keys(fieldMapping).find(
-        (key) => fieldMapping[key] === fieldName
-      );
-      if (roleKey) {
-        removeAssignment(roleKey);
-      }
-      return;
-    }
-
-    // Dropping onto a role
-    if (targetId.startsWith("role-")) {
-      const roleKey = targetId.replace("role-", "");
-      assignField(roleKey, fieldName);
-    }
-  };
-
-  const handleDragCancel = () => {
-    setActiveId(null);
-  };
-
-  const handleOpenChange = (open: boolean) => {
-    // Closing mid-request would drop the result of the attach call.
-    if (!(open || isAttaching)) {
-      onClose();
-    }
-  };
-
-  return (
-    <Dialog onOpenChange={handleOpenChange} open>
-      <DialogContent
-        className="flex max-h-[90vh] max-w-5xl flex-col gap-0 overflow-hidden p-0"
-        // A stray click outside must not throw away a half-built mapping.
-        onInteractOutside={(event) => event.preventDefault()}
-      >
-        <DialogHeader className="border-b p-6 pr-12 text-left">
-          <DialogTitle>{t("configureCalculationAction")}</DialogTitle>
-          <DialogDescription>{t("mapSelectedFieldsToRoles")}</DialogDescription>
-        </DialogHeader>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
-          {/* Action Selection Sidebar */}
-          <div className="shrink-0 border-b bg-muted/30 md:w-80 md:border-r md:border-b-0">
-            <ScrollArea className="h-full p-6">
-              <h3 className="mb-4 font-semibold text-sm">{t("actionType")}</h3>
-              <div className="space-y-3">
-                {actions.map((action) => (
-                  <button
-                    className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
-                      selectedAction === action.id
-                        ? "border-primary bg-primary/5 shadow-sm"
-                        : "border-border bg-card hover:border-primary/50 hover:bg-muted"
-                    }`}
-                    key={action.id}
-                    onClick={() => {
-                      setSelectedAction(action.id);
-                      setFieldMapping({});
-                    }}
-                    type="button"
-                  >
-                    <div className="mb-1 font-semibold text-sm">
-                      {action.name}
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      {action.description}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-
-          {/* Mapping Area */}
-          <div className="min-h-0 flex-1" ref={scrollAreaRef}>
-            <ScrollArea className="h-full p-6">
-              {currentAction ? (
-                <DndContext
-                  onDragCancel={handleDragCancel}
-                  onDragEnd={handleDragEnd}
-                  onDragStart={handleDragStart}
-                >
-                  <div className="mx-auto max-w-3xl space-y-6">
-                    {/* Unassigned Fields Pool */}
-                    <AvailableFieldsPool fields={unassignedFields} />
-
-                    <Separator />
-
-                    {/* Role Assignment Slots */}
-                    <div>
-                      <h3 className="mb-4 font-semibold text-sm">
-                        {t("fieldRoles")}
-                      </h3>
-                      <div className="space-y-4">
-                        {sortedRoles.map((role) => {
-                          const assignedField = fieldMapping[role.key];
-
-                          return (
-                            <FieldRoleDropZone
-                              assignedField={assignedField}
-                              isDragging={!!activeId}
-                              key={role.key}
-                              onRemove={() => removeAssignment(role.key)}
-                              onSelectField={(field) =>
-                                assignField(role.key, field)
-                              }
-                              role={role}
-                              unassignedFields={unassignedFields}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Portaled: the dialog's centering transform would offset a fixed overlay */}
-                  {createPortal(
-                    <DragOverlay>
-                      {activeId ? (
-                        <div className="cursor-move rounded-md border-2 border-primary bg-card px-3 py-2 font-mono text-sm shadow-lg">
-                          {activeId}
-                        </div>
-                      ) : null}
-                    </DragOverlay>,
-                    document.body
-                  )}
-                </DndContext>
-              ) : (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <AlertCircle className="mx-auto mb-3 h-12 w-12 opacity-50" />
-                    <p className="font-medium">{t("selectActionToBegin")}</p>
-                    <p className="mt-1 text-sm">{t("chooseFromOptions")}</p>
-                  </div>
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex flex-col gap-4 border-t bg-muted/30 p-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm">
-            {currentAction &&
-              (isValid() ? (
-                <span className="flex items-center gap-2 font-medium text-green-600">
-                  <Check className="h-4 w-4" />
-                  {t("readyToAttach")}
-                </span>
-              ) : (
-                <span className="flex items-center gap-2 font-medium text-amber-600">
-                  <AlertCircle className="h-4 w-4" />
-                  {t("assignAllRequiredFields")}
-                </span>
-              ))}
-          </div>
-          <div className="flex gap-2">
-            <Button disabled={isAttaching} onClick={onClose} variant="outline">
-              {t("common:cancel")}
-            </Button>
-            <Button disabled={!isValid() || isAttaching} onClick={handleAttach}>
-              {isAttaching && <Spinner />}
-              {isAttaching ? t("attaching") : t("attachCalculation")}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 interface SheetErrorStateProps {
   description: string;
   onRetry?: () => void;
@@ -693,71 +133,100 @@ export interface ExportStrategy {
   revealInFolder?(path: string): Promise<void>;
 }
 
+/**
+ * pick: a step is waiting for a click; edit: the field has a calculation to
+ * open; static: nothing happens on click, so it isn't a button.
+ */
+type OverlayMode = "pick" | "edit" | "static";
+
 interface FieldOverlayProps {
+  badge: number | null;
   field: FieldPosition;
-  hasAction: boolean;
-  isActionHighlighted: boolean;
+  hasCalculation: boolean;
   isFlashing: boolean;
-  isHovered: boolean;
-  isSelected: boolean;
-  onMouseEnter: (name: string) => void;
-  onMouseLeave: () => void;
-  onToggle: (name: string) => void;
-  selectFieldLabel: string;
+  isHighlighted: boolean;
+  label: string;
+  mode: OverlayMode;
+  onClick: (name: string) => void;
 }
 
 const FieldOverlay = memo(function FieldOverlay({
+  badge,
   field,
-  hasAction,
-  isSelected,
-  isHovered,
+  hasCalculation,
   isFlashing,
-  isActionHighlighted,
-  onMouseEnter,
-  onMouseLeave,
-  onToggle,
-  selectFieldLabel,
+  isHighlighted,
+  label,
+  mode,
+  onClick,
 }: FieldOverlayProps) {
-  const handleEnter = useCallback(
-    () => onMouseEnter(field.name),
-    [onMouseEnter, field.name]
+  const handleClick = useCallback(
+    () => onClick(field.name),
+    [onClick, field.name]
   );
-  const handleLeave = useCallback(() => onMouseLeave(), [onMouseLeave]);
-  const handleToggle = useCallback(
-    () => onToggle(field.name),
-    [onToggle, field.name]
+  const marked = badge !== null || isHighlighted;
+  const className = cn(
+    "group absolute box-border rounded-sm border-2",
+    marked && "z-20 border-primary bg-primary/25 shadow-lg",
+    !marked &&
+      mode === "pick" &&
+      "z-10 border-primary/70 border-dashed bg-primary/5 hover:border-solid hover:bg-primary/20",
+    !marked &&
+      mode !== "pick" &&
+      "z-10 border-yellow-400/50 bg-yellow-400/10 hover:border-yellow-400 hover:bg-yellow-400/30",
+    mode !== "static" &&
+      "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+    isFlashing && "z-30 animate-flash"
+  );
+  const style = {
+    left: `${field.bounds.left}px`,
+    top: `${field.bounds.top}px`,
+    width: `${field.bounds.width}px`,
+    height: `${field.bounds.height}px`,
+  };
+  const content = (
+    <>
+      {badge !== null && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-2.5 -left-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary font-semibold text-[11px] text-primary-foreground"
+        >
+          {badge}
+        </span>
+      )}
+      {hasCalculation && badge === null && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-1 -right-1 h-2 w-2 rounded-full border border-background bg-primary"
+        />
+      )}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-full left-0 z-40 mb-1 hidden whitespace-nowrap rounded bg-foreground px-1.5 py-0.5 font-mono text-[11px] text-background group-hover:block group-focus-visible:block"
+      >
+        {field.name}
+      </span>
+    </>
   );
 
+  if (mode === "static") {
+    return (
+      <div className={className} data-field-name={field.name} style={style}>
+        {content}
+      </div>
+    );
+  }
   return (
-    <Toggle
-      aria-label={selectFieldLabel}
-      className={cn(
-        "box-border",
-        "data-[state=on]:z-20 data-[state=on]:border-2 data-[state=on]:border-blue-500 data-[state=on]:bg-blue-500/25 data-[state=on]:shadow-xl",
-        "data-[state=off]:z-10 data-[state=off]:border-2 data-[state=off]:border-yellow-400/50 data-[state=off]:bg-yellow-400/10",
-        "hover:data-[state=off]:border-yellow-400 hover:data-[state=off]:bg-yellow-400/30",
-        isHovered &&
-          "!border-blue-500 !bg-blue-500/30 z-30 shadow-xl ring-2 ring-blue-400",
-        isActionHighlighted &&
-          "!border-blue-500 !bg-blue-500/30 z-30 shadow-xl ring-2 ring-blue-400",
-        isFlashing && "z-30 animate-flash"
-      )}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-      onPressedChange={handleToggle}
-      pressed={isSelected}
-      style={{
-        position: "absolute",
-        left: `${field.bounds.left}px`,
-        top: `${field.bounds.top}px`,
-        width: `${field.bounds.width}px`,
-        height: `${field.bounds.height}px`,
-      }}
+    <button
+      aria-label={label}
+      className={className}
+      data-field-name={field.name}
+      onClick={handleClick}
+      style={style}
+      type="button"
     >
-      {hasAction && (
-        <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-yellow-400" />
-      )}
-    </Toggle>
+      {content}
+    </button>
   );
 });
 
@@ -782,6 +251,7 @@ export default function SheetViewer({
     "loading" | "ready" | "error"
   >("loading");
   const actions = useActions(actionTypes);
+  const builder = useCalculationBuilder(actions);
 
   useEffect(() => {
     let cancelled = false;
@@ -815,15 +285,14 @@ export default function SheetViewer({
   const [pdfDocument, setPdfDocument] = useState<pdfjs.PDFDocumentProxy | null>(
     null
   );
-  const [selectedFields, setSelectedFields] = useState<string[]>([]);
-  const [showActionModal, setShowActionModal] = useState(false);
   const [attachedActions, setAttachedActions] = useState<AttachedAction[]>([]);
+  const [isAttaching, setIsAttaching] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   // State for pre-signed PDF URL
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isPdfUrlLoading, setIsPdfUrlLoading] = useState(false);
   const [pdfUrlError, setPdfUrlError] = useState<string | null>(null);
-  // State for hover tracking
+  // Hover from the panel, mirrored on the sheet
   const [hoveredFieldName, setHoveredFieldName] = useState<string | null>(null);
   const [flashingFieldName, setFlashingFieldName] = useState<string | null>(
     null
@@ -832,56 +301,73 @@ export default function SheetViewer({
     null
   );
 
-  const actionHighlightedFields = useMemo(() => {
-    if (hoveredActionIndex === null) {
-      return new Set<string>();
-    }
-    const action = attachedActions[hoveredActionIndex];
-    if (!action) {
-      return new Set<string>();
-    }
-    return new Set<string>(Object.values(action.mapping));
-  }, [hoveredActionIndex, attachedActions]);
-
-  const fieldsWithActions = useMemo(() => {
+  const highlightedFields = useMemo(() => {
     const set = new Set<string>();
-    for (const attached of attachedActions) {
-      set.add(attached.targetField);
+    if (hoveredFieldName) {
+      set.add(hoveredFieldName);
+    }
+    const action =
+      hoveredActionIndex === null
+        ? undefined
+        : attachedActions[hoveredActionIndex];
+    for (const field of Object.values(action?.mapping ?? {})) {
+      set.add(field);
     }
     return set;
-  }, [attachedActions]);
+  }, [hoveredFieldName, hoveredActionIndex, attachedActions]);
+
+  const calculationByTarget = useMemo(
+    () => new Map(attachedActions.map((a) => [a.targetField, a])),
+    [attachedActions]
+  );
+
+  // Step number per picked field, shown as a badge on the sheet
+  const stepBadges = useMemo(() => {
+    const badges = new Map<string, number>();
+    if (builder.state.status !== "building") {
+      return badges;
+    }
+    const { picks } = builder.state;
+    builder.roles.forEach((role, index) => {
+      const field = picks[role.key];
+      if (field) {
+        badges.set(field, index + 1);
+      }
+    });
+    return badges;
+  }, [builder.state, builder.roles]);
 
   // Ref to manage flash timeout (prevents memory leaks)
   const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Refs for stable callbacks (avoid stale closure deps)
-  const fieldPositionsRef = useRef<FieldPosition[]>(fieldPositions);
-  useEffect(() => {
-    fieldPositionsRef.current = fieldPositions;
-  }, [fieldPositions]);
-
-  const currentPageRef = useRef<number>(currentPage);
-  useEffect(() => {
-    currentPageRef.current = currentPage;
-  }, [currentPage]);
-
-  // Stable event handlers — stable identity prevents cascade re-renders on hover/select
-  const handleMouseEnter = useCallback(
-    (name: string) => setHoveredFieldName(name),
-    []
+  const { pick, edit, stopPicking, pickingRole } = builder;
+  const handleFieldClick = useCallback(
+    (fieldName: string) => {
+      if (pickingRole) {
+        pick(fieldName);
+        return;
+      }
+      const attached = calculationByTarget.get(fieldName);
+      if (attached) {
+        edit(attached);
+      }
+    },
+    [pickingRole, pick, edit, calculationByTarget]
   );
-  const handleMouseLeave = useCallback(() => setHoveredFieldName(null), []);
-  const handleFieldSelect = useCallback((fieldName: string) => {
-    setSelectedFields((prev) =>
-      prev.includes(fieldName)
-        ? prev.filter((f) => f !== fieldName)
-        : [...prev, fieldName]
-    );
-    const field = fieldPositionsRef.current.find((f) => f.name === fieldName);
-    if (field && field.page !== currentPageRef.current) {
-      setCurrentPage(field.page);
+
+  // Esc leaves pick mode, like other canvas tools
+  useEffect(() => {
+    if (!pickingRole) {
+      return;
     }
-  }, []);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        stopPicking();
+      }
+    };
+    globalThis.addEventListener("keydown", onKeyDown);
+    return () => globalThis.removeEventListener("keydown", onKeyDown);
+  }, [pickingRole, stopPicking]);
 
   const {
     setFieldPositions: setFieldSnippetPositions,
@@ -1045,21 +531,17 @@ export default function SheetViewer({
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleBadgeClick = (fieldName: string) => {
-    // Find the field's page
+  const navigateToField = (fieldName: string) => {
     const field = fieldPositions.find((f) => f.name === fieldName);
     if (!field) {
       return;
     }
 
     const scrollToField = () => {
-      // Find the field overlay element by its aria-label
       const fieldElement = document.querySelector(
-        `button[aria-label="${t("viewer.selectField", { field: fieldName })}"]`
+        `[data-field-name="${CSS.escape(fieldName)}"]`
       );
-
       if (fieldElement) {
-        // Use scrollIntoView for smooth, browser-native scrolling
         const prefersReducedMotion = globalThis.matchMedia?.(
           "(prefers-reduced-motion: reduce)"
         ).matches;
@@ -1071,28 +553,18 @@ export default function SheetViewer({
       }
     };
 
-    // Navigate to the field's page if not already there
     const needsPageChange = field.page !== currentPage;
     if (needsPageChange) {
       setCurrentPage(field.page);
     }
 
-    // Clear any existing flash timeout (prevents overlapping animations)
     if (flashTimeoutRef.current) {
       clearTimeout(flashTimeoutRef.current);
     }
-
-    // Start flashing the field
     setFlashingFieldName(fieldName);
 
-    // Scroll to field after a delay if page changed (to allow page to render)
-    // or immediately if on the same page
-    setTimeout(
-      () => {
-        scrollToField();
-      },
-      needsPageChange ? 100 : 0
-    );
+    // Give a new page a moment to render before scrolling to the field
+    setTimeout(scrollToField, needsPageChange ? 100 : 0);
 
     // Stop flashing after 1.5s (3 pulses × 500ms)
     flashTimeoutRef.current = setTimeout(() => {
@@ -1131,41 +603,44 @@ export default function SheetViewer({
     setPdfDocument(doc); // Store PDF document - field extraction happens in useEffect
   };
 
-  const handleAttachAction = async (config: AttachedAction) => {
+  const handleAttach = async () => {
+    const { state, action } = builder;
+    if (state.status !== "building" || !action) {
+      return;
+    }
     if (!sheetId) {
       toast.error(t("viewer.noSheetIdAvailable"));
       return;
     }
 
+    const meta = actionTypes.find((at) => at.id === action.id);
+    const request: AttachActionRequest = {
+      actionLabel: meta?.actionLabel ?? action.id,
+      mapping: state.picks,
+    };
+
+    setIsAttaching(true);
     try {
-      // Find the action type metadata to get the actionLabel for the API
-      const meta = actionTypes.find((at) => at.id === config.id);
-      const action: AttachActionRequest = {
-        actionLabel: meta?.actionLabel ?? config.id,
-        mapping: config.mapping,
-      };
-
-      await apiClient.attachAction(sheetId, action);
-
+      await apiClient.attachAction(sheetId, request);
       // Refresh from DB to get accurate state after backend upsert
-      const refreshed = await apiClient.listAttachedActions(sheetId);
-      setAttachedActions(refreshed);
-      setShowActionModal(false);
-      // Only unselect fields that were used in the action
-      const usedFields = new Set(Object.values(config.mapping));
-      setSelectedFields((prev) =>
-        prev.filter((field) => !usedFields.has(field))
-      );
-      toast.success(t("viewer.attachedSuccessfully", { name: config.name }));
-    } catch (err) {
-      const errorMessage = getErrorMessage(err, t("common:unknownError"));
-      console.error(errorMessage);
-      toast.error(
-        t("viewer.failedToAttach", {
-          name: config.name,
-          message: errorMessage,
+      setAttachedActions(await apiClient.listAttachedActions(sheetId));
+      builder.attached();
+      const target = action.roles.find((r) => r.isTarget);
+      toast.success(
+        t("viewer.attachedSuccessfully", {
+          name: action.name,
+          field: target ? state.picks[target.key] : "",
         })
       );
+    } catch (err) {
+      toast.error(
+        t("viewer.failedToAttach", {
+          name: action.name,
+          message: getErrorMessage(err, t("common:unknownError")),
+        })
+      );
+    } finally {
+      setIsAttaching(false);
     }
   };
 
@@ -1194,6 +669,31 @@ export default function SheetViewer({
     }
   };
 
+  const overlayMode = (fieldName: string): OverlayMode => {
+    if (pickingRole) {
+      return "pick";
+    }
+    if (builder.state.status === "idle" && calculationByTarget.has(fieldName)) {
+      return "edit";
+    }
+    return "static";
+  };
+
+  const overlayLabel = (fieldName: string, mode: OverlayMode) => {
+    if (mode === "pick") {
+      return t("viewer.pickField", { field: fieldName });
+    }
+    const attached = calculationByTarget.get(fieldName);
+    const action = actions.find((a) => a.id === attached?.id);
+    return tActions("editCalculation", {
+      name: action?.name ?? attached?.name ?? "",
+      field: fieldName,
+    });
+  };
+
+  const stepIndex =
+    pickingRole === undefined ? -1 : builder.roles.indexOf(pickingRole);
+
   return (
     <div className="flex flex-col bg-background lg:h-full lg:min-h-0 lg:flex-row">
       {/* PDF viewer with overlays */}
@@ -1205,135 +705,112 @@ export default function SheetViewer({
                 <CardTitle className="text-xl">
                   {t("viewer.characterSheetEditor")}
                 </CardTitle>
-                <CardDescription>
-                  {t("viewer.selectFieldsToConfigureCalculations")}
-                </CardDescription>
+                <CardDescription>{t("viewer.editorHint")}</CardDescription>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  disabled={isExporting || !sheetId}
-                  onClick={handleExportSheet}
-                  size="sm"
-                  variant="outline"
-                >
-                  <FileDown className="mr-2 h-4 w-4" />
-                  {isExporting ? t("viewer.exporting") : t("viewer.export")}
-                </Button>
-                {selectedFields.length > 0 && (
-                  <>
-                    <Button
-                      onClick={() => setSelectedFields([])}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <X className="mr-2 h-4 w-4" />
-                      {t("common:clear")}
-                    </Button>
-                    <Button onClick={() => setShowActionModal(true)} size="sm">
-                      {t("viewer.configureCalculation")}
-                    </Button>
-                  </>
-                )}
-              </div>
+              <Button
+                disabled={isExporting || !sheetId}
+                onClick={handleExportSheet}
+                size="sm"
+                variant="outline"
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                {isExporting ? t("viewer.exporting") : t("viewer.export")}
+              </Button>
             </div>
-
-            {/* Selected Fields */}
-            {selectedFields.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {selectedFields.map((field) => {
-                  const isHovered = hoveredFieldName === field;
-                  const isFlashing = flashingFieldName === field;
-
-                  return (
-                    <div
-                      className={cn(
-                        "inline-flex items-center rounded-md border",
-                        "border-transparent bg-secondary text-secondary-foreground",
-                        "transition-all duration-200 motion-reduce:transform-none motion-reduce:transition-none",
-                        isHovered &&
-                          "scale-105 transform shadow-lg ring-2 ring-blue-500",
-                        isFlashing && "animate-flash"
-                      )}
-                      key={field}
-                    >
-                      <button
-                        aria-label={t("viewer.navigateToField", { field })}
-                        className="cursor-pointer px-2.5 py-0.5"
-                        onClick={() => handleBadgeClick(field)}
-                        onMouseEnter={() => setHoveredFieldName(field)}
-                        onMouseLeave={() => setHoveredFieldName(null)}
-                        type="button"
-                      >
-                        <span className="font-semibold text-xs">{field}</span>
-                      </button>
-                      <button
-                        aria-label={t("viewer.removeField", { field })}
-                        className="px-1 py-0.5 hover:text-destructive"
-                        onClick={() => handleFieldSelect(field)}
-                        onMouseEnter={() => setHoveredFieldName(field)}
-                        onMouseLeave={() => setHoveredFieldName(null)}
-                        type="button"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </CardHeader>
 
           <Separator />
 
-          <CardContent className="flex flex-1 flex-col items-center overflow-auto p-6">
-            <div
-              className="relative inline-block"
-              style={{ willChange: "transform" }}
-            >
-              {isPdfUrlLoading && (
-                <div className="flex h-[600px] w-[450px] items-center justify-center">
-                  <Spinner className="h-8 w-8" />
-                </div>
-              )}
-              {pdfUrlError && (
-                <div className="flex h-[600px] w-[450px] flex-col items-center justify-center gap-2 text-destructive">
-                  <AlertCircle className="h-8 w-8" />
-                  <p>{pdfUrlError}</p>
-                </div>
-              )}
-              {pdfUrl && !isPdfUrlLoading && !pdfUrlError && (
-                <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess}>
-                  <Page
-                    className="shadow-md"
-                    devicePixelRatio={1}
-                    pageNumber={currentPage}
-                    renderAnnotationLayer={false}
-                    renderTextLayer={false}
-                    scale={scale}
-                  />
-                </Document>
-              )}
-
-              {/* Overlays for current page only */}
-              {currentPageFields.map((field) => (
-                <FieldOverlay
-                  field={field}
-                  hasAction={fieldsWithActions.has(field.name)}
-                  isActionHighlighted={actionHighlightedFields.has(field.name)}
-                  isFlashing={flashingFieldName === field.name}
-                  isHovered={hoveredFieldName === field.name}
-                  isSelected={selectedFields.includes(field.name)}
-                  key={field.name}
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                  onToggle={handleFieldSelect}
-                  selectFieldLabel={t("viewer.selectField", {
-                    field: field.name,
-                  })}
-                />
-              ))}
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <div aria-live="polite" className="sr-only">
+              {pickingRole
+                ? tActions("clickTheField", { role: pickingRole.label })
+                : ""}
             </div>
-          </CardContent>
+            {pickingRole && (
+              <div className="fixed bottom-6 left-1/2 z-40 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-2xl bg-foreground py-1.5 pr-1.5 pl-4 text-background shadow-lg lg:absolute lg:top-3 lg:bottom-auto lg:flex-nowrap lg:whitespace-nowrap lg:rounded-full">
+                <span className="text-background/70 text-xs">
+                  {tActions("stepOf", {
+                    current: stepIndex + 1,
+                    total: builder.roles.length,
+                  })}
+                </span>
+                <span className="font-medium text-sm">
+                  {tActions("clickTheField", { role: pickingRole.label })}
+                </span>
+                {!pickingRole.required && (
+                  <button
+                    className="h-7 rounded-full border border-background/40 px-3 text-xs hover:bg-background/10"
+                    onClick={builder.skip}
+                    type="button"
+                  >
+                    {tActions("skip")}
+                  </button>
+                )}
+                <button
+                  className="h-7 rounded-full bg-background/15 px-3 text-xs hover:bg-background/25"
+                  onClick={builder.stopPicking}
+                  type="button"
+                >
+                  {tActions("stopPicking")}
+                </button>
+              </div>
+            )}
+
+            <CardContent
+              className={cn(
+                "flex flex-1 flex-col items-center overflow-auto p-6",
+                pickingRole && "lg:pt-16"
+              )}
+            >
+              <div
+                className="relative inline-block"
+                style={{ willChange: "transform" }}
+              >
+                {isPdfUrlLoading && (
+                  <div className="flex h-[600px] w-[450px] items-center justify-center">
+                    <Spinner className="h-8 w-8" />
+                  </div>
+                )}
+                {pdfUrlError && (
+                  <div className="flex h-[600px] w-[450px] flex-col items-center justify-center gap-2 text-destructive">
+                    <AlertCircle className="h-8 w-8" />
+                    <p>{pdfUrlError}</p>
+                  </div>
+                )}
+                {pdfUrl && !isPdfUrlLoading && !pdfUrlError && (
+                  <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess}>
+                    <Page
+                      className="shadow-md"
+                      devicePixelRatio={1}
+                      pageNumber={currentPage}
+                      renderAnnotationLayer={false}
+                      renderTextLayer={false}
+                      scale={scale}
+                    />
+                  </Document>
+                )}
+
+                {/* Overlays for current page only */}
+                {currentPageFields.map((field) => {
+                  const mode = overlayMode(field.name);
+                  return (
+                    <FieldOverlay
+                      badge={stepBadges.get(field.name) ?? null}
+                      field={field}
+                      hasCalculation={calculationByTarget.has(field.name)}
+                      isFlashing={flashingFieldName === field.name}
+                      isHighlighted={highlightedFields.has(field.name)}
+                      key={field.name}
+                      label={overlayLabel(field.name, mode)}
+                      mode={mode}
+                      onClick={handleFieldClick}
+                    />
+                  );
+                })}
+              </div>
+            </CardContent>
+          </div>
 
           {/* Pagination controls */}
           <div className="flex items-center justify-center gap-4 border-t p-4">
@@ -1365,162 +842,25 @@ export default function SheetViewer({
         </Card>
       </div>
 
-      {/* Sidebar - Attached Actions */}
-      <div className="h-72 shrink-0 p-6 pt-0 lg:h-auto lg:w-96 lg:pt-6 lg:pl-0">
-        <Card className="flex h-full flex-col">
-          <CardHeader>
-            <CardTitle className="text-lg">
-              {tActions("attachedActions")}
-            </CardTitle>
-            <CardDescription>
-              {tActions("calculationsConfigured", {
-                count: attachedActions.length,
-              })}
-            </CardDescription>
-          </CardHeader>
-
-          <Separator />
-
-          <ScrollArea className="flex-1 p-6">
-            {attachedActions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                <div className="mb-3 rounded-full bg-muted p-3">
-                  <AlertCircle className="h-6 w-6" />
-                </div>
-                <p className="font-medium">
-                  {tActions("noActionsConfiguredYet")}
-                </p>
-                <p className="mt-1 text-sm">
-                  {tActions("selectFieldsAndConfigure")}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {attachedActions.map((attachedAction, index) => {
-                  const action = actions.find(
-                    (a) => a.id === attachedAction.id
-                  );
-
-                  const cardKey = `${attachedAction.id.toLowerCase()}-${attachedAction.targetField}`;
-
-                  if (!action && actionTypesStatus === "loading") {
-                    return (
-                      <Skeleton
-                        aria-busy="true"
-                        className="h-24 w-full"
-                        key={cardKey}
-                      />
-                    );
-                  }
-
-                  if (!action) {
-                    return (
-                      <Card
-                        className="border-destructive/50 bg-muted/50"
-                        key={cardKey}
-                      >
-                        <CardHeader className="p-4">
-                          <div className="flex items-start gap-2">
-                            <AlertCircle
-                              aria-hidden="true"
-                              className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
-                            />
-                            <div className="min-w-0 space-y-1">
-                              <div className="font-semibold text-sm">
-                                {tActions("unsupportedCalculation")}
-                              </div>
-                              <p className="text-muted-foreground text-xs">
-                                {tActions("unsupportedCalculationDescription")}
-                              </p>
-                              <Badge
-                                className="font-mono text-xs"
-                                variant="outline"
-                              >
-                                {attachedAction.targetField}
-                              </Badge>
-                            </div>
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    );
-                  }
-
-                  return (
-                    <Card
-                      className={cn(
-                        "bg-muted/50 transition-colors",
-                        hoveredActionIndex === index &&
-                          "border-blue-500 bg-blue-500/10"
-                      )}
-                      key={cardKey}
-                      onMouseEnter={() => setHoveredActionIndex(index)}
-                      onMouseLeave={() => setHoveredActionIndex(null)}
-                    >
-                      <CardHeader className="p-4 pb-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="font-semibold text-sm">
-                              {action.name}
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <div className="space-y-1.5">
-                          {Object.entries(attachedAction.mapping).map(
-                            ([roleKey, fieldName]) => {
-                              const fieldRole = action.roles.find(
-                                (r) => r.key === roleKey
-                              );
-
-                              // TODO: Improve error handling
-                              return (
-                                <div
-                                  className="flex items-start gap-2 text-xs"
-                                  key={roleKey}
-                                >
-                                  <span className="min-w-[100px] text-muted-foreground">
-                                    {fieldRole ? (
-                                      <>{fieldRole.label}:</>
-                                    ) : (
-                                      <span className="flex items-center gap-1 text-destructive">
-                                        <AlertCircle className="h-3 w-3" />
-                                        {roleKey}:
-                                      </span>
-                                    )}
-                                  </span>
-                                  <Badge
-                                    className="font-mono text-xs"
-                                    variant={
-                                      fieldRole ? "outline" : "destructive"
-                                    }
-                                  >
-                                    {fieldName}
-                                  </Badge>
-                                </div>
-                              );
-                            }
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </ScrollArea>
+      {/* Calculations panel */}
+      <div className="shrink-0 p-6 pt-0 lg:w-96 lg:pt-6 lg:pl-0">
+        <Card className="flex flex-col lg:h-full">
+          <div className="p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+            <CalculationPanel
+              actions={actions}
+              actionTypesStatus={actionTypesStatus}
+              attachedActions={attachedActions}
+              builder={builder}
+              hoveredCalculation={hoveredActionIndex}
+              isAttaching={isAttaching}
+              onAttach={handleAttach}
+              onFieldHover={setHoveredFieldName}
+              onHoverCalculation={setHoveredActionIndex}
+              onNavigateToField={navigateToField}
+            />
+          </div>
         </Card>
       </div>
-
-      {/* Action Configuration Modal */}
-      {showActionModal && (
-        <ActionConfigModal
-          actions={actions}
-          onAttach={handleAttachAction}
-          onClose={() => setShowActionModal(false)}
-          selectedFields={selectedFields}
-        />
-      )}
     </div>
   );
 }
