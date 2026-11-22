@@ -1,37 +1,37 @@
 # Saving throws & skill checks
 
 Once you've set up an ability modifier (see [Using Form Forge](index.md)),
-saving throws and skill checks follow the same three steps: pick the fields,
-click **Configure Calculation**, and assign each field to its part. They just
-need a few more fields, because they build on an ability modifier and your
-proficiency.
+saving throws and skill checks work the same way: click **New calculation**,
+choose the type, and click the fields on the sheet in the order the panel asks
+for them. They just need a few more fields, because they build on an ability
+modifier and your proficiency.
 
 Set up your ability modifiers first. Saving throws and skill checks read from
 a modifier box, so that box needs its own calculation before these will give
 the right answer.
+
+!!! tip "Mark your proficiency bonus as Keep"
+    Every saving throw and every skill uses the same proficiency bonus box.
+    Click **Keep** on the Proficiency Bonus step once, and Form Forge fills it
+    in for each following calculation of that type. Six saves or eighteen
+    skills then take a few clicks each.
 
 ## Add a saving throw
 
 A saving throw is your ability modifier, plus your proficiency bonus if you're
 proficient in that save.
 
-1. Pick these fields on the sheet:
-    - the **ability modifier** box the save uses (for a Strength save, that's
-      `STRmod`)
-    - your **proficiency bonus** box
-    - the **proficiency checkbox** for that save
-    - the **saving throw** box where the total should appear
-2. Click **Configure Calculation** and choose **Saving Throw Modifier**.
-3. Assign each picked field to its part:
+1. Click **New calculation** and choose **Saving Throw Modifier**.
+2. Click the fields on the sheet in this order:
 
-    | Part | The field you pick |
+    | Step | The field to click |
     | --- | --- |
-    | Ability Modifier | the modifier box, e.g. `STRmod` |
+    | Target Saving Throw | the box that shows the save total |
+    | Ability Modifier | the modifier box of the save's ability, e.g. Strength |
     | Proficiency Bonus | your proficiency bonus box |
     | Proficiency | the save's proficiency checkbox |
-    | Target Saving Throw | the box that shows the save total |
 
-4. Click **Attach Calculation**.
+3. Click **Attach calculation**.
 
 Now, when the proficiency box is checked, the save adds your proficiency bonus.
 When it's unchecked, it uses the modifier alone.
@@ -41,29 +41,24 @@ When it's unchecked, it uses the modifier alone.
 A skill check works like a saving throw, but it targets a skill box and can
 also handle expertise and half-proficiency.
 
-1. Pick these fields on the sheet:
-    - the **ability modifier** box the skill uses (for Perception, that's your
-      Wisdom modifier)
-    - your **proficiency bonus** box
-    - the **proficiency checkbox** for that skill
-    - the **skill** box where the total should appear
-2. Click **Configure Calculation** and choose **Skill Modifier**.
-3. Assign each picked field to its part:
+1. Click **New calculation** and choose **Skill Modifier**.
+2. Click the fields on the sheet in this order:
 
-    | Part | The field you pick |
+    | Step | The field to click |
     | --- | --- |
-    | Ability Modifier | the modifier box, e.g. `WISmod` |
+    | Target Skill | the box that shows the skill total |
+    | Ability Modifier | the modifier box of the skill's ability, e.g. Wisdom for Perception |
     | Proficiency Bonus | your proficiency bonus box |
     | Proficiency | the skill's proficiency checkbox |
-    | Target Skill | the box that shows the skill total |
+    | Expertise (optional) | the expertise checkbox, if your sheet has one |
+    | Half-Prof (optional) | the Jack of All Trades checkbox, if your sheet has one |
 
-4. Click **Attach Calculation**.
+3. Click **Attach calculation**.
 
 !!! tip "Expertise and half-proficiency"
-    A Skill Modifier also has optional **Expertise** and **Half-Prof** parts.
-    Assign a checkbox to **Expertise** to double the proficiency bonus for
-    that skill, or to **Half-Prof** (Jack of All Trades) to add half of it.
-    Leave them unassigned if the skill doesn't use them.
+    A checkbox on the **Expertise** step doubles the proficiency bonus for that
+    skill. One on the **Half-Prof** step (Jack of All Trades) adds half of it.
+    If the skill doesn't use them, click **Skip** in the bar on the sheet.
 
 For the full list of calculation types and the fields each one needs, see the
 [calculation reference](../reference/index.md).

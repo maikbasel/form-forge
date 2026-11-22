@@ -43,8 +43,8 @@ this README is for contributors.
 
 ## What It Does
 
-You upload a PDF character sheet and Form Forge extracts its form fields. In the editor you map calculations between
-fields (e.g., `Strength modifier = (Strength score - 10) / 2`). Form Forge generates the JavaScript and embeds it in
+You upload a PDF character sheet and Form Forge extracts its form fields. In the editor you pick a calculation and click its
+fields on the sheet (e.g., `Strength modifier = (Strength score - 10) / 2`). Form Forge generates the JavaScript and embeds it in
 the PDF's AcroForm.
 
 Form Forge ships in two distribution modes:
@@ -457,7 +457,7 @@ The role keys must match the `key` values in your `FieldRoleMetadata` entries fr
 - `main.rs` and `openapi.rs`: no new service registrations.
 - Frontend types (`AttachActionRequest`, etc.): generic, not per action.
 - API client code (web and Tauri): reads the action metadata at runtime.
-- UI components (`useActions`, `ActionConfigModal`, etc.): render from the backend metadata.
+- UI components (`useActions`, `CalculationPanel`, etc.): render from the backend metadata.
 - OpenAPI spec and generated types: the `CalculationAction` schema covers all variants via `oneOf`.
 - Tauri commands: `list_action_types` returns the catalog.
 

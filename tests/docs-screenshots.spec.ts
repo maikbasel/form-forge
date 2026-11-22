@@ -60,24 +60,24 @@ test("capture usage flow visuals", async ({
     await shot(page, "02-viewer.png");
   });
 
-  await test.step("Select fields", async () => {
-    await sheetViewerPage.selectField("STRmod");
-    await sheetViewerPage.selectField("STR");
+  await test.step("Choose a calculation type", async () => {
+    await page.getByRole("button", { name: /new calculation/i }).click();
     await rest(page);
-    await shot(page, "03-select-fields.png");
+    await shot(page, "03-choose-type.png");
+    await page.getByRole("button", { name: /^Ability Modifier/ }).click();
   });
 
-  await test.step("Configure Ability Modifier action", async () => {
-    await sheetViewerPage.openActionModal();
-    await sheetViewerPage.selectActionType("Ability Modifier");
-    await sheetViewerPage.assignFieldToRole("STR", "Ability Score");
-    await sheetViewerPage.assignFieldToRole("STRmod", "Target Modifier");
+  await test.step("Pick the fields on the sheet", async () => {
+    await sheetViewerPage.pickField("STRmod");
     await rest(page);
-    await shot(page, "04-configure-action.png");
-    await sheetViewerPage.attachAction();
-    await sheetViewerPage.verifySuccessToast("attached successfully");
-    await sheetViewerPage.verifyActionAttached("Ability Modifier");
-    // Let the video rest on the attached-action result before downloading.
+    await shot(page, "04-pick-fields.png");
+    await sheetViewerPage.pickField("STR");
+    await rest(page);
+    await sheetViewerPage.attachCalculation();
+    await sheetViewerPage.verifySuccessToast("attached to STRmod");
+    await sheetViewerPage.finishBuilding();
+    await sheetViewerPage.verifyCalculationListed("Ability Modifier");
+    // Let the video rest on the attached calculation before downloading.
     await rest(page);
   });
 
