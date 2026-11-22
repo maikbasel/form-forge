@@ -782,7 +782,6 @@ export default function SheetViewer({
                   <Document file={pdfUrl} onLoadSuccess={onDocumentLoadSuccess}>
                     <Page
                       className="shadow-md"
-                      devicePixelRatio={1}
                       pageNumber={currentPage}
                       renderAnnotationLayer={false}
                       renderTextLayer={false}

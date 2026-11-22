@@ -17,10 +17,6 @@ export function Header() {
             <Image alt="" height={24} src="/icon.svg" width={24} />
             <span className="font-bold">{t("appName")}</span>
           </a>
-          {/* Future navigation menu will go here */}
-          <nav className="hidden items-center gap-6 text-sm md:flex">
-            {/* Add navigation items here later */}
-          </nav>
         </div>
 
         {/* Actions - Right side */}

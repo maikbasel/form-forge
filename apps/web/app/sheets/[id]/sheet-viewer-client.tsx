@@ -5,7 +5,6 @@ import { Skeleton } from "@repo/ui/components/skeleton.tsx";
 import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 
 const SheetViewer = dynamic(
@@ -14,23 +13,32 @@ const SheetViewer = dynamic(
       pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
       return import("@repo/ui/views/sheet-viewer.tsx");
     }),
-  { ssr: false }
+  { ssr: false, loading: () => <SheetViewerSkeleton /> }
 );
 
+// Mirrors the editor: sheet card on the left, calculations panel on the right
+// from lg up, stacked below that.
 function SheetViewerSkeleton() {
   return (
-    <div className="flex h-full gap-4">
-      <div className="w-80 space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-[600px] w-full" />
-      </div>
-
-      <div className="flex-1 space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-48" />
+    <div
+      aria-busy="true"
+      className="flex flex-col gap-6 p-6 lg:h-full lg:flex-row"
+    >
+      <div className="flex min-h-0 flex-1 flex-col gap-4 rounded-lg border p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-56" />
+            <Skeleton className="h-4 w-80 max-w-full" />
+          </div>
+          <Skeleton className="h-9 w-24" />
         </div>
-        <Skeleton className="h-[800px] w-full" />
+        <Skeleton className="mx-auto h-[600px] w-full max-w-[612px] lg:h-auto lg:flex-1" />
+      </div>
+      <div className="flex flex-col gap-4 rounded-lg border p-6 lg:w-96">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-11 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
       </div>
     </div>
   );
@@ -58,11 +66,9 @@ export default function SheetViewerClient({ sheetId }: SheetViewerClientProps) {
         </Button>
       </div>
 
-      <Suspense fallback={<SheetViewerSkeleton />}>
-        <div className="min-h-0 flex-1">
-          <SheetViewer file={fileUrl} sheetId={sheetId} />
-        </div>
-      </Suspense>
+      <div className="min-h-0 flex-1">
+        <SheetViewer file={fileUrl} sheetId={sheetId} />
+      </div>
     </div>
   );
 }
