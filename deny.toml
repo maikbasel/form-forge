@@ -21,18 +21,6 @@ ignore = [
     # Goes away with sqlx 0.9.
     "RUSTSEC-2026-0459",
 
-    # Tauri 2.x transitive deps: gtk-rs GTK3 bindings are unmaintained (replaced by gtk4-rs)
-    # These are required by webkit2gtk which is Tauri's Linux WebView backend
-    "RUSTSEC-2024-0411",
-    "RUSTSEC-2024-0412",
-    "RUSTSEC-2024-0413",
-    "RUSTSEC-2024-0414",
-    "RUSTSEC-2024-0415",
-    "RUSTSEC-2024-0416",
-    "RUSTSEC-2024-0417",
-    "RUSTSEC-2024-0418",
-    "RUSTSEC-2024-0419",
-    "RUSTSEC-2024-0420",
     # glib VariantStrIter unsoundness — same GTK3 stack via Tauri
     "RUSTSEC-2024-0429",
 
