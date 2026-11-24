@@ -9,7 +9,7 @@
     "./locales/*": "./locales/*"
   },
   "dependencies": {
-    "i18next": "^25.2.1",
+    "i18next": "^26.0.0",
     "react-i18next": "^15.5.2"
   },
   "devDependencies": {
